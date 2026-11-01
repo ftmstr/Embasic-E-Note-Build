@@ -1,25 +1,34 @@
 param(
-    [ValidateRange(0,100)][int]$ProgressPercent = 2,
-    [ValidateSet('NOT RUN','QUEUED','PASS','FAIL')][string]$CiState = 'PASS'
+    [ValidateRange(0,100)][int]$ProgressPercent = 5,
+    [ValidateSet('PASS','FAIL','PENDING','NOT RUN')]
+    [string]$VerifiedCiState = 'PASS'
 )
 
-$Host.UI.RawUI.WindowTitle = 'Embasic E-Note — Delivery Status'
-$filled = [int][Math]::Floor($ProgressPercent / 5)
-$bar = ('█' * $filled) + ('░' * (20 - $filled))
+# This is a historical evidence dashboard, not a live GitHub status reader.
+try { $Host.UI.RawUI.WindowTitle = 'Embasic E-Note | TUR 02' } catch {}
+
+$completed = [int][Math]::Floor($ProgressPercent / 5)
+$bar = ('█' * $completed) + ('░' * (20 - $completed))
+
 Write-Host ''
-Write-Host '╔══════════════════════════════════════════════════════════════╗' -ForegroundColor Cyan
-Write-Host '║                   EMBASIC  E-NOTE                            ║' -ForegroundColor Cyan
-Write-Host '║                 WINDOWS DEVELOPMENT                          ║' -ForegroundColor Cyan
-Write-Host '╚══════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
-Write-Host ('  Estimated implementation progress : {0,3}%  {1}' -f $ProgressPercent,$bar) -ForegroundColor Yellow
-Write-Host ('  Tur 01 verified CI run #1        : {0} (historical)' -f $CiState)
-Write-Host '  Windows Release build             : PASS · 0 warnings · 0 errors'
-Write-Host '  Bootstrap smoke tests             : PASS · 7/7'
-Write-Host '  Current milestone                 : TUR 01 — WPF bootstrap'
-Write-Host '  Encrypted EMD / key recovery       : NOT IMPLEMENTED'
-Write-Host '  UYAP UDF editor acceptance        : NOT RUN'
-Write-Host '  GUI / installer acceptance        : NOT RUN'
-Write-Host '  Provisional release window        : 2027 Q2–Q3 (NOT COMMITTED)'
-Write-Host '  Release gate                      : BLOCKED until all P0 tests pass' -ForegroundColor Yellow
+Write-Host '╔══════════════════════════════════════════════════════════════════╗' -ForegroundColor Cyan
+Write-Host '║                       EMBASIC  E-NOTE                          ║' -ForegroundColor Cyan
+Write-Host '║                  WINDOWS • GELİŞTİRME PANOSU                    ║' -ForegroundColor Cyan
+Write-Host '╚══════════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
+Write-Host ('  Tahmini mühendislik ilerlemesi     % {0,3}   {1}' -f $ProgressPercent,$bar) -ForegroundColor Yellow
+Write-Host '  TUR 02       Çalışma alanı + klasör ağacı      REVIEW' -ForegroundColor White
+Write-Host ('  Windows CI   Run #41330908174                 {0}' -f $VerifiedCiState) -ForegroundColor Green
+Write-Host '  Release      0 warning / 0 error              PASS' -ForegroundColor Green
+Write-Host '  Smoke        17 / 17 kontrol                  PASS' -ForegroundColor Green
+Write-Host '  EMD          Şifreleme / anahtar yönetimi     NOT IMPLEMENTED' -ForegroundColor Yellow
+Write-Host '  GUI          Fiziksel Windows kabulü         NOT RUN' -ForegroundColor Yellow
+Write-Host '  UDF          Resmî UYAP aç / kaydet           NOT RUN' -ForegroundColor Yellow
+Write-Host '  Kurulum      İmzalı / doğrulanmış dağıtım     NOT BUILT' -ForegroundColor Yellow
 Write-Host ''
-Write-Host 'Progress is an engineering estimate; PASS applies only to CI run 41324011720.' -ForegroundColor DarkGray
+Write-Host '  Koşullu nihai sürüm aralığı: 2027 Q2 – Q3 (TAHHÜT DEĞİL)' -ForegroundColor Cyan
+Write-Host '  Yayın kapısı: BLOCKED — tüm P0 kabul testleri zorunludur.' -ForegroundColor Yellow
+Write-Host ''
+Write-Host '  CI kanıtı: https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41330908174'
+Write-Host '  İlerleme yaklaşık iş yükü tahminidir; test kapsamı veya hazır ürün oranı değildir.' -ForegroundColor DarkGray
+Write-Host '  PASS yalnızca yukarıda belirtilen GitHub Actions çalışması içindir.' -ForegroundColor DarkGray
+Write-Host ''

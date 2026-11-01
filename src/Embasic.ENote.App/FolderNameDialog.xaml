@@ -7,8 +7,7 @@
     <StackPanel Margin="20">
         <TextBlock Text="Klasör adı" FontWeight="SemiBold" Margin="0,0,0,8"/>
         <TextBox x:Name="FolderNameInput" Height="30"
-                 AutomationProperties.Name="Yeni klasör adı"
-                 MaxLength="200"/>
+                 AutomationProperties.Name="Yeni klasör adı"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                     Margin="0,16,0,0">
             <Button Content="Oluştur" Width="92" Height="30" Margin="0,0,8,0"
