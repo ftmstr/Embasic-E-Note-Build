@@ -28,7 +28,7 @@ var checks = new (string Name, Func<Task> Run)[]
         })),
     ("existing workspace accepted", () =>
         InWorkspace((storage, path) => Check(storage.OpenExisting(path).FullPath ==
-            Path.TrimEndingDirectorySeparator(Path.GetFullPath(path)))),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(path))))),
     ("missing workspace refused", async () =>
         await ExpectThrows<FileNotFoundException>(() =>
         {

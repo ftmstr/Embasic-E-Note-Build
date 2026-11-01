@@ -1,3 +1,4 @@
+using System.IO;
 using System.Collections.ObjectModel;
 using Embasic.ENote.Storage.Workspaces;
 
