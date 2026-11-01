@@ -1,0 +1,32 @@
+name: Windows .NET 10 CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: SDK information
+        run: dotnet --info
+      - name: Restore
+        run: dotnet restore Embasic.ENote.slnx
+      - name: Build Windows WPF solution
+        run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
+      - name: Run framework-free smoke tests
+        run: dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj --configuration Release --no-restore
