@@ -1,31 +1,45 @@
-# Developer bootstrap — Tur 01
+# Embasic E-Note — developer guide (Tur 02)
 
 ## Requirements
 
-- Windows 10/11 with .NET SDK 10.0.x (Windows Desktop / WPF workload in the SDK)
-- Visual Studio with .NET desktop development workload is optional.
-- No paid account, service or third-party NuGet dependency is required for this bootstrap.
+- Windows 10/11 and .NET 10 SDK (10.0.x) with WPF/Windows desktop targeting.
+- No mandatory paid API, online activation or third-party runtime NuGet SDK
+  exists in the current source.
+- The source may be built in Windows CI. Interactive GUI behavior requires
+  separate hands-on Windows checks.
 
 ## Build and run
 
 ```powershell
 dotnet restore Embasic.ENote.slnx
-dotnet build Embasic.ENote.slnx --configuration Release --no-restore
+dotnet build Embasic.ENote.slnx -c Release --no-restore
+dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj -c Release
 dotnet run --project src/Embasic.ENote.App/Embasic.ENote.App.csproj
-dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj --configuration Release
 pwsh -File scripts/Show-ENoteStatus.ps1
 ```
 
-The WPF app is a **non-editing UI shell**. The smoke tests are a small dependency-free console
-runner for extension policy and UTF-8 reading; they do not replace full xUnit/NUnit,
-cryptographic tests, GUI automation or UYAP acceptance.
+## Implemented functions in this branch
 
-Do not claim a successful Windows build until the GitHub Actions Windows job completes.
-The Linux authoring environment initially had no .NET SDK and could not build.
+- Click **Klasör Seç…** to choose an existing local folder.
+- Expand folder nodes to enumerate one level. Direct children are folders,
+  `.md` and `.emd` filenames. No file content is read by tree browsing.
+- Select a folder (or use workspace root) and click **Yeni Alt Klasör**.
+  Validation rejects illegal, reserved and traversal names.
+- **Yenile** reloads the selected folder; a new workspace selection clears
+  the prior UI tree.
+- No arbitrary per-folder item count/depth cap in storage enumeration; Windows
+  filesystem, permissions and memory limits still apply.
+- The `.emd` creation command is disabled and note editors are not present.
+  Plain `.md` is explicitly unencrypted.
 
-## Next engineer tasks
+## Security and testing boundaries
 
-1. Specify and review .emd v1 binary envelope and key-slot API against ENOTE-08.
-2. Develop authenticated encryption/negative tests and secure Windows key management.
-3. Add explicit workspace selection and safe atomic .md/.emd note saving.
-4. Connect real edit/preview tabs only after persistence and secret-handling safeguards.
+- Directory links/junctions are not followed in the current navigator;
+  this is not a hardened sandbox against concurrent path-swap races.
+- Untrusted folders can produce access exceptions and very large listings.
+  The UI receives a recoverable status message, but GUI and stress tests
+  are outstanding.
+- Verify evidence at [Tur 02 CI](CI-EVIDENCE-TUR02.md).
+- Before any claim of a usable secure editor, implement the ENOTE-08
+  cryptographic format, key and recovery tests, atomically safe persistence,
+  and actual Windows GUI acceptance.

@@ -1,0 +1,19 @@
+<Window x:Class="Embasic.ENote.App.FolderNameDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Yeni klasör" Width="410" Height="186"
+        ResizeMode="NoResize" WindowStartupLocation="CenterOwner"
+        Background="#F7F9FC" Loaded="Dialog_Loaded">
+    <StackPanel Margin="20">
+        <TextBlock Text="Klasör adı" FontWeight="SemiBold" Margin="0,0,0,8"/>
+        <TextBox x:Name="FolderNameInput" Height="30"
+                 AutomationProperties.Name="Yeni klasör adı"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="Oluştur" Width="92" Height="30" Margin="0,0,8,0"
+                    IsDefault="True" Click="Accept_Click"/>
+            <Button Content="İptal" Width="84" Height="30"
+                    IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
