@@ -2,6 +2,7 @@ using System.IO;
 using System.Text;
 using Embasic.ENote.Storage;
 using Embasic.ENote.Core.Printing;
+using Embasic.ENote.Emd;
 
 if (!OperatingSystem.IsWindows()) return 2;
 int passed = 0, failed = 0;
@@ -124,5 +125,54 @@ try
         Yes(!Directory.EnumerateFiles(dir,"*.enote-tmp").Any()));
 }
 finally { Directory.Delete(dir,recursive:true); }
+string locked = Path.Combine(Path.GetTempPath(), "enote-tur09-binding-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(locked);
+try
+{
+    Directory.CreateDirectory(Path.Combine(locked, "Alt"));
+    string target=Path.Combine(locked,"Alt","Gizli.emd");
+    using var parent=LayerSecret.Generate(LayerKind.Folder);
+    using var child=LayerSecret.Generate(LayerKind.Subfolder);
+    using var secret=LayerSecret.Generate(LayerKind.NoteAdditional);
+    using var document=PortableEmd.Encrypt("Şifreli Türkçe 🔐","Şifreli not parola 2026");
+    byte[] encrypted=LayeredEmd3.Seal(document,[parent,child,secret]);
+    File.WriteAllBytes(target,encrypted);
+    Guid workspaceId=Guid.NewGuid();
+    var entries=new[]
+    {
+        new WorkspaceLockEntry(parent.Id,Guid.Empty,LayerKind.Folder,"Klasör"),
+        new WorkspaceLockEntry(child.Id,parent.Id,LayerKind.Subfolder,"Klasör/Alt"),
+        new WorkspaceLockEntry(secret.Id,child.Id,LayerKind.NoteAdditional,"Klasör/Alt/Gizli.emd")
+    };
+    byte[] index=WorkspaceLockIndex.Protect(workspaceId,parent,entries);
+    var all=new Dictionary<Guid,LayerSecret>{{parent.Id,parent},{child.Id,child},{secret.Id,secret}};
+    Check("verified ELH1 IDs bound to existing directory and file",()=>{
+        var bound=WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Gizli.emd",all);
+        Yes(bound.FullPath==Path.GetFullPath(target) && bound.RequiredIds.SequenceEqual(new[]{parent.Id,child.Id,secret.Id}));
+    });
+    Check("authorized binding can open ELK1 only with full factor chain",()=>{
+        var bound=WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Gizli.emd",all);
+        Yes(LayeredEmd3.Open(File.ReadAllBytes(bound.FullPath),bound.AuthorizedFactors,password:"Şifreli not parola 2026")=="Şifreli Türkçe 🔐");
+    });
+    Check("missing independent child factor refuses binding",()=>{
+        var missing=new Dictionary<Guid,LayerSecret>{{parent.Id,parent},{secret.Id,secret}};
+        Throws<UnauthorizedAccessException>(()=>WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Gizli.emd",missing));
+    });
+    Check("wrong root workspace cannot bind",()=>Throws<System.Security.Cryptography.CryptographicException>(()=>
+        WorkspaceLockPathBinding.Resolve(locked,index,Guid.NewGuid(),parent,"Klasör/Alt/Gizli.emd",all)));
+    Check("absent filesystem node refuses binding",()=>{
+        File.Delete(target);
+        Throws<FileNotFoundException>(()=>WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Gizli.emd",all));
+        File.WriteAllBytes(target,encrypted);
+    });
+    Check("non-indexed path cannot be opened by name",()=>Throws<KeyNotFoundException>(()=>
+        WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Fake.emd",all)));
+    Check("tombstoned child folder refuses binding",()=>{
+        File.Delete(target);Directory.Delete(Path.Combine(locked,"Alt"));
+        Throws<FileNotFoundException>(()=>WorkspaceLockPathBinding.Resolve(locked,index,workspaceId,parent,"Klasör/Alt/Gizli.emd",all));
+    });
+}
+finally {Directory.Delete(locked,recursive:true);}
+
 Console.WriteLine($"{passed}/{passed+failed} Tur09 plain-md and page settings checks passed.");
 return failed==0?0:1;
