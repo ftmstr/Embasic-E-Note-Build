@@ -19,3 +19,17 @@ verification before publication.
 No compulsory cloud, subscription, paid API, ads SDK or account.
 Windows GUI, cryptographic audit, UYAP UDF, installer and license
 release gates are NOT RUN / not passed.
+
+## User-provided official E-Note icons (Tur 08)
+
+The user's verified Google Drive `Uygulama/Embasic E-Note/Logo` folder
+contains the new identity pack (six files) plus the two original
+light/dark Embasic logos. This tour copied:
+- `Embasic_E-Note.ico` 77,021 bytes, Git blob
+  `cc2dcce16b7620b4cab68220b56ef5831fc9a436`;
+- `Embasic_E-Note_Icon_512.png` 129,559 bytes, Git blob
+  `a73e3a37e932802b43e3d59cebabe934b23c7be1`.
+Both are local app resources, not remotely downloaded at runtime.
+Original `Logo-Light.png`/`Logo-Dark.png` are preserved.
+The logo/trademark redistribution permission and complete copyright
+provenance require final release verification. No font files shared.

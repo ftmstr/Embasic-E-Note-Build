@@ -72,3 +72,29 @@ access are not fully accepted. Do not use it for real notes yet.
 
 License: `Konscious.Security.Cryptography.Argon2` v1.3.1 MIT;
 `System.Security.Cryptography.ProtectedData` v10.0.14 MIT.
+
+## Tur 08: experimental ELH1 encrypted workspace ancestry index
+
+This draft is distinct from EMD2/ELK1/ELV1. `ELH1` stores metadata
+**only**: workspace GUID, root layer GUID, node GUIDs, parent GUIDs,
+layer kinds and UTF-8 relative paths. Header = ASCII ELH1 (4),
+schema version (1), workspace GUID (16), root-factor GUID (16),
+random nonce (12), little-endian encrypted payload length (4).
+Payload includes count and UUID/parent/kind/path records, encrypted
+with AES-256-GCM under a separately unlocked random 256-bit root
+`LayerSecret`; header is authenticated as AAD with 16-byte tag.
+No folder names, note paths or raw factor keys are stored in plaintext
+inside an ELH1 file. Root factor UUID must match the encrypted hierarchy
+root record; parents/paths/duplicates/traversals are validated.
+Child/subfolder/note factors are NOT inferred or automatically released;
+each ELV1 factor must still be separately unlocked and the whole
+ELK1 outer-layer chain must authenticate.
+
+`WorkspaceLockIndexDiskStore` creates a `.elh` file from authenticated
+ciphertext with same-directory encrypted temporary file, flush, and
+create-only File.Move. No plaintext document temp exists.
+A 16 MiB draft metadata size guard prevents excessive allocation and
+is not a product limit on folder count/nesting; production needs
+paginated/lazy metadata. Metadata has NOT been integrated into the real
+WPF folder tree, and path-symlink/TOCTOU, crash durability and root-key
+recovery are NOT accepted. The format remains EXPERIMENTAL.

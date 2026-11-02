@@ -37,3 +37,24 @@ Actual WPF **New Secure Note (.emd) stays DISABLED**.
 All core features must work fully offline without paid APIs, accounts,
 subscriptions, mandatory cloud or paid software licenses. MIT source
 and third-party NOTICE are tracked; transitive SBOM not yet accepted.
+
+## Tur 08 — research integration, 2026-11-02
+
+Draft [PR #8](https://github.com/ftmstr/Embasic-E-Note-Build/pull/8).
+The companion `Araştırma` conversation's A4-by-default page design and
+expanded paper formats are implemented as a .NET Core **geometry model**
+and a WPF **non-editable preview tab**. Newly provided genuine
+E-Note ICO and 512px PNG resources are bundled; the original light/dark
+Embasic theme logos remain unchanged.
+
+Experimental encrypted `ELH1` workspace root/parent/child/note GUID
+metadata now has ciphertext-only `.elh` create-only disk persistence.
+The index requires the authenticated root factor but does NOT implement
+the actual workspace UI-key relationship or transaction-safe password
+recovery. Real locked-note operation remains disabled.
+
+[Tur 08 Windows Actions evidence](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41421579049):
+Release 0 warnings/errors, 218/218 automated PASS on the code HEAD
+before documentation-only changes. See
+[research integration scope](docs/RESEARCH-INTEGRATION-TUR08.md) and
+[CI evidence and open blockers](docs/CI-EVIDENCE-TUR08.md).
