@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using Embasic.ENote.App.ViewModels;
@@ -9,6 +11,7 @@ namespace Embasic.ENote.App;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
+    private bool _darkTheme;
 
     public MainWindow()
     {
@@ -16,6 +19,23 @@ public partial class MainWindow : Window
         _viewModel = new MainViewModel(
             new WorkspaceStorage(), PickWorkspace, RequestFolderName);
         DataContext = _viewModel;
+    }
+
+    private void ToggleTheme_Click(object sender, RoutedEventArgs e)
+    {
+        _darkTheme = !_darkTheme;
+        Resources["WindowSurface"] = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(_darkTheme ? "#0F1724" : "#F7F9FC"));
+        Resources["PanelSurface"] = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(_darkTheme ? "#172131" : "#FFFFFF"));
+        Resources["PrimaryInk"] = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(_darkTheme ? "#E8EDF5" : "#172033"));
+        Resources["SecondaryInk"] = new SolidColorBrush(
+            (Color)ColorConverter.ConvertFromString(_darkTheme ? "#A8B9CE" : "#64748B"));
+        BrandLogo.Source = new BitmapImage(new Uri(_darkTheme
+            ? "pack://application:,,,/Assets/Logo-Dark.png"
+            : "pack://application:,,,/Assets/Logo-Light.png"));
+        ThemeToggleButton.Content = _darkTheme ? "Açık tema" : "Koyu tema";
     }
 
     private string? PickWorkspace()
