@@ -1,45 +1,40 @@
 # Embasic E-Note
 
-**Status — 2026-11-02:** Early, public MIT .NET 10 Windows desktop source.
-NOT a usable or released secure Markdown editor.
+**State (2026-11-02):** Public, MIT, experimental C#/.NET 10 WPF
+Windows desktop source. **Not** a released or user-ready encrypted editor.
 
-Progress to date: WPF shell (Tur 01); real folder picker, lazy tree and
-folder creation (Tur 02); user's genuine light/dark Embasic logos and
-experimental EMD1 AES-GCM/DPAPI/recovery (Tur 03); separately versioned
-experimental EMD2 password-based Argon2id key wrapping plus encrypted-only
-disk staging and optimistic conflict detection (Tur 04).
+Tur 01: WPF shell. Tur 02: local workspace selection, folder tree,
+folder creation. Tur 03: authentic light/dark Embasic logos and experimental
+EMD1 AES-256-GCM/Windows DPAPI. Tur 04: experimental EMD2 portable
+Argon2id key wrapping and ciphertext-only staging / optimistic SHA-256
+overwrite guard. Tur 05: **ERB1 encrypted recovery-secret backup in memory**,
+full EMD2 password-rotation re-encryption, explicit in-memory EMD1-to-EMD2
+migration and **design-only** independent lock authorization planning.
 
-## Important security restrictions
+## Verified source and tests
 
-- WPF's **New Secure Note (.emd)** remains disabled; it cannot safely create
-  or save real notes. The EMD2 codec and disk writer are experimental and
-  not connected to the editor UI.
-- Password/recovery setup and secure backup UX, independent
-  application/folder/subfolder/note locks, cross-user disaster recovery,
-  and external crypto review remain unfinished.
-- Same-volume temporary-write + replace and SHA-256 checks reduce ordinary
-  data-loss/overwrite errors; they do not guarantee race-free cross-process
-  CAS, and power-loss/disk-full testing remains outstanding.
-- Plain `.md` is standard UTF-8 plaintext. Encrypted `.emd` will remain
-  encrypted even when optional application and folder locks are off.
-- No Windows GUI acceptance, UDF writer/UYAP official Editor tests, export
-  acceptance or Windows install package exists yet.
+- [Tur 01 draft PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1)
+- [Tur 02 draft PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2)
+- [Tur 03 draft PR #3](https://github.com/ftmstr/Embasic-E-Note-Build/pull/3)
+- [Tur 04 draft PR #4](https://github.com/ftmstr/Embasic-E-Note-Build/pull/4)
+- [Tur 05 draft PR #5](https://github.com/ftmstr/Embasic-E-Note-Build/pull/5)
+- [Tur 05 Windows CI](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41386156447):
+  Release 0 errors/warnings, 97/97 automated checks PASS.
+- [Tur 05 technical evidence](docs/CI-EVIDENCE-TUR05.md)
+- [Encrypted backup and lock design](docs/RECOVERY-LOCK-DESIGN-TUR05.md)
+- [Experimental EMD formats](docs/EMD-DRAFT.md)
+- [Security restrictions](docs/SECURITY.md)
+- [Licensed packages](NOTICE.md)
 
-## Source and CI
+**Important:** EMD1, EMD2 and ERB1 are experimental formats. The
+`.emd` New Secure Note WPF control is **DISABLED**. A lock planning
+helper is not encryption or an access-control mechanism. Complete file
+format freeze, robust key life cycle, backup UI, folder/subfolder/note
+cryptographic locks, real Windows GUI/accessibility, crash/NTFS/ACL
+recovery, and UDF official Editor acceptance are outstanding. No
+installer/release binary is published.
 
-[Tur 01 PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1) ·
-[Tur 02 PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2) ·
-[Tur 03 PR #3](https://github.com/ftmstr/Embasic-E-Note-Build/pull/3) ·
-[Tur 04 PR #4](https://github.com/ftmstr/Embasic-E-Note-Build/pull/4).
-
-[Tur 04 corrected Windows build & 62/62 tests](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41385023814) ·
-[Tur 04 scope and negative evidence](docs/CI-EVIDENCE-TUR04.md) ·
-[EMD experimental format](docs/EMD-DRAFT.md) ·
-[License provenance](NOTICE.md).
-
-The PRs are stacked in numerical order; default `main` remains unchanged.
-The target release is fully offline with no mandatory paid API, cloud,
-account, subscription or paid runtime license. P0 printing and UDF export
-require real UYAP acceptance before version 1.0 can be declared complete.
-
-[MIT LICENSE](LICENSE)
+The project aims to be offline-first, free/open source and independent
+of paid APIs/cloud services. P0 printing, PDF/DOCX/RTF/HTML/TXT/MD
+and UDF exports are planned, not yet available. UDF compatibility must
+be verified with the real UYAP editor. No unapproved merge to `main`.
