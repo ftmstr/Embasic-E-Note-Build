@@ -106,7 +106,7 @@ Check("independent note recovery does not bypass parent and child factors", () =
 {
     using var onlyNote = LayerKeyVault.Open(noteSeparate, note.Id, note.Kind, noteRecovery, true);
     byte[] wrapped = LayeredEmd3.Seal(document, [parent,nested,note]);
-    Throws<ArgumentException>(() => LayeredEmd3.Open(wrapped, [onlyNote], password: pwd));
+    Throws<CryptographicException>(() => LayeredEmd3.Open(wrapped, [onlyNote], password: pwd));
 });
 
 string dir = Path.Combine(Path.GetTempPath(), "enote-tur07-" + Guid.NewGuid().ToString("N"));
