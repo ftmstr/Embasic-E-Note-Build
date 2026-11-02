@@ -19,6 +19,8 @@ public static class WorkspaceLockIndex
         if (workspaceId == Guid.Empty) throw new ArgumentException("Missing workspace ID.");
         if (rootFactor.Kind != LayerKind.Folder) throw new ArgumentException("Root factor required.");
         Validate(entries);
+        if (!entries.Any(x => x.Id == rootFactor.Id && x.ParentId == Guid.Empty && x.Kind == LayerKind.Folder))
+            throw new InvalidDataException("Workspace root ID must match its unlocked factor.");
         using var plainStream = new MemoryStream();
         using (var writer = new BinaryWriter(plainStream, StrictUtf8, leaveOpen: true))
         {
@@ -99,6 +101,8 @@ public static class WorkspaceLockIndex
             }
             if (stream.Position != stream.Length) throw new InvalidDataException("Trailing hierarchy data.");
             Validate(entries);
+            if (!entries.Any(x => x.Id == rootFactor.Id && x.ParentId == Guid.Empty && x.Kind == LayerKind.Folder))
+                throw new InvalidDataException("Workspace root ID does not match encrypted metadata.");
             return entries.AsReadOnly();
         }
         finally

@@ -84,6 +84,9 @@ Check("sibling path masquerade rejected", () =>
 Check("path traversal refused", () =>
     Throws<InvalidDataException>(()=>WorkspaceLockIndex.Protect(workspace,root,[
         new WorkspaceLockEntry(root.Id,Guid.Empty,LayerKind.Folder,"../Secret")])));
+Check("unrelated root ID cannot be saved under root key", () =>
+    Throws<InvalidDataException>(() => WorkspaceLockIndex.Protect(workspace, root, [
+        new WorkspaceLockEntry(Guid.NewGuid(), Guid.Empty, LayerKind.Folder, "Klasör")])));
 Check("duplicate node identity refused", () =>
     Throws<InvalidDataException>(()=>WorkspaceLockIndex.Protect(workspace,root,[index[0],index[0]])));
 Check("unlocked note ID still requires original root key", () =>
