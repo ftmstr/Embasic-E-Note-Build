@@ -38,3 +38,6 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.Tur06.Tests/Embasic.ENote.Tur06.Tests.csproj --configuration Release --no-restore
       - name: Run Tur07 encrypted independent layer vault and persistence tests
         run: dotnet run --project tests/Embasic.ENote.Tur07.Tests/Embasic.ENote.Tur07.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur08 encrypted workspace ancestry tests
+        run: dotnet run --project tests/Embasic.ENote.Tur08.Tests/Embasic.ENote.Tur08.Tests.csproj --configuration Release --no-restore
