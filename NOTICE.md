@@ -33,3 +33,11 @@ Both are local app resources, not remotely downloaded at runtime.
 Original `Logo-Light.png`/`Logo-Dark.png` are preserved.
 The logo/trademark redistribution permission and complete copyright
 provenance require final release verification. No font files shared.
+
+## Tur 09 dependency and source isolation
+This tour adds no new NuGet package, font, cloud SDK or advertising
+dependency. It uses .NET BCL local filesystem/JSON/cryptography and
+existing WPF features. Genuine original light/dark Embasic logo blobs
+and new user-provided E-Note ICO/512 PNG resources are unchanged.
+Full transitive NOTICE/SBOM/license verification and user trademark
+rights must still pass before any public installer/release.
