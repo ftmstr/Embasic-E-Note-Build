@@ -1,45 +1,44 @@
 # Embasic E-Note
 
-**Status (1 November 2026):** Early .NET 10 / WPF desktop source under review.
-Tur 02 adds a real local folder picker, a lazy-loading directory tree,
-folder creation and refresh. A usable Markdown editor, encrypted `.emd`
-implementation, Windows GUI acceptance and an installable v1.0 release
-**do not yet exist**.
+**Current state (2026-11-02): Experimental Windows desktop source, not a released encrypted editor.**
 
-## Development and evidence
+Tur 01: .NET 10 WPF solution scaffold. Tur 02: workspace selection,
+folder tree, folder creation and Unicode filesystem smoke checks.
+Tur 03: experimental in-memory EMD1 AES-256-GCM container with per-file
+random key, DPAPI CurrentUser key wrapping and optional random recovery
+secret. The user's official light/dark Embasic logos are embedded as
+offline WPF resources with a theme toggle.
 
-- [Tur 01 WPF scaffold PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1)
-- [Tur 02 workspace tree PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2)
-- [Verified Tur 02 Windows CI](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41330908174): Release build with zero warnings/errors, **17/17 smoke checks passed**.
-- [Windows CI details and limitations](docs/CI-EVIDENCE-TUR02.md)
-- [Developer guide](docs/DEVELOPMENT.md)
-- [Current security limitations](docs/SECURITY.md)
+**Warning:** Secure note creation/open/save, portable Argon2id password mode,
+independent folder/note locks, atomic ciphertext disk writes, key backup UX,
+Markdown editor and printing/UDF are NOT IMPLEMENTED. In particular the
+`.emd` UI button stays DISABLED. Experimental EMD1 is not a frozen format
+and should not be used for real user notes.
 
-Tur 02 is a **stacked draft PR** based on Tur 01's feature branch.
-The `main` branch has not been changed as part of this work.
+## Engineering evidence
 
-## Planned note formats and security
+- [Tur 01 draft PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1)
+- [Tur 02 draft PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2)
+- [Tur 03 draft PR #3](https://github.com/ftmstr/Embasic-E-Note-Build/pull/3)
+- [Tur 03 last verified CI (build, 17/17 storage + 15/15 experimental EMD)](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41383011430)
+- [Experimental EMD specification](docs/EMD-DRAFT.md)
+- [Official asset provenance](docs/ASSET-PROVENANCE-TUR03.md)
+- [Developer setup](docs/DEVELOPMENT.md)
+- [Security release limitations](docs/SECURITY.md)
 
-- `.md` is standard, **unencrypted** Markdown.
-- `.emd` (Embasic Mark Down) will be a public, versioned encrypted format,
-  independent of optional application, folder and note locks.
-- Existing `.emd` filenames appear in the tree but cannot be opened,
-  created or saved. No plaintext fallback is permitted.
-- The open format may be implemented by third parties; confidentiality
-  will rely on authenticated encryption and secret key management.
+These are stacked feature PRs; main is unchanged. Build and automated
+smoke-test success do not prove real Windows GUI/keyboard/DPI acceptance.
 
-## Planned v1.0 features and release gates
+## Product goal
 
-Local folders and files; hierarchical folders with custom icons; tabbed
-Markdown editing and safe preview; encryption, key recovery and independent
-locks; Windows printing and PDF/DOCX/RTF/HTML/TXT/MD export; separately
-developed UDF writer proven by real UYAP editor open/save tests.
+Fully offline, MIT-licensed Windows Markdown editor. Standard `.md` remains
+plain UTF-8 text; planned `.emd` is independently encrypted even without
+optional UI/folder/note locks. Planned P0 exports: Windows print,
+PDF/DOCX/RTF/HTML/TXT/MD and UDF writer validated with real UYAP Editor.
+A left-panel-only advertisement area must never see note content or keys.
 
-An isolated advertising slot is restricted to the lower left folder panel;
-the app must remain offline-first and free of mandatory paid services.
-No advertising SDK was introduced.
+No required subscription, cloud account, paid SDK or online activation.
+The Microsoft ProtectedData package (10.0.14) is MIT licensed; a full
+license/SBOM and physical Windows release acceptance are outstanding.
 
-## License
-
-[MIT](LICENSE). Before release, validate all third-party runtime licenses,
-third-party notices, SBOM and the installer acceptance criteria.
+[MIT license](LICENSE)
