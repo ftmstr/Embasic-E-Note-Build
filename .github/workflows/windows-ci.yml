@@ -17,7 +17,7 @@ permissions:
 jobs:
   build-and-smoke:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -35,5 +35,7 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.Emd.Tests/Embasic.ENote.Emd.Tests.csproj --configuration Release --no-restore
       - name: Run portable EMD2 and encrypted disk tests
         run: dotnet run --project tests/Embasic.ENote.Portable.Tests/Embasic.ENote.Portable.Tests.csproj --configuration Release --no-restore
-      - name: Run encrypted recovery backup rotation migration and lock-planning tests
+      - name: Run recovery backup rotation migration and lock-planning tests
         run: dotnet run --project tests/Embasic.ENote.Security.Tests/Embasic.ENote.Security.Tests.csproj --configuration Release --no-restore
+      - name: Run experimental layered encryption lifecycle and recovery-disk tests
+        run: dotnet run --project tests/Embasic.ENote.Tur06.Tests/Embasic.ENote.Tur06.Tests.csproj --configuration Release --no-restore
