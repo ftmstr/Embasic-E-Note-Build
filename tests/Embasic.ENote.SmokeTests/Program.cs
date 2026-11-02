@@ -1,3 +1,4 @@
+using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Core.Notes;
 using Embasic.ENote.Storage;
 using Embasic.ENote.Storage.Workspaces;
@@ -113,6 +114,33 @@ var checks = new (string Name, Func<Task> Run)[]
             await ExpectThrows<OperationCanceledException>(() =>
                 storage.ListChildrenAsync(storage.OpenExisting(path), path, cancelled.Token));
         }))
+,
+    ("A4 default page setup", () => Check(PageLayoutSettings.Default.Paper.Id == "A4" &&
+        PageLayoutSettings.Default.WidthMm == 210m && PageLayoutSettings.Default.HeightMm == 297m)),
+    ("A4 landscape dimensions swap", () => Check(PageLayoutSettings.Default with { Landscape = true } is var p &&
+        p.WidthMm == 297m && p.HeightMm == 210m)),
+    ("all research paper sizes present", () => Check(new[] {"A2","A3","A4","A5","A6","ISO-B4","ISO-B5","JIS-B5","Letter","Legal","Tabloid","Executive","Custom"}
+        .All(id => PageLayoutCatalog.Presets.Any(p => p.Id == id)))),
+    ("ISO and Japanese B5 differ", () => Check(PageLayoutCatalog.Get("ISO-B5").WidthMm == 176m &&
+        PageLayoutCatalog.Get("JIS-B5").WidthMm == 182m)),
+    ("US Letter dimensions", () => Check(PageLayoutCatalog.Get("Letter").WidthMm == 215.9m &&
+        PageLayoutCatalog.Get("Letter").HeightMm == 279.4m)),
+    ("custom paper within bounds", () => Check(PageLayoutCatalog.Custom(230m, 340m).Id == "Custom")),
+    ("reject too-small custom paper", async () => await ExpectThrows<ArgumentOutOfRangeException>(() =>
+        { _ = PageLayoutCatalog.Custom(20m, 297m); return Task.CompletedTask; })),
+    ("reject too-large custom paper", async () => await ExpectThrows<ArgumentOutOfRangeException>(() =>
+        { _ = PageLayoutCatalog.Custom(210m, 2500m); return Task.CompletedTask; })),
+    ("printable area subtracts margins", () => Check(PageLayoutSettings.Default.PrintableWidthMm == 170m &&
+        PageLayoutSettings.Default.PrintableHeightMm == 257m)),
+    ("invalid margins refuse content overflow", async () => await ExpectThrows<ArgumentOutOfRangeException>(() =>
+        { _ = PageLayoutSettings.Default with { LeftMarginMm = 120m, RightMarginMm = 120m }; return Task.CompletedTask; })),
+    ("invalid zoom below minimum", async () => await ExpectThrows<ArgumentOutOfRangeException>(() =>
+        { _ = PageLayoutSettings.Default with { ZoomPercent = 45 }; return Task.CompletedTask; })),
+    ("zoom upper bound accepted", () => Check((PageLayoutSettings.Default with { ZoomPercent = 150 }).ZoomPercent == 150)),
+    ("page settings are per-document immutable snapshots", () => Check((PageLayoutSettings.Default with { Landscape = true }).Landscape &&
+        !PageLayoutSettings.Default.Landscape)),
+    ("unknown page size rejected", async () => await ExpectThrows<KeyNotFoundException>(() =>
+        { _ = PageLayoutCatalog.Get("Unknown"); return Task.CompletedTask; }))
 };
 
 var failures = 0;

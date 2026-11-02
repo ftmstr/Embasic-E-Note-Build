@@ -6,6 +6,7 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <AssemblyName>Embasic.ENote.App</AssemblyName>
     <RootNamespace>Embasic.ENote.App</RootNamespace>
+    <ApplicationIcon>Assets/Embasic-E-Note.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Embasic.ENote.Core/Embasic.ENote.Core.csproj" />
@@ -14,5 +15,7 @@
   <ItemGroup>
     <Resource Include="Assets/Logo-Light.png" />
     <Resource Include="Assets/Logo-Dark.png" />
+    <Resource Include="Assets/Embasic-E-Note.ico" />
+    <Resource Include="Assets/Embasic-E-Note-Icon-512.png" />
   </ItemGroup>
 </Project>

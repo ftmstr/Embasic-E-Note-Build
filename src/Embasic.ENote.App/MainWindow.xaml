@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Embasic.ENote.App.ViewModels"
         Title="Embasic E-Note — Çalışma Alanı Önizlemesi"
+        Icon="/Embasic.ENote.App;component/Assets/Embasic-E-Note.ico"
         Width="1200" Height="780" MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource WindowSurface}" FontFamily="Segoe UI">
@@ -113,6 +114,64 @@
                                        Foreground="#9A3412"
                                        Text="Güvenlik: .emd şifreleme ve anahtar yönetimi uygulanana kadar .emd oluşturma, açma ve kaydetme devre dışı."/>
                         </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Sayfa Düzeni (önizleme)">
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <Image Source="/Embasic.ENote.App;component/Assets/Embasic-E-Note-Icon-512.png"
+                                           Width="36" Height="36" Stretch="Uniform" Margin="0,0,9,0"
+                                           AutomationProperties.Name="Embasic E-Note yeni uygulama simgesi"/>
+                                    <TextBlock VerticalAlignment="Center" Text="Sayfa Düzeni" FontWeight="Bold"
+                                               FontSize="19" Foreground="{DynamicResource PrimaryInk}"/>
+                                </StackPanel>
+                                <TextBlock Text="Kâğıt boyutu" Foreground="{DynamicResource PrimaryInk}"/>
+                                <ComboBox x:Name="PageSizeComboBox" Height="32" DisplayMemberPath="Name"
+                                          Margin="0,6,0,12" SelectionChanged="PageLayout_Changed"
+                                          AutomationProperties.Name="Kâğıt boyutu seç"/>
+                                <TextBlock Text="Sayfa yönü" Foreground="{DynamicResource PrimaryInk}"/>
+                                <ComboBox x:Name="PageOrientationComboBox" Height="32" Margin="0,6,0,12"
+                                          SelectedIndex="0" SelectionChanged="PageLayout_Changed"
+                                          AutomationProperties.Name="Sayfa yönünü seç">
+                                    <ComboBoxItem Content="Dikey"/>
+                                    <ComboBoxItem Content="Yatay"/>
+                                </ComboBox>
+                                <TextBlock Text="Yakınlaştırma" Foreground="{DynamicResource PrimaryInk}"/>
+                                <ComboBox x:Name="PageZoomComboBox" Height="32" Margin="0,6,0,12"
+                                          SelectedIndex="2" SelectionChanged="PageLayout_Changed"
+                                          AutomationProperties.Name="Sayfa yakınlaştırması">
+                                    <ComboBoxItem Content="%50" Tag="50"/>
+                                    <ComboBoxItem Content="%75" Tag="75"/>
+                                    <ComboBoxItem Content="%100" Tag="100"/>
+                                    <ComboBoxItem Content="%125" Tag="125"/>
+                                    <ComboBoxItem Content="%150" Tag="150"/>
+                                </ComboBox>
+                                <TextBlock Text="Kenar boşlukları: 20 mm (örnek)"
+                                           Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"/>
+                                <TextBlock Text="Özel ölçüler, yazdırma ve PDF için nihai belge modeli henüz uygulanmadı."
+                                           Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"
+                                           Margin="0,12,4,0"/>
+                                <TextBlock Text="Bu ekran yalnız geometri önizlemesidir; notu kaydetmez veya yazdırmaz."
+                                           Foreground="#9A3412" TextWrapping="Wrap" Margin="0,12,4,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Center"
+                                        VerticalAlignment="Center" Margin="22,0,12,0">
+                                <Border x:Name="PagePreviewBorder" Width="148" Height="210"
+                                        Background="White" BorderBrush="#94A3B8" BorderThickness="1">
+                                    <TextBlock Text="A4&#10;Sayfa önizlemesi" FontSize="14" Foreground="#475569"
+                                               TextAlignment="Center" TextWrapping="Wrap"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="PageLayoutSummary" Text="A4 · 210 × 297 mm · Dikey"
+                                           Foreground="{DynamicResource PrimaryInk}"
+                                           TextAlignment="Center" Margin="0,12,0,0"
+                                           AutomationProperties.Name="Seçilen sayfa ölçüleri"/>
+                            </StackPanel>
+                        </Grid>
                     </TabItem>
                 </TabControl>
             </Grid>
