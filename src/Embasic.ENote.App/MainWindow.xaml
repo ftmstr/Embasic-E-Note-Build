@@ -2,11 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Embasic.ENote.App.ViewModels"
-        Title="Embasic E-Note — Çalışma Alanı Önizlemesi"
+        Title="Embasic E-Note — Markdown Düzenleyici (deneysel)"
         Icon="/Embasic.ENote.App;component/Assets/Embasic-E-Note.ico"
         Width="1200" Height="780" MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowSurface}" FontFamily="Segoe UI">
+        Background="{DynamicResource WindowSurface}" FontFamily="Segoe UI"
+        PreviewKeyDown="Window_PreviewKeyDown" Closing="Window_Closing">
     <Window.Resources>
         <SolidColorBrush x:Key="WindowSurface" Color="#F7F9FC"/>
         <SolidColorBrush x:Key="PanelSurface" Color="#FFFFFF"/>
@@ -40,7 +41,7 @@
                        AutomationProperties.Name="Embasic gerçek marka logosu"/>
                 <TextBlock Text="E-Note" FontWeight="SemiBold" FontSize="17"
                            Foreground="{DynamicResource PrimaryInk}"/>
-                <TextBlock Text="  ·  TUR 03 / şifreleme altyapısı"
+                <TextBlock Text="  ·  TUR 09 / .md metin düzenleme"
                            FontSize="12" Foreground="{DynamicResource SecondaryInk}" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
@@ -114,6 +115,46 @@
                                        Foreground="#9A3412"
                                        Text="Güvenlik: .emd şifreleme ve anahtar yönetimi uygulanana kadar .emd oluşturma, açma ve kaydetme devre dışı."/>
                         </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Notlar (.md)">
+                        <DockPanel Margin="10">
+                            <StackPanel DockPanel.Dock="Top">
+                                <WrapPanel Margin="0,0,0,8">
+                                    <Button Content="Yeni .md (Ctrl+Alt+N)" Click="NewMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button Content="Sekmeyi Kapat" Click="CloseMarkdown_Click" Padding="8,5"/>
+                                </WrapPanel>
+                                <TextBlock Text="Düz Markdown (.md) metin editörü · Çoklu sekme · Harici değişiklikte kayıt reddi · Şifreli .emd kapalı"
+                                           Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <TextBlock x:Name="MarkdownStatusText"
+                                           Text="Bir .md dosyası açın. Görsel WYSIWYG ve PDF henüz uygulanmadı."
+                                           Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            </StackPanel>
+                            <TabControl x:Name="MarkdownTabs" SelectionChanged="MarkdownTabs_SelectionChanged"
+                                        AutomationProperties.Name="Açık Markdown belgeleri">
+                                <TabControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding DisplayTitle}" />
+                                    </DataTemplate>
+                                </TabControl.ItemTemplate>
+                                <TabControl.ContentTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1"
+                                                Margin="8" Padding="15">
+                                            <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                                                     VerticalScrollBarVisibility="Auto"
+                                                     HorizontalScrollBarVisibility="Auto"
+                                                     FontFamily="Consolas" FontSize="14" BorderThickness="0"
+                                                     Background="White" Foreground="#1E293B"
+                                                     SpellCheck.IsEnabled="False"
+                                                     AutomationProperties.Name="Düz Markdown metin alanı"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </TabControl.ContentTemplate>
+                            </TabControl>
+                        </DockPanel>
                     </TabItem>
                     <TabItem Header="Sayfa Düzeni (önizleme)">
                         <Grid Margin="20">
