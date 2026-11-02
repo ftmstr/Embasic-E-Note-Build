@@ -1,5 +1,4 @@
 name: Windows .NET 10 CI
-
 on:
   push:
     branches:
@@ -10,14 +9,12 @@ on:
       - main
       - 'feature/**'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   build-and-smoke:
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -39,3 +36,5 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.Security.Tests/Embasic.ENote.Security.Tests.csproj --configuration Release --no-restore
       - name: Run experimental layered encryption lifecycle and recovery-disk tests
         run: dotnet run --project tests/Embasic.ENote.Tur06.Tests/Embasic.ENote.Tur06.Tests.csproj --configuration Release --no-restore
+      - name: Run Tur07 encrypted independent layer vault and persistence tests
+        run: dotnet run --project tests/Embasic.ENote.Tur07.Tests/Embasic.ENote.Tur07.Tests.csproj --configuration Release --no-restore
