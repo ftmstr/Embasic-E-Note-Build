@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
+using Embasic.ENote.Core.Printing;
 using Microsoft.Win32;
 using Embasic.ENote.App.ViewModels;
 using Embasic.ENote.Storage.Workspaces;
@@ -19,6 +20,9 @@ public partial class MainWindow : Window
         _viewModel = new MainViewModel(
             new WorkspaceStorage(), PickWorkspace, RequestFolderName);
         DataContext = _viewModel;
+        PageSizeComboBox.ItemsSource = PageLayoutCatalog.Presets;
+        PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
+        Loaded += (_, _) => UpdatePagePreview();
     }
 
     private void ToggleTheme_Click(object sender, RoutedEventArgs e)
@@ -36,6 +40,35 @@ public partial class MainWindow : Window
             ? "pack://application:,,,/Assets/Logo-Dark.png"
             : "pack://application:,,,/Assets/Logo-Light.png"));
         ThemeToggleButton.Content = _darkTheme ? "Açık tema" : "Koyu tema";
+    }
+
+    private void PageLayout_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded || PageSizeComboBox is null ||
+            PageZoomComboBox is null || PageOrientationComboBox is null) return;
+        UpdatePagePreview();
+    }
+
+    private void UpdatePagePreview()
+    {
+        if (PageSizeComboBox.SelectedItem is not PagePaper paper) return;
+        var landscape = PageOrientationComboBox.SelectedIndex == 1;
+        var zoomItem = PageZoomComboBox.SelectedItem as ComboBoxItem;
+        int zoom = int.TryParse(zoomItem?.Tag?.ToString(), out int z) ? z : 100;
+        var setup = PageLayoutSettings.Default with
+        {
+            Paper = paper,
+            Landscape = landscape,
+            ZoomPercent = zoom
+        };
+        setup.Validate();
+        double scale = Math.Min(220d / (double)setup.WidthMm,
+            300d / (double)setup.HeightMm) * (zoom / 100d);
+        PagePreviewBorder.Width = (double)setup.WidthMm * scale;
+        PagePreviewBorder.Height = (double)setup.HeightMm * scale;
+        PageLayoutSummary.Text =
+            $"{paper.Name} · {setup.WidthMm} × {setup.HeightMm} mm · " +
+            $"{(landscape ? "Yatay" : "Dikey")} · %{zoom}";
     }
 
     private string? PickWorkspace()
