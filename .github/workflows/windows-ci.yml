@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+      - 'feature/**'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +17,7 @@ permissions:
 jobs:
   build-and-smoke:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -28,5 +29,7 @@ jobs:
         run: dotnet restore Embasic.ENote.slnx
       - name: Build Windows WPF solution
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
-      - name: Run framework-free smoke tests
+      - name: Run storage smoke tests
         run: dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj --configuration Release --no-restore
+      - name: Run Windows DPAPI and EMD draft tests
+        run: dotnet run --project tests/Embasic.ENote.Emd.Tests/Embasic.ENote.Emd.Tests.csproj --configuration Release --no-restore

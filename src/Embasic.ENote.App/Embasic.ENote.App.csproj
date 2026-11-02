@@ -11,4 +11,8 @@
     <ProjectReference Include="../Embasic.ENote.Core/Embasic.ENote.Core.csproj" />
     <ProjectReference Include="../Embasic.ENote.Storage/Embasic.ENote.Storage.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets/Logo-Light.png" />
+    <Resource Include="Assets/Logo-Dark.png" />
+  </ItemGroup>
 </Project>
