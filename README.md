@@ -58,3 +58,32 @@ Release 0 warnings/errors, 218/218 automated PASS on the code HEAD
 before documentation-only changes. See
 [research integration scope](docs/RESEARCH-INTEGRATION-TUR08.md) and
 [CI evidence and open blockers](docs/CI-EVIDENCE-TUR08.md).
+
+## Tur 09 — plaintext Markdown editor foundation (2026-11-02)
+
+[Draft PR #9](https://github.com/ftmstr/Embasic-E-Note-Build/pull/9)
+adds a **plain `.md`-only** WPF multi-tab **source text** editor and
+per-document page-layout sidecar. It is NOT a Word/UYAP WYSIWYG editor.
+Saved Markdown remains interoperable UTF-8 text. The editor displays
+unsaved-change indicators, asks before discarding changes and refuses
+stale SHA-256 writes. Ctrl+O opens, Ctrl+S saves; Ctrl+Alt+N creates
+plain `.md`; Ctrl+N is reserved for a DISABLED secure `.emd` flow.
+Custom page geometry remains in Core, with sidecar JSON for plain
+Markdown only (not inside `.md`).
+
+A separate, still experimental read-only
+`WorkspaceLockPathBinding` performs authenticated ELH1 root GUID
+validation, filesystem existence/path-segment checks and authorization
+to require **all** independently unlocked ELV1/ELK1 factors before a
+locked note could be decrypted. It is not connected to the WPF tree
+and is not race-free vs hostile reparse/path swaps. Secure `.emd`
+note creation/open/save stays DISABLED.
+
+[Tur09 Windows CI run](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41500273510):
+Windows Release 0 errors/warnings, **249/249** automated PASS on
+source HEAD prior to docs commit. See
+[Tur09 technical report](docs/CI-EVIDENCE-TUR09.md).
+
+No actual interactive Windows GUI/DPI, printing, PDF/DOCX/RTF/UDF
+exports or native UYAP Editor acceptance passed. The WPF editor
+source-text milestone and sidecar are NOT a complete product release.
