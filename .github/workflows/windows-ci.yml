@@ -33,3 +33,5 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj --configuration Release --no-restore
       - name: Run Windows DPAPI and EMD draft tests
         run: dotnet run --project tests/Embasic.ENote.Emd.Tests/Embasic.ENote.Emd.Tests.csproj --configuration Release --no-restore
+      - name: Run Argon2id portable and encrypted-disk negative tests
+        run: dotnet run --project tests/Embasic.ENote.Portable.Tests/Embasic.ENote.Portable.Tests.csproj --configuration Release --no-restore

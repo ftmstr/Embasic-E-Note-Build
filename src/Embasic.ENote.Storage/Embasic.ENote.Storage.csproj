@@ -4,5 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Embasic.ENote.Core/Embasic.ENote.Core.csproj" />
+    <ProjectReference Include="../Embasic.ENote.Emd/Embasic.ENote.Emd.csproj" />
   </ItemGroup>
 </Project>

@@ -1,44 +1,45 @@
 # Embasic E-Note
 
-**Current state (2026-11-02): Experimental Windows desktop source, not a released encrypted editor.**
+**Status — 2026-11-02:** Early, public MIT .NET 10 Windows desktop source.
+NOT a usable or released secure Markdown editor.
 
-Tur 01: .NET 10 WPF solution scaffold. Tur 02: workspace selection,
-folder tree, folder creation and Unicode filesystem smoke checks.
-Tur 03: experimental in-memory EMD1 AES-256-GCM container with per-file
-random key, DPAPI CurrentUser key wrapping and optional random recovery
-secret. The user's official light/dark Embasic logos are embedded as
-offline WPF resources with a theme toggle.
+Progress to date: WPF shell (Tur 01); real folder picker, lazy tree and
+folder creation (Tur 02); user's genuine light/dark Embasic logos and
+experimental EMD1 AES-GCM/DPAPI/recovery (Tur 03); separately versioned
+experimental EMD2 password-based Argon2id key wrapping plus encrypted-only
+disk staging and optimistic conflict detection (Tur 04).
 
-**Warning:** Secure note creation/open/save, portable Argon2id password mode,
-independent folder/note locks, atomic ciphertext disk writes, key backup UX,
-Markdown editor and printing/UDF are NOT IMPLEMENTED. In particular the
-`.emd` UI button stays DISABLED. Experimental EMD1 is not a frozen format
-and should not be used for real user notes.
+## Important security restrictions
 
-## Engineering evidence
+- WPF's **New Secure Note (.emd)** remains disabled; it cannot safely create
+  or save real notes. The EMD2 codec and disk writer are experimental and
+  not connected to the editor UI.
+- Password/recovery setup and secure backup UX, independent
+  application/folder/subfolder/note locks, cross-user disaster recovery,
+  and external crypto review remain unfinished.
+- Same-volume temporary-write + replace and SHA-256 checks reduce ordinary
+  data-loss/overwrite errors; they do not guarantee race-free cross-process
+  CAS, and power-loss/disk-full testing remains outstanding.
+- Plain `.md` is standard UTF-8 plaintext. Encrypted `.emd` will remain
+  encrypted even when optional application and folder locks are off.
+- No Windows GUI acceptance, UDF writer/UYAP official Editor tests, export
+  acceptance or Windows install package exists yet.
 
-- [Tur 01 draft PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1)
-- [Tur 02 draft PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2)
-- [Tur 03 draft PR #3](https://github.com/ftmstr/Embasic-E-Note-Build/pull/3)
-- [Tur 03 last verified CI (build, 17/17 storage + 15/15 experimental EMD)](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41383011430)
-- [Experimental EMD specification](docs/EMD-DRAFT.md)
-- [Official asset provenance](docs/ASSET-PROVENANCE-TUR03.md)
-- [Developer setup](docs/DEVELOPMENT.md)
-- [Security release limitations](docs/SECURITY.md)
+## Source and CI
 
-These are stacked feature PRs; main is unchanged. Build and automated
-smoke-test success do not prove real Windows GUI/keyboard/DPI acceptance.
+[Tur 01 PR #1](https://github.com/ftmstr/Embasic-E-Note-Build/pull/1) ·
+[Tur 02 PR #2](https://github.com/ftmstr/Embasic-E-Note-Build/pull/2) ·
+[Tur 03 PR #3](https://github.com/ftmstr/Embasic-E-Note-Build/pull/3) ·
+[Tur 04 PR #4](https://github.com/ftmstr/Embasic-E-Note-Build/pull/4).
 
-## Product goal
+[Tur 04 corrected Windows build & 62/62 tests](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/41385023814) ·
+[Tur 04 scope and negative evidence](docs/CI-EVIDENCE-TUR04.md) ·
+[EMD experimental format](docs/EMD-DRAFT.md) ·
+[License provenance](NOTICE.md).
 
-Fully offline, MIT-licensed Windows Markdown editor. Standard `.md` remains
-plain UTF-8 text; planned `.emd` is independently encrypted even without
-optional UI/folder/note locks. Planned P0 exports: Windows print,
-PDF/DOCX/RTF/HTML/TXT/MD and UDF writer validated with real UYAP Editor.
-A left-panel-only advertisement area must never see note content or keys.
+The PRs are stacked in numerical order; default `main` remains unchanged.
+The target release is fully offline with no mandatory paid API, cloud,
+account, subscription or paid runtime license. P0 printing and UDF export
+require real UYAP acceptance before version 1.0 can be declared complete.
 
-No required subscription, cloud account, paid SDK or online activation.
-The Microsoft ProtectedData package (10.0.14) is MIT licensed; a full
-license/SBOM and physical Windows release acceptance are outstanding.
-
-[MIT license](LICENSE)
+[MIT LICENSE](LICENSE)
