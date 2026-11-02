@@ -108,20 +108,20 @@ try
         string mdTarget = Path.Combine(folder, "forbidden.md");
         Test("ciphertext-only new file saved and roundtrip decrypted", () =>
         {
-            var version = store.Save(target, bytes);
+            var version = store.Save(target, encrypted);
             Assert(version == store.Read(target).Sha256);
             Assert(PortableEmd.Decrypt(store.Read(target).Envelope, recoverySecret: recovery) == plain);
             Assert(!Convert.ToHexString(File.ReadAllBytes(target))
                  .Contains(Convert.ToHexString(Encoding.UTF8.GetBytes(plain))));
         });
         Test("duplicate creation fails closed", () =>
-            Fails<IOException>(() => store.Save(target, bytes)));
+            Fails<IOException>(() => store.Save(target, encrypted)));
         Test("stale digest refuses replacement", () =>
-            Fails<IOException>(() => store.Save(target, bytes, new string('A', 64))));
+            Fails<IOException>(() => store.Save(target, encrypted, new string('A', 64))));
         Test("new version with valid digest replaces atomically", () =>
         {
             var snapshot = store.Read(target);
-            var replaced = store.Save(target, bytes, snapshot.Sha256);
+            var replaced = store.Save(target, encrypted, snapshot.Sha256);
             Assert(replaced == store.Read(target).Sha256);
         });
         Test("external mutation makes snapshot stale", () =>
@@ -130,24 +130,30 @@ try
             var changed = File.ReadAllBytes(target);
             changed[^1] ^= 1;
             File.WriteAllBytes(target, changed);
-            Fails<IOException>(() => store.Save(target, bytes, snapshot.Sha256));
+            Fails<IOException>(() => store.Save(target, encrypted, snapshot.Sha256));
         });
         Test("corruption is rejected at decryption after read", () =>
             Fails<CryptographicException>(() =>
                 PortableEmd.Decrypt(store.Read(target).Envelope, recoverySecret: recovery)));
         Test("encrypted writer denies md extension", () =>
-            Fails<NotSupportedException>(() => store.Save(mdTarget, bytes)));
-        Test("encrypted writer denies arbitrary plain bytes", () =>
-            Fails<InvalidDataException>(() => store.Save(Path.Combine(folder, "raw.emd"), "plaintext"u8)));
+            Fails<NotSupportedException>(() => store.Save(mdTarget, encrypted)));
+        Test("encrypted store rejects plain bytes read from disk", () =>
+        {
+            var invalid = Path.Combine(folder, "raw.emd");
+            File.WriteAllBytes(invalid, "plaintext"u8.ToArray());
+            Fails<InvalidDataException>(() => store.Read(invalid));
+        });
         Test("missing parent directory rejected", () =>
             Fails<DirectoryNotFoundException>(() =>
-                store.Save(Path.Combine(folder, "missing", "file.emd"), bytes)));
+                store.Save(Path.Combine(folder, "missing", "file.emd"), encrypted)));
         Test("new file write does not leave temporary files", () =>
             Assert(!Directory.EnumerateFiles(folder, "*.enc-tmp").Any()));
         Test("unsupported EMD1 encrypted data rejected by EMD2 store", () =>
         {
             var legacy = EmdDraftCodec.Encrypt("test", protector);
-            Fails<InvalidDataException>(() => store.Save(Path.Combine(folder, "old.emd"), legacy.Envelope));
+            var old = Path.Combine(folder, "old.emd");
+            File.WriteAllBytes(old, legacy.Envelope);
+            Fails<InvalidDataException>(() => store.Read(old));
         });
     }
     finally { Directory.Delete(folder, recursive: true); }

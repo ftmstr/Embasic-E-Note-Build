@@ -1,5 +1,6 @@
 using System.IO;
 using System.Security.Cryptography;
+using Embasic.ENote.Emd;
 
 namespace Embasic.ENote.Storage;
 
@@ -27,11 +28,12 @@ public sealed class EncryptedNoteDiskStore
     /// This only protects cooperating writers in one process; external changes
     /// between comparison and File.Replace are a documented residual race.
     /// </param>
-    public string Save(string path, ReadOnlySpan<byte> encryptedEnvelope, string? expectedDigest = null)
+    public string Save(string path, PortableEmdResult encryptedDocument, string? expectedDigest = null)
     {
         string full = ValidatePath(path);
-        ValidateEnvelope(encryptedEnvelope);
-        byte[] ciphertext = encryptedEnvelope.ToArray();
+        ArgumentNullException.ThrowIfNull(encryptedDocument);
+        byte[] ciphertext = encryptedDocument.Envelope;
+        ValidateEnvelope(ciphertext);
         var gate = Gates.GetOrAdd(full, _ => new object());
         try
         {

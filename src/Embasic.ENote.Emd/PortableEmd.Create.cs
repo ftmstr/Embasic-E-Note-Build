@@ -114,4 +114,17 @@ public static partial class PortableEmd
     }
 }
 
-public sealed record PortableEmdResult(byte[] Envelope, byte[]? RecoverySecret);
+/// <summary>Opaque output from the EMD2 encryptor; users cannot construct it
+/// from arbitrary plaintext or malformed bytes. Accessors return copies.</summary>
+public sealed class PortableEmdResult
+{
+    private readonly byte[] _envelope;
+    private readonly byte[]? _recovery;
+    internal PortableEmdResult(byte[] envelope, byte[]? recovery)
+    {
+        _envelope = envelope.ToArray();
+        _recovery = recovery?.ToArray();
+    }
+    public byte[] Envelope => _envelope.ToArray();
+    public byte[]? RecoverySecret => _recovery?.ToArray();
+}
