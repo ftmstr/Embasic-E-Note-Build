@@ -82,6 +82,33 @@ Check("rotation using recovery credential succeeds", () =>
 });
 Check("rotation with wrong current password rejected", () => Throws<CryptographicException>(() => LayerKeyVault.Rotate(parentVault, parent.Id, parent.Kind, "wrong current password 12345", next, rec)));
 
+const string childPassword = "Alt klasör için farklı parola 2026";
+const string childRecovery = "Alt klasör ayrı kurtarma 2026";
+const string notePassword = "Not için ayrı özel parola 2026";
+const string noteRecovery = "Not ayrı kurtarma parolası 2026";
+byte[] childSeparate = LayerKeyVault.Create(nested, childPassword, childRecovery);
+byte[] noteSeparate = LayerKeyVault.Create(note, notePassword, noteRecovery);
+Check("parent password alone cannot recover separately locked subfolder", () =>
+    Throws<CryptographicException>(() => LayerKeyVault.Open(childSeparate, nested.Id, nested.Kind, pwd)));
+Check("parent recovery alone cannot recover independently protected child", () =>
+    Throws<CryptographicException>(() => LayerKeyVault.Open(childSeparate, nested.Id, nested.Kind, rec, true)));
+Check("subfolder password cannot recover separately protected note", () =>
+    Throws<CryptographicException>(() => LayerKeyVault.Open(noteSeparate, note.Id, note.Kind, childPassword)));
+Check("independent per-layer credentials can reconstruct required factors", () =>
+{
+    using var p = LayerKeyVault.Open(parentVault, parent.Id, parent.Kind, pwd);
+    using var c = LayerKeyVault.Open(childSeparate, nested.Id, nested.Kind, childPassword);
+    using var n = LayerKeyVault.Open(noteSeparate, note.Id, note.Kind, notePassword);
+    byte[] wrapped = LayeredEmd3.Seal(document, [p,c,n]);
+    Yes(LayeredEmd3.Open(wrapped, [p,c,n], password: pwd) == textValue);
+});
+Check("independent note recovery does not bypass parent and child factors", () =>
+{
+    using var onlyNote = LayerKeyVault.Open(noteSeparate, note.Id, note.Kind, noteRecovery, true);
+    byte[] wrapped = LayeredEmd3.Seal(document, [parent,nested,note]);
+    Throws<ArgumentException>(() => LayeredEmd3.Open(wrapped, [onlyNote], password: pwd));
+});
+
 string dir = Path.Combine(Path.GetTempPath(), "enote-tur07-" + Guid.NewGuid().ToString("N"));
 Directory.CreateDirectory(dir);
 try
