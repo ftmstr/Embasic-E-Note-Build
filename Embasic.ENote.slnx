@@ -5,5 +5,6 @@
   <Project Path="src/Embasic.ENote.Storage/Embasic.ENote.Storage.csproj" />
   <Project Path="tests/Embasic.ENote.Emd.Tests/Embasic.ENote.Emd.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.Portable.Tests/Embasic.ENote.Portable.Tests.csproj" />
+  <Project Path="tests/Embasic.ENote.Security.Tests/Embasic.ENote.Security.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj" />
 </Solution>
