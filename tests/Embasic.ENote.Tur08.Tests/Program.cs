@@ -1,6 +1,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using Embasic.ENote.Emd;
+using Embasic.ENote.Storage;
 
 if (!OperatingSystem.IsWindows()) return 2;
 const string password = "Deneysel workspace 2026 🌿";
@@ -99,5 +100,41 @@ Check("read-only index does not alter original EMD2", () =>
     _=WorkspaceLockIndex.Open(ciphertext,workspace,root);
     Yes(PortableEmd.Decrypt(doc.Envelope,password:password)==markdown);
 });
+string folder = Path.Combine(Path.GetTempPath(), "enote-tur08-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(folder);
+try
+{
+    var disk = new WorkspaceLockIndexDiskStore();
+    string path = Path.Combine(folder, "workspace.elh");
+    Check("ELH1 encrypted index saved and restored from disk", () =>
+    {
+        disk.CreateNew(path, workspace, root, index);
+        var restored = disk.Open(path, workspace, root);
+        Yes(WorkspaceLockIndex.RequiredFactors(restored, "Klasör/Alt/Gizli.emd")
+            .SequenceEqual(new[] { root.Id, child.Id, note.Id }));
+    });
+    Check("ELH1 disk bytes do not reveal folder names", () =>
+        Yes(File.ReadAllBytes(path).AsSpan().IndexOf(System.Text.Encoding.UTF8.GetBytes("Klasör")) < 0));
+    Check("duplicate ELH1 creation cannot overwrite existing ciphertext", () =>
+        Throws<IOException>(() => disk.CreateNew(path, workspace, root, index)));
+    Check("wrong workspace identity refuses saved index", () =>
+        Throws<CryptographicException>(() => disk.Open(path, Guid.NewGuid(), root)));
+    Check("tampered saved index is rejected by AEAD", () =>
+    {
+        var other = Path.Combine(folder, "tampered.elh");
+        byte[] invalid = File.ReadAllBytes(path);
+        invalid[^1] ^= 1;
+        File.WriteAllBytes(other, invalid);
+        Throws<CryptographicException>(() => disk.Open(other, workspace, root));
+    });
+    Check("missing encrypted workspace index is rejected", () =>
+        Throws<FileNotFoundException>(() => disk.Open(Path.Combine(folder,"missing.elh"),workspace,root)));
+    Check("plaintext index extension refused", () =>
+        Throws<NotSupportedException>(() => disk.CreateNew(Path.Combine(folder,"not.txt"), workspace,root,index)));
+    Check("encrypted hierarchy staging cleaned up on normal path", () =>
+        Yes(!Directory.EnumerateFiles(folder,"*.elh-tmp").Any()));
+}
+finally { Directory.Delete(folder, recursive: true); }
+
 Console.WriteLine($"{passed}/{passed+failed} encrypted workspace ancestry tests passed.");
 return failed==0?0:1;
