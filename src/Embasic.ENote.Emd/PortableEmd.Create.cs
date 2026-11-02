@@ -93,6 +93,7 @@ public static partial class PortableEmd
         {
             CryptographicOperations.ZeroMemory(clear);
             CryptographicOperations.ZeroMemory(dataKey);
+            if (recoverySecret is not null) CryptographicOperations.ZeroMemory(recoverySecret);
         }
     }
 
@@ -116,15 +117,44 @@ public static partial class PortableEmd
 
 /// <summary>Opaque output from the EMD2 encryptor; users cannot construct it
 /// from arbitrary plaintext or malformed bytes. Accessors return copies.</summary>
-public sealed class PortableEmdResult
+public sealed class PortableEmdResult : IDisposable
 {
+    private readonly object _gate = new();
     private readonly byte[] _envelope;
     private readonly byte[]? _recovery;
+    private bool _disposed;
+
     internal PortableEmdResult(byte[] envelope, byte[]? recovery)
     {
         _envelope = envelope.ToArray();
         _recovery = recovery?.ToArray();
     }
-    public byte[] Envelope => _envelope.ToArray();
-    public byte[]? RecoverySecret => _recovery?.ToArray();
+
+    public byte[] Envelope
+    {
+        get { lock (_gate) { EnsureNotDisposed(); return _envelope.ToArray(); } }
+    }
+
+    /// <summary>Caller OWNS the returned copy and must zero it after use.</summary>
+    public byte[]? RecoverySecret
+    {
+        get { lock (_gate) { EnsureNotDisposed(); return _recovery?.ToArray(); } }
+    }
+
+    public void Dispose()
+    {
+        lock (_gate)
+        {
+            if (_disposed) return;
+            _disposed = true;
+            CryptographicOperations.ZeroMemory(_envelope);
+            if (_recovery is not null) CryptographicOperations.ZeroMemory(_recovery);
+        }
+        GC.SuppressFinalize(this);
+    }
+
+    private void EnsureNotDisposed()
+    {
+        if (_disposed) throw new ObjectDisposedException(nameof(PortableEmdResult));
+    }
 }
