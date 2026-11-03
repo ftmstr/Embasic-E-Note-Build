@@ -44,3 +44,6 @@ jobs:
 
       - name: Run Tur09 plain Markdown conflict and page layout tests
         run: dotnet run --project tests/Embasic.ENote.Tur09.Tests/Embasic.ENote.Tur09.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur10 native RTF copy-only and collision tests
+        run: dotnet run --project tests/Embasic.ENote.Tur10.Tests/Embasic.ENote.Tur10.Tests.csproj --configuration Release --no-restore

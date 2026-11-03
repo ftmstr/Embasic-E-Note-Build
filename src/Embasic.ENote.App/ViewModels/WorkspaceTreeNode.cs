@@ -23,6 +23,10 @@ public sealed class WorkspaceTreeNode
         WorkspaceEntryKind.Folder => "📁",
         WorkspaceEntryKind.PlainMarkdown => "📝",
         WorkspaceEntryKind.EncryptedEmd => "🔒",
+        WorkspaceEntryKind.RichTextRtf => "📃",
+        WorkspaceEntryKind.WordDocument => "📄",
+        WorkspaceEntryKind.ReadOnlyDocument => "📑",
+        WorkspaceEntryKind.OnlineShortcut => "🔗",
         _ => "…"
     };
     public ObservableCollection<WorkspaceTreeNode> Children { get; } = new();
