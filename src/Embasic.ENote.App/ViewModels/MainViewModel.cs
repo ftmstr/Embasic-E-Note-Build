@@ -8,8 +8,8 @@ using Embasic.ENote.Storage.Workspaces;
 namespace Embasic.ENote.App.ViewModels;
 
 /// <summary>
-/// View model for workspace browsing and folders only. No note editor,
-/// plaintext .emd reading, hidden auto-save or key access is implemented.
+/// View model for workspace browsing, folders and document classification.
+/// No plaintext .emd reading, hidden auto-save or key access is implemented.
 /// </summary>
 public sealed class MainViewModel : INotifyPropertyChanged
 {
@@ -72,7 +72,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 name, workspace.FullPath, WorkspaceEntryKind.Folder,
                 _storage, workspace, message => StatusText = message));
             WorkspaceLabel = workspace.FullPath;
-            SelectionDescription = "Bir klasörü genişletin veya öğe seçin. Not düzenleme henüz etkin değil.";
+            SelectionDescription = "Alt klasörleri açın; .md metin ve .rtf zengin düzenleme desteklenir.";
             StatusText = "Çalışma alanı açıldı. Klasörler genişletildikçe yüklenir.";
             CommandManager.InvalidateRequerySuggested();
         }
@@ -89,7 +89,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         SelectionDescription = node.Kind switch
         {
             WorkspaceEntryKind.Folder => $"Klasör: {node.FullPath}",
-            WorkspaceEntryKind.PlainMarkdown => $"Standart .md (şifresiz). Dosya: {node.FullPath}. Düzenleme sonraki turda.",
+            WorkspaceEntryKind.PlainMarkdown => $"Standart .md (şifresiz): {node.FullPath}. Çift tıklayarak metin editöründe açın.",
+            WorkspaceEntryKind.RichTextRtf => $"RTF: {node.FullPath}. Çift tıklayarak yerel zengin editörde açın; yalnız yeni .rtf kopyasına kaydedilir.",
+            WorkspaceEntryKind.WordDocument => $"Word/Writer belgesi: {node.FullPath}. Tam sadakatli yerel DOCX/ODT editörü henüz yok; orijinal korunur.",
+            WorkspaceEntryKind.ReadOnlyDocument => $"Referans belgesi: {node.FullPath}. Yalnız dosya ağacında listelenir; içerik önizlemesi henüz eklenmedi.",
+            WorkspaceEntryKind.OnlineShortcut => $"Google Docs bağlantısı: {node.FullPath}. İnternet yokken içerik çevrimdışı okunamaz.",
             WorkspaceEntryKind.EncryptedEmd => "Şifreli .emd: güvenli açma henüz uygulanmadı. İçerik okunmuyor.",
             _ => "Seçim yok"
         };
