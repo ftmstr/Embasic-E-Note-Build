@@ -209,6 +209,8 @@ public partial class MainWindow : Window
         { NewMarkdown_Click(sender, e); e.Handled = true; return; }
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.R)
         { OpenRtf_Click(sender, e); e.Handled = true; return; }
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.D)
+        { OpenOfflineWord_Click(sender, e); e.Handled = true; return; }
         if (Keyboard.Modifiers != ModifierKeys.Control) return;
         switch (e.Key)
         {
@@ -235,6 +237,32 @@ public partial class MainWindow : Window
         }
         finally { _syncingPageControls = false; }
         UpdatePagePreview();
+    }
+
+    private void OpenOfflineWord_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Yerel DOCX/ODT — basit paragrafları yeni kopyaya kaydet",
+            Filter = "Word / OpenDocument (.docx; .odt)|*.docx;*.odt",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog(this) == true) OpenOfflineWord(dialog.FileName);
+    }
+
+    private void OpenOfflineWord(string path)
+    {
+        try
+        {
+            new OfflineWordEditorWindow(path) { Owner = this }.ShowDialog();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+                                   ArgumentException or NotSupportedException or
+                                   System.Xml.XmlException)
+        {
+            MessageBox.Show(this, "DOCX/ODT okunamadı: " + ex.Message,
+                "Embasic E-Note", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void OpenRtf_Click(object sender, RoutedEventArgs e)
@@ -276,6 +304,14 @@ public partial class MainWindow : Window
             case WorkspaceEntryKind.RichTextRtf:
                 OpenRtf(node.FullPath);
                 e.Handled = true;
+                break;
+            case WorkspaceEntryKind.WordDocument:
+                if (Path.GetExtension(node.FullPath).Equals(".docx", StringComparison.OrdinalIgnoreCase) ||
+                    Path.GetExtension(node.FullPath).Equals(".odt", StringComparison.OrdinalIgnoreCase))
+                {
+                    OpenOfflineWord(node.FullPath);
+                    e.Handled = true;
+                }
                 break;
         }
     }
