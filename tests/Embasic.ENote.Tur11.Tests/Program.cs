@@ -61,7 +61,7 @@ var checks = new (string Name, Action Run)[]
         {
             var copy = Path.Combine(d, "new.docx");
             s.SaveEditedCopy(s.Read(p), copy, new[] { "New", "Second" });
-            var xml = XDocument.Parse(Encoding.UTF8.GetString(Part(copy, "word/document.xml")));
+            var xml = XDocument.Load(new MemoryStream(Part(copy, "word/document.xml")));
             XNamespace w = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
             Check(xml.Descendants(w + "pStyle").Any(e => (string?)e.Attribute(w + "val") == "Heading1") &&
                 xml.Descendants(w + "b").Any());
@@ -71,7 +71,7 @@ var checks = new (string Name, Action Run)[]
         {
             var copy = Path.Combine(d, "new.odt");
             s.SaveEditedCopy(s.Read(p), copy, new[] { "New", "Second" });
-            var xml = XDocument.Parse(Encoding.UTF8.GetString(Part(copy, "content.xml")));
+            var xml = XDocument.Load(new MemoryStream(Part(copy, "content.xml")));
             XNamespace text = "urn:oasis:names:tc:opendocument:xmlns:text:1.0";
             Check(xml.Descendants(text + "h").Any(e =>
                 (string?)e.Attribute(text + "style-name") == "Heading_20_1"));
