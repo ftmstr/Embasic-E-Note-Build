@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Embasic.ENote.App.ViewModels"
-        Title="Embasic E-Note — Markdown Düzenleyici (deneysel)"
+        Title="Embasic E-Note — Yerel Markdown ve RTF (geliştirme)"
         Icon="/Embasic.ENote.App;component/Assets/Embasic-E-Note.ico"
         Width="1200" Height="780" MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
@@ -41,7 +41,7 @@
                        AutomationProperties.Name="Embasic gerçek marka logosu"/>
                 <TextBlock Text="E-Note" FontWeight="SemiBold" FontSize="17"
                            Foreground="{DynamicResource PrimaryInk}"/>
-                <TextBlock Text="  ·  TUR 09 / .md metin düzenleme"
+                <TextBlock Text="  ·  TUR 10 / .md + RTF düzenleme"
                            FontSize="12" Foreground="{DynamicResource SecondaryInk}" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
@@ -79,6 +79,7 @@
                           ItemsSource="{Binding Roots}" BorderThickness="0"
                           SelectedItemChanged="WorkspaceTree_SelectedItemChanged"
                           TreeViewItem.Expanded="WorkspaceTree_Expanded"
+                          MouseDoubleClick="WorkspaceTree_MouseDoubleClick"
                           VirtualizingStackPanel.IsVirtualizing="True"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           ScrollViewer.CanContentScroll="True"
@@ -107,7 +108,7 @@
                                        FontWeight="SemiBold" Foreground="{DynamicResource PrimaryInk}"/>
                             <TextBlock Margin="0,18,0,0" TextWrapping="Wrap"
                                        Foreground="#334155"
-                                       Text="Klasör seçimi, alt klasör oluşturma ve açıldıkça yüklenen ağaç çalışmaya hazır. Not düzenleme henüz eklenmedi."/>
+                                       Text="Klasör seçimi, alt klasörler ve belge ağacı mevcut. .md metni ve basit .rtf belgeleri yerel olarak düzenleyebilirsiniz. DOCX/ODT tam görsel sadakati henüz yok."/>
                             <TextBlock Margin="0,15,0,0" TextWrapping="Wrap"
                                        Foreground="#475569"
                                        Text="{Binding SelectionDescription}"/>
@@ -122,6 +123,7 @@
                                 <WrapPanel Margin="0,0,0,8">
                                     <Button Content="Yeni .md (Ctrl+Alt+N)" Click="NewMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button Content="RTF Düzenle (Ctrl+Alt+R)" Click="OpenRtf_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Sekmeyi Kapat" Click="CloseMarkdown_Click" Padding="8,5"/>
                                 </WrapPanel>
