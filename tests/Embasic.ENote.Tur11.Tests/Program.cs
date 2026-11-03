@@ -5,6 +5,13 @@ using System.Xml;
 using System.Xml.Linq;
 using Embasic.ENote.Storage.Documents;
 
+const string DocxXml = """
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Merhaba</w:t></w:r></w:p><w:p><w:r><w:t>İkinci satır</w:t></w:r></w:p><w:sectPr /></w:body></w:document>
+""";
+const string OdtXml = """
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text><text:h text:style-name="Heading_20_1">Başlık</text:h><text:p>Merhaba ODT</text:p></office:text></office:body></office:document-content>
+""";
+
 var checks = new (string Name, Action Run)[]
 {
     ("DOCX simple package reads offline", () => Fixture(OfflineWordFormat.Docx,
@@ -248,9 +255,5 @@ static void Expect<T>(Action a) where T : Exception
     catch (T) { return; }
     throw new Exception("Expected " + typeof(T).Name);
 }
-const string DocxXml = """
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>Merhaba</w:t></w:r></w:p><w:p><w:r><w:t>İkinci satır</w:t></w:r></w:p><w:sectPr /></w:body></w:document>
-""";
-const string OdtXml = """
-<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"><office:body><office:text><text:h text:style-name="Heading_20_1">Başlık</text:h><text:p>Merhaba ODT</text:p></office:text></office:body></office:document-content>
-""";
+
+
