@@ -139,7 +139,7 @@ public sealed class OfflineWordPackageStore
                 throw new IOException("Source changed during export; output was not committed.");
             // Validate the output as a new package before making it visible.
             var copyCheck = ReadTemporaryPackage(temp, source.Format);
-            if (!copyCheck.Editable || !copyCheck.Paragraphs.SequenceEqual(newParagraphs))
+            if (!copyCheck.CanEdit || !copyCheck.Paragraphs.SequenceEqual(newParagraphs))
                 throw new InvalidDataException("Export round-trip validation failed.");
             File.Move(temp, outputPath, overwrite: false);
             return copyCheck.Sha256;
