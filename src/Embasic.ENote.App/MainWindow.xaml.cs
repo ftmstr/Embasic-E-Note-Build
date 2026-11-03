@@ -207,6 +207,8 @@ public partial class MainWindow : Window
     {
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.N)
         { NewMarkdown_Click(sender, e); e.Handled = true; return; }
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.R)
+        { OpenRtf_Click(sender, e); e.Handled = true; return; }
         if (Keyboard.Modifiers != ModifierKeys.Control) return;
         switch (e.Key)
         {
@@ -233,6 +235,49 @@ public partial class MainWindow : Window
         }
         finally { _syncingPageControls = false; }
         UpdatePagePreview();
+    }
+
+    private void OpenRtf_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Office gerektirmeyen RTF görsel editörü — yeni kopya kaydı",
+            Filter = "Rich Text Format (.rtf)|*.rtf",
+            CheckFileExists = true
+        };
+        if (dialog.ShowDialog(this) == true) OpenRtf(dialog.FileName);
+    }
+
+    private void OpenRtf(string path)
+    {
+        try
+        {
+            var editor = new RtfEditorWindow(path) { Owner = this };
+            editor.ShowDialog();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
+                                   ArgumentException or NotSupportedException)
+        {
+            MessageBox.Show(this, "RTF açılamadı: " + ex.Message, "Embasic E-Note",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void WorkspaceTree_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (WorkspaceTree.SelectedItem is not WorkspaceTreeNode node ||
+            node.IsFolder || node.IsPlaceholder) return;
+        switch (node.Kind)
+        {
+            case WorkspaceEntryKind.PlainMarkdown:
+                OpenMarkdown(node.FullPath);
+                e.Handled = true;
+                break;
+            case WorkspaceEntryKind.RichTextRtf:
+                OpenRtf(node.FullPath);
+                e.Handled = true;
+                break;
+        }
     }
 
     private string? PickWorkspace()
