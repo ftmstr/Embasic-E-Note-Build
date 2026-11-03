@@ -20,5 +20,9 @@ public enum WorkspaceEntryKind
 {
     Folder,
     PlainMarkdown,
-    EncryptedEmd
+    EncryptedEmd,
+    RichTextRtf,
+    WordDocument,
+    ReadOnlyDocument,
+    OnlineShortcut
 }
