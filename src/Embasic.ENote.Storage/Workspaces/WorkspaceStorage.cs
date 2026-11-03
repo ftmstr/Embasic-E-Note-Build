@@ -64,6 +64,24 @@ public sealed class WorkspaceStorage : IWorkspaceStorage
             {
                 entries.Add(new WorkspaceEntry(name, path, WorkspaceEntryKind.EncryptedEmd));
             }
+            else
+            {
+                // List filenames only. No binary document parsing or network requests.
+                var kind = Path.GetExtension(path).ToLowerInvariant() switch
+                {
+                    ".rtf" => WorkspaceEntryKind.RichTextRtf,
+                    ".doc" or ".docx" or ".odt" or ".fodt" or ".odf" =>
+                        WorkspaceEntryKind.WordDocument,
+                    ".pdf" or ".epub" or ".xls" or ".xlsx" or ".ods" or
+                    ".ppt" or ".pptx" or ".odp" or ".csv" or ".tsv" or
+                    ".txt" or ".html" or ".htm" or ".xml" or ".json" or
+                    ".udf" => WorkspaceEntryKind.ReadOnlyDocument,
+                    ".gdoc" => WorkspaceEntryKind.OnlineShortcut,
+                    _ => (WorkspaceEntryKind?)null
+                };
+                if (kind is { } supported)
+                    entries.Add(new WorkspaceEntry(name, path, supported));
+            }
         }
 
         entries.Sort(static (left, right) =>
