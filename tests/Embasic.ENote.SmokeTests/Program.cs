@@ -52,7 +52,7 @@ var checks = new (string Name, Func<Task> Run)[]
             Directory.CreateDirectory(Path.Combine(path, "A"));
             await File.WriteAllTextAsync(Path.Combine(path, "b.EMD"), "opaque fixture");
             await File.WriteAllTextAsync(Path.Combine(path, "a.md"), "plain");
-            await File.WriteAllTextAsync(Path.Combine(path, "ignored.txt"), "not a note");
+            await File.WriteAllTextAsync(Path.Combine(path, "ignored.xyz"), "unsupported");
             var nodes = await storage.ListChildrenAsync(storage.OpenExisting(path), path);
             await Check(nodes.Count == 4 && nodes[0].Name == "A" &&
                 nodes[1].Name == "b" &&
