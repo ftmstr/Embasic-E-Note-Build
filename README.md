@@ -87,3 +87,23 @@ source HEAD prior to docs commit. See
 No actual interactive Windows GUI/DPI, printing, PDF/DOCX/RTF/UDF
 exports or native UYAP Editor acceptance passed. The WPF editor
 source-text milestone and sidecar are NOT a complete product release.
+
+## Tur 12 (2026-11-06) — offline Markdown visual preview
+
+Stacked [Draft PR #13](https://github.com/ftmstr/Embasic-E-Note-Build/pull/13)
+builds on the existing Tur 10/11 native RTF and guarded DOCX/ODT editors,
+**without removing them**. Core inert Markdown block parsing + WPF
+**Write / Preview / Split** displays headings, lists, quotes, simple
+tables and fenced code. Source `.md` remains editable UTF-8; preview
+is read-only, with literal HTML and non-fetched images/links. GUI
+truncation guards never truncate note content.
+
+[Windows CI](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42111850623):
+Windows Release 0 warnings/errors, 318/318 automated checks on code
+HEAD before documentation commit. See
+[CI evidence](docs/CI-EVIDENCE-TUR12.md) and
+[research integration](docs/RESEARCH-INTEGRATION-TUR12.md).
+
+Physical WPF GUI/DPI, true Word/UYAP WYSIWYG, full DOCX/ODT fidelity,
+printer/PDF/UDF and security/recovery release gates remain NOT RUN or
+BLOCKED. New secure note (.emd) remains DISABLED.
