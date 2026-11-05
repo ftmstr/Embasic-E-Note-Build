@@ -41,3 +41,10 @@ existing WPF features. Genuine original light/dark Embasic logo blobs
 and new user-provided E-Note ICO/512 PNG resources are unchanged.
 Full transitive NOTICE/SBOM/license verification and user trademark
 rights must still pass before any public installer/release.
+
+## Tur 12 additions (2026-11-06)
+Inert Markdown preview uses only existing .NET 10 / WPF/Core
+libraries; **no new NuGet, font, SDK or remote image loader**.
+Logo-Light/Logo-Dark and official new E-Note ICO/512 PNG bits remain
+unchanged. Legal inventory and binary runtime/license/SBOM acceptance
+remain required before signed installer release.
