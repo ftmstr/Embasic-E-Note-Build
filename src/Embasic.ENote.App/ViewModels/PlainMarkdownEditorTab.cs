@@ -3,6 +3,9 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
+using Embasic.ENote.App.Preview;
+using System.Windows;
+using System.Windows.Documents;
 
 namespace Embasic.ENote.App.ViewModels;
 
@@ -13,6 +16,28 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
     private string _savedText;
     private PageLayoutSettings _layout;
     private PageLayoutSettings _savedLayout;
+    private MarkdownEditorViewMode _viewMode = MarkdownEditorViewMode.Split;
+    public FlowDocument PreviewDocument { get; private set; }
+    public MarkdownEditorViewMode ViewMode
+    {
+        get => _viewMode;
+        set
+        {
+            if (_viewMode == value) return;
+            _viewMode = value;
+            Changed(); Changed(nameof(SourceColumnWidth)); Changed(nameof(PreviewColumnWidth));
+            Changed(nameof(SourceVisibility)); Changed(nameof(PreviewVisibility));
+        }
+    }
+    public GridLength SourceColumnWidth => new(ViewMode == MarkdownEditorViewMode.Preview ? 0 : 1, GridUnitType.Star);
+    public GridLength PreviewColumnWidth => new(ViewMode == MarkdownEditorViewMode.Write ? 0 : 1, GridUnitType.Star);
+    public Visibility SourceVisibility => ViewMode == MarkdownEditorViewMode.Preview ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility PreviewVisibility => ViewMode == MarkdownEditorViewMode.Write ? Visibility.Collapsed : Visibility.Visible;
+    public void RefreshPreview()
+    {
+        PreviewDocument = MarkdownPreviewDocumentFactory.Create(Text);
+        Changed(nameof(PreviewDocument));
+    }
     public string FilePath { get; }
     public string Digest { get; private set; }
     public bool HasUtf8Bom { get; }
@@ -52,6 +77,7 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
         HasUtf8Bom = note.HasUtf8Bom;
         _layout = _savedLayout = page.Settings;
         LayoutDigest = page.Sha256;
+        PreviewDocument = MarkdownPreviewDocumentFactory.Create(_text);
     }
     public void Save(PlainMarkdownDocumentStore notes, DocumentPageSettingsStore pages)
     {
@@ -75,3 +101,5 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
     private void Changed([CallerMemberName] string? name=null) =>
         PropertyChanged?.Invoke(this,new PropertyChangedEventArgs(name));
 }
+
+public enum MarkdownEditorViewMode { Write, Preview, Split }
