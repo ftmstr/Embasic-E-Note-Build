@@ -11,6 +11,7 @@ using Embasic.ENote.Core.Printing;
 using Microsoft.Win32;
 using Embasic.ENote.App.ViewModels;
 using Embasic.ENote.Storage.Workspaces;
+using System.Windows.Threading;
 
 namespace Embasic.ENote.App;
 
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     private readonly PlainMarkdownDocumentStore _noteStore = new();
     private readonly DocumentPageSettingsStore _pageStore = new();
     private readonly ObservableCollection<PlainMarkdownEditorTab> _tabs = new();
+    private readonly DispatcherTimer _previewDebounce = new() { Interval = TimeSpan.FromMilliseconds(300) };
 
     public MainWindow()
     {
@@ -33,6 +35,11 @@ public partial class MainWindow : Window
         PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
         Loaded += (_, _) => UpdatePagePreview();
         MarkdownTabs.ItemsSource = _tabs;
+        _previewDebounce.Tick += (_, _) =>
+        {
+            _previewDebounce.Stop();
+            if (SelectedTab is { } tab) tab.RefreshPreview();
+        };
     }
 
     private void ToggleTheme_Click(object sender, RoutedEventArgs e)
@@ -145,6 +152,7 @@ public partial class MainWindow : Window
             var snap = _noteStore.Read(absolute);
             var layout = _pageStore.Read(absolute);
             var tab = new PlainMarkdownEditorTab(absolute, snap, layout);
+            tab.PropertyChanged += MarkdownTab_PropertyChanged;
             _tabs.Add(tab);
             MarkdownTabs.SelectedItem = tab;
             MarkdownStatusText.Text = "Şifresiz Markdown dosyası açıldı: " + Path.GetFileName(path);
@@ -194,6 +202,7 @@ public partial class MainWindow : Window
     private void CloseMarkdown_Click(object sender, RoutedEventArgs e)
     {
         if (SelectedTab is not { } tab || !ConfirmCloseTab(tab)) return;
+        tab.PropertyChanged -= MarkdownTab_PropertyChanged;
         _tabs.Remove(tab);
     }
 
@@ -222,6 +231,9 @@ public partial class MainWindow : Window
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
         if (SelectedTab is not { } tab) return;
+        _previewDebounce.Stop();
+        tab.RefreshPreview();
+        MarkdownModeSelector.SelectedIndex = (int)tab.ViewMode;
         _syncingPageControls = true;
         try
         {
@@ -233,6 +245,24 @@ public partial class MainWindow : Window
         }
         finally { _syncingPageControls = false; }
         UpdatePagePreview();
+    }
+
+    private void MarkdownMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded || MarkdownTabs is null || MarkdownModeSelector is null) return;
+        if (SelectedTab is not { } tab) return;
+        tab.ViewMode = (MarkdownEditorViewMode)Math.Clamp(MarkdownModeSelector.SelectedIndex, 0, 2);
+        if (tab.ViewMode != MarkdownEditorViewMode.Write) tab.RefreshPreview();
+    }
+
+    private void MarkdownTab_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PlainMarkdownEditorTab.Text) &&
+            ReferenceEquals(sender, SelectedTab))
+        {
+            _previewDebounce.Stop();
+            _previewDebounce.Start();
+        }
     }
 
     private string? PickWorkspace()

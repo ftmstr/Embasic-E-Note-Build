@@ -41,7 +41,7 @@
                        AutomationProperties.Name="Embasic gerçek marka logosu"/>
                 <TextBlock Text="E-Note" FontWeight="SemiBold" FontSize="17"
                            Foreground="{DynamicResource PrimaryInk}"/>
-                <TextBlock Text="  ·  TUR 09 / .md metin düzenleme"
+                <TextBlock Text="  ·  TUR 10 / .md görsel önizleme"
                            FontSize="12" Foreground="{DynamicResource SecondaryInk}" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
@@ -124,11 +124,19 @@
                                     <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Sekmeyi Kapat" Click="CloseMarkdown_Click" Padding="8,5"/>
+                                    <TextBlock Text="Görünüm:" VerticalAlignment="Center" Margin="16,0,5,0"/>
+                                    <ComboBox x:Name="MarkdownModeSelector" Width="130" Height="30"
+                                              SelectedIndex="2" SelectionChanged="MarkdownMode_Changed"
+                                              AutomationProperties.Name="Markdown görünüm modu">
+                                        <ComboBoxItem Content="Yaz"/>
+                                        <ComboBoxItem Content="Önizle"/>
+                                        <ComboBoxItem Content="Bölünmüş"/>
+                                    </ComboBox>
                                 </WrapPanel>
-                                <TextBlock Text="Düz Markdown (.md) metin editörü · Çoklu sekme · Harici değişiklikte kayıt reddi · Şifreli .emd kapalı"
+                                <TextBlock Text="Markdown kaynak + güvenli salt okunur görsel önizleme · Uzak içerik yüklenmez · Şifreli .emd kapalı"
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                 <TextBlock x:Name="MarkdownStatusText"
-                                           Text="Bir .md dosyası açın. Görsel WYSIWYG ve PDF henüz uygulanmadı."
+                                           Text="Yaz / Önizle / Bölünmüş · Görsel bölüm düzenlenemez; WYSIWYG ve PDF henüz uygulanmadı."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             </StackPanel>
                             <TabControl x:Name="MarkdownTabs" SelectionChanged="MarkdownTabs_SelectionChanged"
@@ -140,17 +148,31 @@
                                 </TabControl.ItemTemplate>
                                 <TabControl.ContentTemplate>
                                     <DataTemplate>
-                                        <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1"
-                                                Margin="8" Padding="15">
-                                            <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
-                                                     VerticalScrollBarVisibility="Auto"
-                                                     HorizontalScrollBarVisibility="Auto"
-                                                     FontFamily="Consolas" FontSize="14" BorderThickness="0"
-                                                     Background="White" Foreground="#1E293B"
-                                                     SpellCheck.IsEnabled="False"
-                                                     AutomationProperties.Name="Düz Markdown metin alanı"/>
-                                        </Border>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="{Binding SourceColumnWidth}"/>
+                                                <ColumnDefinition Width="{Binding PreviewColumnWidth}"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" Visibility="{Binding SourceVisibility}"
+                                                    Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
+                                                    Margin="5" Padding="12">
+                                                <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                         AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                                                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                                                         FontFamily="Consolas" FontSize="14" BorderThickness="0"
+                                                         Background="White" Foreground="#1E293B"
+                                                         SpellCheck.IsEnabled="False" IsUndoEnabled="True" UndoLimit="200"
+                                                         AutomationProperties.Name="Düzenlenebilir Markdown kaynak metni"/>
+                                            </Border>
+                                            <Border Grid.Column="1" Visibility="{Binding PreviewVisibility}"
+                                                    Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
+                                                    Margin="5" Padding="2">
+                                                <FlowDocumentScrollViewer Document="{Binding PreviewDocument}"
+                                                    IsToolBarVisible="False" IsSelectionEnabled="True"
+                                                    VerticalScrollBarVisibility="Auto"
+                                                    AutomationProperties.Name="Güvenli salt okunur Markdown önizlemesi"/>
+                                            </Border>
+                                        </Grid>
                                     </DataTemplate>
                                 </TabControl.ContentTemplate>
                             </TabControl>
