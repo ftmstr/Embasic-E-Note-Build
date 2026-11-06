@@ -1,34 +1,35 @@
-param([ValidateRange(0,100)][int]$ProgressPercent = 35)
-# Static evidence snapshot. This does not poll GitHub or claim a Windows GUI run.
-try { $Host.UI.RawUI.WindowTitle = 'Embasic E-Note | TUR 13' } catch {}
+param([ValidateRange(0,100)][int]$ProgressPercent = 36)
+# Tur14: static verified GitHub Actions snapshot, not live monitoring.
+try { $Host.UI.RawUI.WindowTitle = 'Embasic E-Note | TUR 14' } catch {}
 $filled = [int][Math]::Floor($ProgressPercent / 5)
-$bar = ('█' * $filled) + ('░' * (20-$filled))
+$bar = ('#' * $filled) + ('.' * (20 - $filled))
 Write-Host ''
-Write-Host '╔═══════════════════════════════════════════════════════════════════╗' -ForegroundColor Cyan
-Write-Host '║                         EMBASIC E-NOTE                          ║' -ForegroundColor Cyan
-Write-Host '║                    WINDOWS DEVELOPMENT · TUR 13                 ║' -ForegroundColor Cyan
-Write-Host '╚═══════════════════════════════════════════════════════════════════╝' -ForegroundColor Cyan
-Write-Host ('  ENGINEERING ESTIMATE     {0,3}%  {1}' -f $ProgressPercent,$bar) -ForegroundColor Yellow
+Write-Host '=======================================================================' -ForegroundColor Cyan
+Write-Host '                       EMBASIC E-NOTE / TUR 14                       ' -ForegroundColor Cyan
+Write-Host '                       WINDOWS DEVELOPMENT                           ' -ForegroundColor Cyan
+Write-Host '=======================================================================' -ForegroundColor Cyan
+Write-Host ('  ENGINEERING ESTIMATE     {0,3}%  [{1}]' -f $ProgressPercent, $bar) -ForegroundColor Yellow
 Write-Host ''
-Write-Host '  Windows Release          PASS · 0 warnings / 0 errors' -ForegroundColor Green
-Write-Host '  Tur12 + earlier          318/318 PASS' -ForegroundColor Green
-Write-Host '  Tur13 inline + table      27/27 PASS' -ForegroundColor Green
-Write-Host '  TOTAL                    345/345 AUTOMATED PASS' -ForegroundColor Green
-Write-Host '  Verified code CI         42173395275' -ForegroundColor Cyan
+Write-Host '  Windows Release           PASS / 0 warnings / 0 errors' -ForegroundColor Green
+Write-Host '  Tur13 and earlier         345/345 PASS' -ForegroundColor Green
+Write-Host '  Tur14 nested preview      28/28 PASS' -ForegroundColor Green
+Write-Host '  ALL AUTOMATED             373/373 PASS' -ForegroundColor Green
+Write-Host '  Verified code run         42259573972' -ForegroundColor Cyan
+Write-Host '  Historical CI failures    CS1628 / FIXED' -ForegroundColor Yellow
 Write-Host ''
-Write-Host '  Markdown bold/italic      INERT WPF RUN PREVIEW' -ForegroundColor Cyan
-Write-Host '  Inline code/strike        INERT WPF RUN PREVIEW' -ForegroundColor Cyan
-Write-Host '  Escaped table pipes       TESTED BASIC MODEL' -ForegroundColor Cyan
-Write-Host '  RTF + DOCX + ODT          LIMITED / GUARDED COPY-ONLY' -ForegroundColor Yellow
-Write-Host '  Full Word/UYAP WYSIWYG    NOT IMPLEMENTED' -ForegroundColor Yellow
-Write-Host '  Secure .emd in WPF        DISABLED' -ForegroundColor Red
-Write-Host '  Windows GUI/DPI           NOT RUN' -ForegroundColor Yellow
-Write-Host '  NTFS/ACL/TOCTOU           NOT RUN' -ForegroundColor Yellow
-Write-Host '  Real UYAP UDF            NOT RUN' -ForegroundColor Yellow
+Write-Host '  Nested Markdown           EXPERIMENTAL INERT PREVIEW' -ForegroundColor Cyan
+Write-Host '  Escaped tables            STRUCTURED CELLS / TESTED' -ForegroundColor Cyan
+Write-Host '  RTF + DOCX/ODT            LIMITED SAFE COPY-ONLY' -ForegroundColor Yellow
+Write-Host '  True Word/UYAP WYSIWYG    NOT IMPLEMENTED' -ForegroundColor Yellow
+Write-Host '  Secure New Note (.emd)    DISABLED' -ForegroundColor Red
+Write-Host '  GUI/DPI/accessibility     NOT RUN' -ForegroundColor Yellow
+Write-Host '  ACL/full disk/TOCTOU      NOT RUN' -ForegroundColor Yellow
+Write-Host '  Different-user DPAPI      NOT RUN' -ForegroundColor Yellow
+Write-Host '  UDF in real UYAP Editor   NOT RUN' -ForegroundColor Yellow
 Write-Host '  Signed Windows installer  NOT BUILT' -ForegroundColor Yellow
+Write-Host '  V1.0 RELEASE GATE         BLOCKED' -ForegroundColor Red
 Write-Host ''
-Write-Host '  CONDITIONAL V1.0         2027 Q2-Q3 · NOT PROMISED' -ForegroundColor Cyan
-Write-Host '  RELEASE GATE             BLOCKED' -ForegroundColor Red
-Write-Host '  https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42173395275'
-Write-Host '  Estimate is NOT a measured acceptance/feature completion percentage.' -ForegroundColor DarkGray
+Write-Host '  Conditional planning      2027 Q2-Q3 / NOT A COMMITMENT' -ForegroundColor Cyan
+Write-Host '  https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42259573972'
+Write-Host '  36% is NOT a measured completion/security acceptance percentage.' -ForegroundColor DarkGray
 Write-Host ''

@@ -76,7 +76,11 @@ internal static class MarkdownPreviewDocumentFactory
                     foreach (string rowText in block.Rows ?? Array.Empty<string>())
                     {
                         var row = new TableRow();
-                        foreach (string cell in rowText.Split('\t'))
+                        int rowIndex = group.Rows.Count;
+                        var cells = block.TableCells is not null && rowIndex < block.TableCells.Count
+                            ? block.TableCells[rowIndex]
+                            : rowText.Split('\t');
+                        foreach (string cell in cells)
                             row.Cells.Add(new TableCell(Paragraph(cell))
                             {
                                 BorderBrush = Brushes.LightGray,
@@ -111,29 +115,36 @@ internal static class MarkdownPreviewDocumentFactory
     private static Paragraph Paragraph(string text)
     {
         var result = new Paragraph { Margin = new Thickness(0, 0, 0, 9) };
-        foreach (var span in MarkdownInlineParser.Parse(text))
-        {
-            // Run is inert literal text; never create Hyperlink, UIElement,
-            // Image, WebBrowser, executable HTML or remotely fetched content.
-            var run = new Run(span.Text);
-            switch (span.Kind)
-            {
-                case MarkdownInlineKind.Strong:
-                    run.FontWeight = FontWeights.Bold;
-                    break;
-                case MarkdownInlineKind.Emphasis:
-                    run.FontStyle = FontStyles.Italic;
-                    break;
-                case MarkdownInlineKind.Strikethrough:
-                    run.TextDecorations = TextDecorations.Strikethrough;
-                    break;
-                case MarkdownInlineKind.Code:
-                    run.FontFamily = new FontFamily("Consolas");
-                    run.Background = Brushes.AliceBlue;
-                    break;
-            }
-            result.Inlines.Add(run);
-        }
+        foreach (var node in MarkdownNestedInlineParser.Parse(text))
+            result.Inlines.Add(ToInertInline(node));
         return result;
+    }
+
+    private static Inline ToInertInline(MarkdownInlineNode node)
+    {
+        // Inlines are strictly Run/Span. No Hyperlink, UIElement, HTML,
+        // browser, file or remote media processing is allowed.
+        if (node.Kind is MarkdownInlineKind.Text or MarkdownInlineKind.Code)
+        {
+            var literal = new Run(node.Text);
+            if (node.Kind == MarkdownInlineKind.Code)
+            {
+                literal.FontFamily = new FontFamily("Consolas");
+                literal.Background = Brushes.AliceBlue;
+            }
+            return literal;
+        }
+        var span = new Span();
+        switch (node.Kind)
+        {
+            case MarkdownInlineKind.Strong: span.FontWeight = FontWeights.Bold; break;
+            case MarkdownInlineKind.Emphasis: span.FontStyle = FontStyles.Italic; break;
+            case MarkdownInlineKind.Strikethrough:
+                span.TextDecorations = TextDecorations.Strikethrough; break;
+        }
+        if (node.Children is { } children)
+            foreach (var child in children) span.Inlines.Add(ToInertInline(child));
+        else span.Inlines.Add(new Run(node.Text));
+        return span;
     }
 }

@@ -56,3 +56,6 @@ jobs:
 
       - name: Run Tur13 inert inline Markdown and table escaping tests
         run: dotnet run --project tests/Embasic.ENote.Tur13.Tests/Embasic.ENote.Tur13.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur14 bounded nested Markdown preview tests
+        run: dotnet run --project tests/Embasic.ENote.Tur14.Tests/Embasic.ENote.Tur14.Tests.csproj --configuration Release --no-restore

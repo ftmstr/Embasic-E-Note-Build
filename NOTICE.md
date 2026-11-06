@@ -55,3 +55,11 @@ Core/WPF libraries; **no new NuGet, font, network SDK or account**.
 Official original Embasic light/dark logo and new E-Note ICO/512 PNG
 asset content remains unchanged. Final runtime NOTICE, SBOM, licensing,
 trademark provenance and installer security review are still REQUIRED.
+
+## Tur 14 dependencies (2026-11-06)
+No new NuGet package, library, paid SDK, font, cloud, account or ad
+dependency. Markdown preview uses existing .NET 10 BCL and WPF inert
+`Span`/`Run` elements; source Markdown remains intact. Official
+original Embasic light/dark logos and user-provided E-Note ICO/512 PNG
+binary blobs remain unchanged. Transitive NOTICE/SBOM, runtime license
+and logo redistribution clearance are still required before publication.

@@ -128,3 +128,24 @@ See [Tur13 CI evidence](docs/CI-EVIDENCE-TUR13.md) and
 [Tur13 security risk register](docs/RISKS-TUR13.md).
 Physical Windows GUI/DPI, rich-document fidelity and UYAP are NOT RUN.
 The WPF secure `.emd` note workflow remains DISABLED.
+
+## Tur 14 (2026-11-06) — bounded nested Markdown preview
+
+[Stacked Draft PR #15](https://github.com/ftmstr/Embasic-E-Note-Build/pull/15)
+adds a conservative `MarkdownNestedInlineParser` with bounded nested
+strong/emphasis/strike/code spans, and WPF literal `Span`/`Run` rendering.
+The basic Markdown table preview preserves escaped pipes (odd/even
+backslash runs), multi-backtick code-span pipes and literal tab characters
+using structured cells. Extra/malformed columns fail closed to literal
+text rather than silently losing content. Original `.md` bytes are never
+rewritten by this feature.
+
+[Windows CI 42259573972](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42259573972)
+shows **373/373 automated PASS**, Windows Release 0 errors/warnings
+on source code HEAD. Two initial commits FAILED compilation
+(**CS1628**, local function captured `ref`), fixed in
+`c907fe9843a47d9251487e37696cfa6bfae62d93`.
+See [Tur14 evidence](docs/CI-EVIDENCE-TUR14.md) and
+[security limits](docs/SECURITY-RISKS-TUR14.md).
+Full CommonMark, WYSIWYG editing, real printing/PDF/UDF and physical
+Windows GUI acceptance are NOT claimed. `.emd` creation remains DISABLED.
