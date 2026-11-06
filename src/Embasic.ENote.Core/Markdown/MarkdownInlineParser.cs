@@ -98,5 +98,5 @@ public static class MarkdownInlineParser
             '(' or ')' or '!' or '|' or '#' or '{' or '}' or '<' or '>';
 }
 
-public enum MarkdownInlineKind { Text, Strong, Emphasis, Strikethrough, Code }
+public enum MarkdownInlineKind { Text, Strong, Emphasis, Strikethrough, Code, StrongEmphasis }
 public sealed record MarkdownInlineSpan(MarkdownInlineKind Kind, string Text);
