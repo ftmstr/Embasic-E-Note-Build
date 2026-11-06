@@ -108,5 +108,84 @@ Check("bounded input may render enormous literal without edit",()=>{
     var x=MarkdownNestedInlineParser.Parse(source);
     Yes(x.Count==1 && x[0].Text.Length==source.Length);
 });
+Check("terminal even backslashes keep proper table frame",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B\\\\|\n| --- | --- |\n| 1 | 2 |");
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Table
+        && x.Blocks[0].TableCells![0].Count==2);
+});
+Check("terminal odd escaped pipe is literal data",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B\\|\n| --- | --- |\n| 1 | 2 |");
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Table
+        && x.Blocks[0].TableCells![0][1]=="B|");
+});
+Check("unclosed code span in table row falls back verbatim",()=>{
+    string source="| A | B |\n| --- | --- |\n| \u0060not closed | x |";
+    var x=MarkdownPreviewParser.Parse(source);
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Paragraph
+        && x.Blocks[0].Text==source);
+});
+Check("unclosed code span in header remains text",()=>{
+    var x=MarkdownPreviewParser.Parse("| \u0060unfinished | B |\n| --- | --- |\n| 1 | 2 |");
+    Yes(x.Blocks.All(n=>n.Kind!=MarkdownBlockKind.Table));
+});
+Check("escaped backtick does not swallow column",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| \\\u0060literal | value |");
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Table
+        && x.Blocks[0].TableCells![1].Count==2);
+});
+Check("triple backtick span contains pipe",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| \u0060\u0060\u0060a|b\u0060\u0060\u0060 | ikinci |");
+    Yes(x.Blocks[0].Kind==MarkdownBlockKind.Table
+        && x.Blocks[0].TableCells![1][0].Contains("a|b"));
+});
+Check("mismatched code span length literal fallback",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| \u0060\u0060a|b\u0060 | x |");
+    Yes(x.Blocks[0].Kind==MarkdownBlockKind.Paragraph
+        && x.Blocks[0].Text.Contains("a|b"));
+});
+Check("table columns above preview cap never silently lost",()=>{
+    int n=MarkdownPreviewParser.MaximumPreviewTableColumns+1;
+    string header="| "+string.Join(" | ",Enumerable.Repeat("A",n))+" |";
+    string delimit="| "+string.Join(" | ",Enumerable.Repeat("---",n))+" |";
+    string source=header+"\n"+delimit+"\n"+header;
+    var x=MarkdownPreviewParser.Parse(source);
+    Yes(x.Blocks.All(b=>b.Kind!=MarkdownBlockKind.Table)
+        && source.Contains(delimit));
+});
+Check("table rows above preview cap revert to literal source",()=>{
+    const string header="| A | B |\n| --- | --- |\n";
+    string data=string.Concat(Enumerable.Repeat("| T | V |\n",
+        MarkdownPreviewParser.MaximumPreviewTableRows+3));
+    string source=header+data;
+    var x=MarkdownPreviewParser.Parse(source);
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Paragraph
+        && x.Blocks[0].Text.Contains("| T | V |"));
+});
+Check("extra column never silently discarded",()=>{
+    string source="| A | B |\n| --- | --- |\n| 1 | 2 | EXTRA |";
+    var x=MarkdownPreviewParser.Parse(source);
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Paragraph
+        && x.Blocks[0].Text==source);
+});
+Check("literal tab in Unicode table remains in cell",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| Çığ\t日本語 | 😀 |");
+    Yes(x.Blocks[0].TableCells![1][0]=="Çığ\t日本語");
+});
+Check("malicious HTML in table cannot create active content",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| <script>x</script> | [x](https://bad.invalid/) |");
+    Yes(x.Blocks[0].TableCells![1][0]=="<script>x</script>"
+        && x.Blocks[0].TableCells![1][1].StartsWith("[x]"));
+});
+Check("mixed newlines normalized only for preview",()=>{
+    string original="| A | B |\r\n| --- | --- |\r\n| Türkçe | 日本語 |";
+    var x=MarkdownPreviewParser.Parse(original);
+    Yes(x.Blocks.Count==1 && x.Blocks[0].Kind==MarkdownBlockKind.Table
+        && original.Contains("\r\n"));
+});
+Check("source markdown table text immutable after parsing",()=>{
+    string original="| \u0060a|b\u0060 | B\\|C |\n| --- | --- |\n| 🇹🇷 | 😄 |";
+    var _=MarkdownPreviewParser.Parse(original);
+    Yes(original.Contains("B\\|C") && original.Contains("🇹🇷"));
+});
 Console.WriteLine($"{passed}/{passed+failed} Tur15 triple-markdown safety checks passed.");
 return failed==0?0:1;

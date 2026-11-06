@@ -138,6 +138,10 @@ internal static class MarkdownPreviewDocumentFactory
         switch (node.Kind)
         {
             case MarkdownInlineKind.Strong: span.FontWeight = FontWeights.Bold; break;
+            case MarkdownInlineKind.StrongEmphasis:
+                span.FontWeight = FontWeights.Bold;
+                span.FontStyle = FontStyles.Italic;
+                break;
             case MarkdownInlineKind.Emphasis: span.FontStyle = FontStyles.Italic; break;
             case MarkdownInlineKind.Strikethrough:
                 span.TextDecorations = TextDecorations.Strikethrough; break;
