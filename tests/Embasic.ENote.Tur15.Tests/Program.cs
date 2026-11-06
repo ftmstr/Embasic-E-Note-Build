@@ -1,3 +1,5 @@
+using Embasic.ENote.Emd;
+using System.Security.Cryptography;
 using Embasic.ENote.Core.Markdown;
 
 int passed=0,failed=0;
@@ -187,5 +189,66 @@ Check("source markdown table text immutable after parsing",()=>{
     var _=MarkdownPreviewParser.Parse(original);
     Yes(original.Contains("B\\|C") && original.Contains("🇹🇷"));
 });
+// Experimental crypto policy regression probes. These do not simulate
+// another Windows account, a malicious local process or rollback protection.
+static void RejectAuth(Action action)
+{
+    try { action(); }
+    catch (CryptographicException) { return; }
+    catch (InvalidDataException) { return; }
+    catch (ArgumentException) { return; }
+    throw new InvalidOperationException("Unauthorized operation unexpectedly succeeded.");
+}
+const string oldPassword="Tur15 synthetic password 2026!";
+const string recoveryPassword="Tur15 synthetic recovery 2026!";
+const string newPassword="Tur15 next password 2027!";
+using var rootFactor=LayerSecret.Generate(LayerKind.Folder);
+using var childFactor=LayerSecret.Generate(LayerKind.Subfolder);
+using var noteFactor=LayerSecret.Generate(LayerKind.NoteAdditional);
+using var plaintext=PortableEmd.Encrypt("Tur15 korunan not 🔒",oldPassword);
+byte[] outer=LayeredEmd3.Seal(plaintext,[rootFactor,childFactor,noteFactor]);
+Guid workspaceId=Guid.NewGuid();
+var members=new[]
+{
+    new WorkspaceLockEntry(rootFactor.Id,Guid.Empty,LayerKind.Folder,"Klasör"),
+    new WorkspaceLockEntry(childFactor.Id,rootFactor.Id,LayerKind.Subfolder,"Klasör/Alt"),
+    new WorkspaceLockEntry(noteFactor.Id,childFactor.Id,LayerKind.NoteAdditional,"Klasör/Alt/Gizli.emd")
+};
+byte[] hierarchy=WorkspaceLockIndex.Protect(workspaceId,rootFactor,members);
+Check("ELK1 full independent factor chain decrypts synthetic note",()=>{
+    Yes(LayeredEmd3.Open(outer,[rootFactor,childFactor,noteFactor],password:oldPassword)
+        =="Tur15 korunan not 🔒");
+});
+Check("ELK1 missing subfolder factor is rejected",()=>
+    RejectAuth(()=>LayeredEmd3.Open(outer,[rootFactor,noteFactor],password:oldPassword)));
+Check("ELK1 missing additional note factor is rejected",()=>
+    RejectAuth(()=>LayeredEmd3.Open(outer,[rootFactor,childFactor],password:oldPassword)));
+Check("ELK1 tampered ciphertext refuses decryption",()=>{
+    var changed=outer.ToArray(); changed[^1]^=0x20;
+    RejectAuth(()=>LayeredEmd3.Open(changed,[rootFactor,childFactor,noteFactor],password:oldPassword));
+});
+Check("ELH1 wrong workspace identifier refuses root authentication",()=>
+    RejectAuth(()=>WorkspaceLockIndex.Open(hierarchy,Guid.NewGuid(),rootFactor)));
+Check("ELH1 modified authenticated hierarchy refuses open",()=>{
+    var changed=hierarchy.ToArray(); changed[^1]^=0x10;
+    RejectAuth(()=>WorkspaceLockIndex.Open(changed,workspaceId,rootFactor));
+});
+Check("ELH1 replacing root factor cannot open encrypted ancestry",()=>{
+    using var different=LayerSecret.Generate(LayerKind.Folder);
+    RejectAuth(()=>WorkspaceLockIndex.Open(hierarchy,workspaceId,different));
+});
+byte[] originalVault=LayerKeyVault.Create(rootFactor,oldPassword,recoveryPassword);
+byte[] rotatedVault=LayerKeyVault.Rotate(originalVault,rootFactor.Id,rootFactor.Kind,
+    oldPassword,newPassword,recoveryPassword);
+Check("rotated current ELV1 vault rejects previous credential",()=>
+    RejectAuth(()=>LayerKeyVault.Open(rotatedVault,rootFactor.Id,rootFactor.Kind,oldPassword)));
+Check("KNOWN ROLLBACK RISK old ELV1 snapshot remains decryptable",()=>{
+    // A pass here DOCUMENTS unresolved offline anti-rollback weakness,
+    // NOT proof that rotation invalidates old backup copies.
+    using var stale=LayerKeyVault.Open(originalVault,rootFactor.Id,rootFactor.Kind,oldPassword);
+    Yes(LayeredEmd3.Open(outer,[stale,childFactor,noteFactor],password:oldPassword)
+        =="Tur15 korunan not 🔒");
+});
+
 Console.WriteLine($"{passed}/{passed+failed} Tur15 triple-markdown safety checks passed.");
 return failed==0?0:1;
