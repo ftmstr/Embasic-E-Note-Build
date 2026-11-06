@@ -6,6 +6,8 @@ public static class MarkdownPreviewParser
 {
     public const int MaximumPreviewCharacters = 200_000;
     public const int MaximumPreviewLines = 3_000;
+    public const int MaximumPreviewTableColumns = 32;
+    public const int MaximumPreviewTableRows = 256;
 
     public static MarkdownPreviewResult Parse(string markdown)
     {
@@ -51,10 +53,11 @@ public static class MarkdownPreviewParser
                 blocks.Add(new(MarkdownBlockKind.Quote, string.Join("\n", quote)));
                 continue;
             }
-            if (i + 1 < limit && Separator(lines[i+1], out int count))
+            if (i + 1 < limit && BalancedCodeSpans(line) &&
+                Separator(lines[i+1], out int count))
             {
                 var headers = Cells(line);
-                if (headers.Count == count)
+                if (headers.Count == count && count <= MaximumPreviewTableColumns)
                 {
                     var rows = new List<string> { string.Join("\t", headers) };
                     var parsedCells = new List<IReadOnlyList<string>> { headers.AsReadOnly() };
@@ -63,7 +66,13 @@ public static class MarkdownPreviewParser
                     i += 2;
                     while (i < limit && !string.IsNullOrWhiteSpace(lines[i]) && lines[i].Contains('|'))
                     {
-                        var cells = Cells(lines[i++]);
+                        string rawRow = lines[i++];
+                        var cells = Cells(rawRow);
+                        // Fail to literal preview on unclosed code spans and
+                        // oversized tables; never silently absorb a delimiter.
+                        if (!BalancedCodeSpans(rawRow) ||
+                            rows.Count >= MaximumPreviewTableRows)
+                            valid = false;
                         // Never silently discard extra columns: malformed tables
                         // fall back to literal text with their content preserved.
                         if (cells.Count > count) valid = false;
@@ -139,8 +148,14 @@ public static class MarkdownPreviewParser
     {
         string input = row.Trim();
         if (input.StartsWith('|')) input = input[1..];
-        if (input.EndsWith('|') && (input.Length < 2 || input[^2] != '\\'))
-            input = input[..^1];
+        if (input.EndsWith('|'))
+        {
+            int slashRun = 0;
+            for (int p = input.Length - 2; p >= 0 && input[p] == '\\'; p--)
+                slashRun++;
+            // A trailing pipe is a table frame only when unescaped.
+            if ((slashRun & 1) == 0) input = input[..^1];
+        }
         var result = new List<string>();
         var cell = new System.Text.StringBuilder();
         int codeRun = 0;
@@ -158,6 +173,14 @@ public static class MarkdownPreviewParser
                     if (count % 2 == 1) { cell.Append('|'); i++; }
                     else if (codeRun != 0) { cell.Append('|'); i++; }
                     else { result.Add(cell.ToString().Trim()); cell.Clear(); i++; }
+                }
+                else if (i < input.Length && input[i] == '\u0060' &&
+                         (count & 1) == 1)
+                {
+                    // Escaped backtick is literal, not a code-span toggle.
+                    cell.Append('\\', count / 2);
+                    cell.Append('\u0060');
+                    i++;
                 }
                 else cell.Append('\\', count);
                 continue;
@@ -185,6 +208,35 @@ public static class MarkdownPreviewParser
         result.Add(cell.ToString().Trim());
         return result;
     }
+    private static bool BalancedCodeSpans(string source)
+    {
+        int openRun = 0;
+        for (int i = 0; i < source.Length;)
+        {
+            if (source[i] == '\\')
+            {
+                int start = i;
+                while (i < source.Length && source[i] == '\\') i++;
+                if (i < source.Length && source[i] == '\u0060' &&
+                    ((i - start) & 1) == 1)
+                    i++; // escaped backtick; not a delimiter
+                continue;
+            }
+            if (source[i] == '\u0060')
+            {
+                int run = 0;
+                while (i + run < source.Length && source[i + run] == '\u0060')
+                    run++;
+                if (openRun == 0) openRun = run;
+                else if (run == openRun) openRun = 0;
+                i += run;
+                continue;
+            }
+            i++;
+        }
+        return openRun == 0;
+    }
+
     private static bool Separator(string line, out int count)
     {
         count = 0;

@@ -61,6 +61,27 @@ public static class MarkdownNestedInlineParser
                 marker = new string('\u0060', run);
                 kind = MarkdownInlineKind.Code;
             }
+            else if (i + 2 < end && (source[i] is '*' or '_') &&
+                     source[i+1] == source[i] && source[i+2] == source[i])
+            {
+                char delimiter = source[i];
+                int run = 3;
+                while (i+run < end && source[i+run] == delimiter) run++;
+                if (run == 3 && (delimiter != '_' ||
+                    (i == begin || !char.IsLetterOrDigit(source[i-1]))))
+                {
+                    marker = new string(delimiter, 3);
+                    kind = MarkdownInlineKind.StrongEmphasis;
+                }
+                else
+                {
+                    // Ambiguous 4+ marker runs or intraword underscores:
+                    // preserve source literally, never guess-and-rewrite it.
+                    plain.Append(source.AsSpan(i, run));
+                    i += run;
+                    continue;
+                }
+            }
             else if (Match(source, i, end, "**"))
             { marker = "**"; kind = MarkdownInlineKind.Strong; }
             else if (Match(source, i, end, "~~"))
@@ -87,6 +108,14 @@ public static class MarkdownNestedInlineParser
                     continue;
                 }
             }
+            if (marker.Length == 3)
+            {
+                // Malformed or unclosed triple delimiters stay literal.
+                // Never retry their 2-char suffix as an independent opener.
+                plain.Append(marker);
+                i += marker.Length;
+                continue;
+            }
             plain.Append(source[i++]);
         }
         Flush();
@@ -107,6 +136,10 @@ public static class MarkdownNestedInlineParser
             if (marker[0] == '\u0060' &&
                 ((i > 0 && source[i-1] == '\u0060') ||
                  (i + marker.Length < end && source[i+marker.Length] == '\u0060')))
+                continue;
+            if (marker.Length == 3 &&
+                ((i > 0 && source[i-1] == marker[0]) ||
+                 (i + 3 < end && source[i+3] == marker[0])))
                 continue;
             if (marker == "_" && i + 1 < end &&
                 char.IsLetterOrDigit(source[i+1])) continue;
