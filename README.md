@@ -107,3 +107,24 @@ HEAD before documentation commit. See
 Physical WPF GUI/DPI, true Word/UYAP WYSIWYG, full DOCX/ODT fidelity,
 printer/PDF/UDF and security/recovery release gates remain NOT RUN or
 BLOCKED. New secure note (.emd) remains DISABLED.
+
+## Tur 13 (2026-11-06) — safe inline Markdown and table escapes
+
+[Stacked Draft PR #14](https://github.com/ftmstr/Embasic-E-Note-Build/pull/14)
+adds inert `MarkdownInlineParser` tokens for limited **bold**,
+*italic*, inline code and ~~strikethrough~~; WPF displays these using
+ordinary literal `Run` styles inside the existing FlowDocument.
+Markdown tables now keep escaped `\|` and simple code-span pipes
+within the same cell. All changes affect **visual preview only**;
+source `.md`, per-note paper-layout sidecars, RTF copy-only saves,
+and guarded DOCX/ODT editing remain untouched.
+
+No HTML, JavaScript, remote images, links, browser engine or
+new API. This is not full CommonMark, full WYSIWYG or print/PDF/UDF.
+[Windows CI 42173395275](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42173395275)
+confirmed Release **0 warnings/0 errors, 345/345 checks** on the
+code HEAD before the documentation-only commit.
+See [Tur13 CI evidence](docs/CI-EVIDENCE-TUR13.md) and
+[Tur13 security risk register](docs/RISKS-TUR13.md).
+Physical Windows GUI/DPI, rich-document fidelity and UYAP are NOT RUN.
+The WPF secure `.emd` note workflow remains DISABLED.
