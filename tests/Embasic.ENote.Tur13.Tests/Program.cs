@@ -89,5 +89,36 @@ Check("preview parser rejects excessive inline source",()=>
         new string('x',MarkdownPreviewParser.MaximumPreviewCharacters+1))));
 Check("null inline text rejected",()=>
     Throws<ArgumentNullException>(()=>MarkdownInlineParser.Parse(null!)));
+Check("escaped table separator is one cell",()=>{
+    var r=MarkdownPreviewParser.Parse("| A\\|B | C |\n| --- | --- |\n| 1\\|2 | 3 |");
+    Yes(r.Blocks.Count==1 && r.Blocks[0].Kind==MarkdownBlockKind.Table &&
+        r.Blocks[0].Rows![0]=="A|B\tC" && r.Blocks[0].Rows![1]=="1|2\t3");
+});
+Check("inline code containing pipe is one table cell",()=>{
+    var r=MarkdownPreviewParser.Parse("| \u0060a|b\u0060 | C |\n| --- | --- |\n| x | y |");
+    Yes(r.Blocks.Count==1 && r.Blocks[0].Rows![0]=="\u0060a|b\u0060\tC");
+});
+Check("Unicode table with bold tokens preserved",()=>{
+    var r=MarkdownPreviewParser.Parse("| **Başlık** | 日本語 |\n| --- | --- |\n| *İçerik* | 😀 |");
+    Yes(r.Blocks[0].Rows![0]=="**Başlık**\t日本語" &&
+        MarkdownInlineParser.Parse("**Başlık**")[0].Kind==MarkdownInlineKind.Strong);
+});
+Check("malformed delimiter does not create table",()=>{
+    var r=MarkdownPreviewParser.Parse("| a | b |\n| -- | -- |\n| x | y |");
+    Yes(r.Blocks.All(b=>b.Kind!=MarkdownBlockKind.Table));
+});
+Check("literal script inside table remains text",()=>{
+    var r=MarkdownPreviewParser.Parse("| Name | Value |\n| --- | --- |\n| x | <script>x</script> |");
+    Yes(r.Blocks[0].Rows![1].Contains("<script>x</script>"));
+});
+Check("escaped pipe outside table is literal preview text",()=>{
+    var spans=MarkdownInlineParser.Parse("hello \\| world");
+    Yes(spans.Count==1 && spans[0].Text=="hello | world");
+});
+Check("Code literal asterisk is not styled",()=>{
+    var spans=MarkdownInlineParser.Parse("\u0060**X**\u0060");
+    Yes(spans.Count==1 && spans[0].Kind==MarkdownInlineKind.Code &&
+        spans[0].Text=="**X**");
+});
 Console.WriteLine($"{passed}/{passed+failed} Tur13 inert inline Markdown tests passed.");
 return failed==0?0:1;
