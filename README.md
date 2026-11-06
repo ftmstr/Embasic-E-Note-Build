@@ -149,3 +149,13 @@ See [Tur14 evidence](docs/CI-EVIDENCE-TUR14.md) and
 [security limits](docs/SECURITY-RISKS-TUR14.md).
 Full CommonMark, WYSIWYG editing, real printing/PDF/UDF and physical
 Windows GUI acceptance are NOT claimed. `.emd` creation remains DISABLED.
+
+## Tur 15 (2026-11-06) — conservative triple emphasis, safe table fallback, lock-risk probes
+
+Draft PR #16: https://github.com/ftmstr/Embasic-E-Note-Build/pull/16
+This stacks on verified Tur14 PR #15 (01690b193df14e4245b322a9d3aa0eef92719da0), preserving Tur10 RTF copy-only and Tur11 guarded DOCX/ODT editing. The offline Markdown preview understands a conservative triple-asterisk / triple-underscore strong+emphasis subset. Ambiguous four-plus delimiters stay literal. Inert WPF Span/Run formatting, escaped table pipes, balanced code runs, malformed rows, and preview-only table-size limits avoid source rewriting and silent extra-column loss. This is NOT full CommonMark, native WYSIWYG, or Office output fidelity.
+
+Experimental synthetic security tests exercise independent ELK1 factors, authenticated ELH1 index failures, and ELV1 password rotation. Importantly, an old copied ELV1 vault STILL OPENS with the former password, even after a current vault rotates credentials. This is a documented ANTI-ROLLBACK VULNERABILITY, not a resolved security feature. New secure .emd creation/open/save in WPF stays DISABLED.
+
+Code HEAD Windows CI: https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42265556341
+Windows .NET 10 Release 0 errors and 0 warnings, **418/418 automated PASS** including 45 Tur15 checks. Headless CI does not establish physical Windows GUI/DPI, disk-full/ACL/TOCTOU, cross-account DPAPI, print/PDF/UDF acceptance. See docs/CI-EVIDENCE-TUR15.md and docs/SECURITY-RISKS-TUR15.md. No signed installer released.

@@ -63,3 +63,12 @@ dependency. Markdown preview uses existing .NET 10 BCL and WPF inert
 original Embasic light/dark logos and user-provided E-Note ICO/512 PNG
 binary blobs remain unchanged. Transitive NOTICE/SBOM, runtime license
 and logo redistribution clearance are still required before publication.
+
+## Tur 15 dependency and licensing scope
+No additional NuGet package, font, paid API, account, cloud connector,
+advertising SDK or subscription dependency was introduced. All changes
+use the existing .NET 10, WPF, local Core and Emd test dependencies.
+The original Embasic Light/Dark and official E-Note ICO/512 PNG Git
+blobs remain unchanged. This is NOT an SBOM, NOTICE transitive dependency
+or distribution trademark/license clearance; full review remains BLOCKED
+for public installer publishing.
