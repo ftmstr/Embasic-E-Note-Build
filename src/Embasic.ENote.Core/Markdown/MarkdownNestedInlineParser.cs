@@ -15,12 +15,14 @@ public static class MarkdownNestedInlineParser
         ArgumentNullException.ThrowIfNull(source);
         if (source.Length > MarkdownPreviewParser.MaximumPreviewCharacters)
             throw new ArgumentOutOfRangeException(nameof(source), "Preview length exceeded.");
-        int remaining = MaximumNodes;
-        return Level(source, 0, source.Length, 0, ref remaining).AsReadOnly();
+        var budget = new NodeBudget { Remaining = MaximumNodes };
+        return Level(source, 0, source.Length, 0, budget).AsReadOnly();
     }
 
+    private sealed class NodeBudget { public int Remaining; }
+
     private static List<MarkdownInlineNode> Level(string source, int begin, int end,
-        int depth, ref int remaining)
+        int depth, NodeBudget budget)
     {
         var nodes = new List<MarkdownInlineNode>();
         var plain = new System.Text.StringBuilder();
@@ -29,9 +31,9 @@ public static class MarkdownNestedInlineParser
             if (plain.Length == 0) return;
             nodes.Add(new MarkdownInlineNode(MarkdownInlineKind.Text, plain.ToString()));
             plain.Clear();
-            remaining--;
+            budget.Remaining--;
         }
-        if (depth >= MaximumDepth || remaining <= 1)
+        if (depth >= MaximumDepth || budget.Remaining <= 1)
         {
             nodes.Add(new MarkdownInlineNode(MarkdownInlineKind.Text, source[begin..end]));
             return nodes;
@@ -39,7 +41,7 @@ public static class MarkdownNestedInlineParser
 
         for (int i = begin; i < end;)
         {
-            if (remaining <= 2)
+            if (budget.Remaining <= 2)
             {
                 plain.Append(source.AsSpan(i, end - i));
                 break;
@@ -78,9 +80,9 @@ public static class MarkdownNestedInlineParser
                     string raw = source[start..close];
                     IReadOnlyList<MarkdownInlineNode>? children = null;
                     if (kind != MarkdownInlineKind.Code)
-                        children = Level(source, start, close, depth + 1, ref remaining).AsReadOnly();
+                        children = Level(source, start, close, depth + 1, budget).AsReadOnly();
                     nodes.Add(new MarkdownInlineNode(kind, raw, children));
-                    remaining--;
+                    budget.Remaining--;
                     i = close + marker.Length;
                     continue;
                 }
