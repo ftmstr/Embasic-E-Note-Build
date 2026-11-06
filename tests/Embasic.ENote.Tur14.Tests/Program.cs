@@ -91,5 +91,41 @@ Check("limited preview source not rewritten",()=>{
     var s="# Heading\n\n**x *y* z**"; var p=MarkdownPreviewParser.Parse(s);
     Yes(p.Blocks.Count==2 && s.EndsWith("**x *y* z**"));
 });
+Check("odd escaped pipe stays within one cell",()=>{
+    var x=MarkdownPreviewParser.Parse("| A\\|B | C |\n| --- | --- |\n| x | y |");
+    Yes(x.Blocks[0].Kind==MarkdownBlockKind.Table && x.Blocks[0].TableCells![0][0]=="A|B");
+});
+Check("double backslash before pipe leaves real column",()=>{
+    var x=MarkdownPreviewParser.Parse("| A\\\\| B | C |\n| --- | --- | --- |\n| a | b | c |");
+    Yes(x.Blocks[0].Kind==MarkdownBlockKind.Table && x.Blocks[0].TableCells![0].Count==3);
+});
+Check("double-backtick span keeps internal pipe",()=>{
+    var x=MarkdownPreviewParser.Parse("| \u0060\u0060a|b\u0060\u0060 | C |\n| --- | --- |\n| x | y |");
+    Yes(x.Blocks[0].Kind==MarkdownBlockKind.Table &&
+        x.Blocks[0].TableCells![0][0]=="\u0060\u0060a|b\u0060\u0060");
+});
+Check("table with tab in content preserves exact cell",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| iç\ttab | 😀 |");
+    Yes(x.Blocks[0].TableCells![1][0]=="iç\ttab" && x.Blocks[0].TableCells![1][1]=="😀");
+});
+Check("extra table column safely falls back to paragraph",()=>{
+    var x=MarkdownPreviewParser.Parse("| A | B |\n| --- | --- |\n| 1 | 2 | 3 |");
+    Yes(x.Blocks.All(t=>t.Kind!=MarkdownBlockKind.Table) &&
+        x.Blocks[0].Text.Contains("| 1 | 2 | 3 |"));
+});
+Check("inert HTML within nested strong remains literal leaf",()=>{
+    var x=MarkdownNestedInlineParser.Parse("**<script>alert(1)</script>**");
+    Yes(x.Count==1 && x[0].Children![0].Kind==MarkdownInlineKind.Text &&
+        x[0].Children![0].Text.StartsWith("<script>"));
+});
+Check("unclosed multi-backtick span stays literal",()=>{
+    var x=MarkdownNestedInlineParser.Parse("\u0060\u0060unsafe");
+    Yes(x.Count==1 && x[0].Kind==MarkdownInlineKind.Text);
+});
+Check("simple inline code markdown source remains untouched",()=>{
+    var s="| \u0060\u0060a|b\u0060\u0060 | Türkçe |\n| --- | --- |\n| X | Y |";
+    var t=MarkdownPreviewParser.Parse(s);
+    Yes(t.Blocks[0].Kind==MarkdownBlockKind.Table && s.Contains("Türkçe"));
+});
 Console.WriteLine($"{passed}/{passed+failed} Tur14 safe nested inline checks passed.");
 return failed==0?0:1;

@@ -98,6 +98,10 @@ public static class MarkdownNestedInlineParser
             if (source[i] == '\\' && i + 1 < end && Escapable(source[i+1]))
             { i++; continue; }
             if (!Match(source, i, end, marker)) continue;
+            // A single '*' is never closed by either half of a double '**'.
+            // This permits a bounded outer italic span around inner bold.
+            if (marker == "*" && ((i > start && source[i-1] == '*') ||
+                (i+1 < end && source[i+1] == '*'))) continue;
             if (marker[0] == '\u0060' &&
                 ((i > 0 && source[i-1] == '\u0060') ||
                  (i + marker.Length < end && source[i+marker.Length] == '\u0060')))

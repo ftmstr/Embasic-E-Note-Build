@@ -57,14 +57,25 @@ public static class MarkdownPreviewParser
                 if (headers.Count == count)
                 {
                     var rows = new List<string> { string.Join("\t", headers) };
+                    var parsedCells = new List<IReadOnlyList<string>> { headers.AsReadOnly() };
+                    int sourceStart = i;
+                    bool valid = true;
                     i += 2;
                     while (i < limit && !string.IsNullOrWhiteSpace(lines[i]) && lines[i].Contains('|'))
                     {
                         var cells = Cells(lines[i++]);
+                        // Never silently discard extra columns: malformed tables
+                        // fall back to literal text with their content preserved.
+                        if (cells.Count > count) valid = false;
                         while (cells.Count < count) cells.Add("");
-                        rows.Add(string.Join("\t", cells.Take(count)));
+                        parsedCells.Add(cells.AsReadOnly());
+                        rows.Add(string.Join("\t", cells));
                     }
-                    blocks.Add(new(MarkdownBlockKind.Table, "", 0, rows));
+                    if (valid)
+                        blocks.Add(new(MarkdownBlockKind.Table, "", 0, rows, parsedCells));
+                    else
+                        blocks.Add(new(MarkdownBlockKind.Paragraph,
+                            string.Join("\n", lines[sourceStart..i])));
                     continue;
                 }
             }
@@ -126,37 +137,53 @@ public static class MarkdownPreviewParser
     }
     private static List<string> Cells(string row)
     {
-        string text = row.Trim();
-        if (text.StartsWith('|')) text = text[1..];
-        if (text.EndsWith('|') && (text.Length < 2 || text[^2] != '\\'))
-            text = text[..^1];
-        var cells = new List<string>();
+        string input = row.Trim();
+        if (input.StartsWith('|')) input = input[1..];
+        if (input.EndsWith('|') && (input.Length < 2 || input[^2] != '\\'))
+            input = input[..^1];
+        var result = new List<string>();
         var cell = new System.Text.StringBuilder();
-        bool inCode = false;
-        for (int i = 0; i < text.Length; i++)
+        int codeRun = 0;
+        for (int i = 0; i < input.Length;)
         {
-            char current = text[i];
-            if (current == '\\' && i + 1 < text.Length && text[i + 1] == '|')
+            if (input[i] == '\\')
             {
-                cell.Append('|');
+                int start = i;
+                while (i < input.Length && input[i] == '\\') i++;
+                int count = i-start;
+                if (i < input.Length && input[i] == '|')
+                {
+                    // Odd parity escapes the pipe, even parity leaves a delimiter.
+                    cell.Append('\\', count/2);
+                    if (count % 2 == 1) { cell.Append('|'); i++; }
+                    else if (codeRun != 0) { cell.Append('|'); i++; }
+                    else { result.Add(cell.ToString().Trim()); cell.Clear(); i++; }
+                }
+                else cell.Append('\\', count);
+                continue;
+            }
+            if (input[i] == '\u0060')
+            {
+                int length=0;
+                while (i+length < input.Length && input[i+length] == '\u0060')
+                    length++;
+                if (codeRun == 0) codeRun = length;
+                else if (codeRun == length) codeRun = 0;
+                cell.Append('\u0060', length);
+                i += length;
+                continue;
+            }
+            if (input[i] == '|' && codeRun == 0)
+            {
+                result.Add(cell.ToString().Trim());
+                cell.Clear();
                 i++;
                 continue;
             }
-            if (current == '\u0060')
-            {
-                inCode = !inCode;
-                cell.Append(current);
-                continue;
-            }
-            if (current == '|' && !inCode)
-            {
-                cells.Add(cell.ToString().Trim());
-                cell.Clear();
-            }
-            else cell.Append(current);
+            cell.Append(input[i++]);
         }
-        cells.Add(cell.ToString().Trim());
-        return cells;
+        result.Add(cell.ToString().Trim());
+        return result;
     }
     private static bool Separator(string line, out int count)
     {
@@ -175,5 +202,6 @@ public static class MarkdownPreviewParser
 }
 public enum MarkdownBlockKind { Heading, Paragraph, Quote, BulletList, NumberedList, Code, Table, Rule, Notice }
 public sealed record MarkdownPreviewBlock(MarkdownBlockKind Kind, string Text,
-    int HeadingLevel = 0, IReadOnlyList<string>? Rows = null);
+    int HeadingLevel = 0, IReadOnlyList<string>? Rows = null,
+    IReadOnlyList<IReadOnlyList<string>>? TableCells = null);
 public sealed record MarkdownPreviewResult(IReadOnlyList<MarkdownPreviewBlock> Blocks, bool IsTruncated);
