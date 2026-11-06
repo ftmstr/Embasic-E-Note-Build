@@ -27,26 +27,24 @@ internal static class MarkdownPreviewDocumentFactory
             {
                 case MarkdownBlockKind.Heading:
                     int level = Math.Clamp(block.HeadingLevel, 1, 6);
-                    document.Blocks.Add(new Paragraph(new Run(block.Text))
-                    {
-                        FontWeight = FontWeights.SemiBold,
-                        FontSize = new double[]{0, 25, 22, 19, 17, 15, 14}[level],
-                        Margin = new Thickness(0, 13, 0, 8)
-                    });
+                    var heading = Paragraph(block.Text);
+                    heading.FontWeight = FontWeights.SemiBold;
+                    heading.FontSize = new double[]{0, 25, 22, 19, 17, 15, 14}[level];
+                    heading.Margin = new Thickness(0, 13, 0, 8);
+                    document.Blocks.Add(heading);
                     break;
                 case MarkdownBlockKind.Paragraph:
                     document.Blocks.Add(Paragraph(block.Text));
                     break;
                 case MarkdownBlockKind.Quote:
-                    document.Blocks.Add(new Paragraph(new Run(block.Text))
-                    {
-                        FontStyle = FontStyles.Italic,
-                        Foreground = Brushes.DimGray,
-                        BorderBrush = Brushes.SteelBlue,
-                        BorderThickness = new Thickness(3, 0, 0, 0),
-                        Padding = new Thickness(12, 7, 4, 7),
-                        Margin = new Thickness(0, 6, 0, 9)
-                    });
+                    var quote = Paragraph(block.Text);
+                    quote.FontStyle = FontStyles.Italic;
+                    quote.Foreground = Brushes.DimGray;
+                    quote.BorderBrush = Brushes.SteelBlue;
+                    quote.BorderThickness = new Thickness(3, 0, 0, 0);
+                    quote.Padding = new Thickness(12, 7, 4, 7);
+                    quote.Margin = new Thickness(0, 6, 0, 9);
+                    document.Blocks.Add(quote);
                     break;
                 case MarkdownBlockKind.Code:
                     document.Blocks.Add(new Paragraph(new Run(block.Text))
@@ -110,6 +108,32 @@ internal static class MarkdownPreviewDocumentFactory
         return document;
     }
 
-    private static Paragraph Paragraph(string text) =>
-        new(new Run(text)) { Margin = new Thickness(0, 0, 0, 9) };
+    private static Paragraph Paragraph(string text)
+    {
+        var result = new Paragraph { Margin = new Thickness(0, 0, 0, 9) };
+        foreach (var span in MarkdownInlineParser.Parse(text))
+        {
+            // Run is inert literal text; never create Hyperlink, UIElement,
+            // Image, WebBrowser, executable HTML or remotely fetched content.
+            var run = new Run(span.Text);
+            switch (span.Kind)
+            {
+                case MarkdownInlineKind.Strong:
+                    run.FontWeight = FontWeights.Bold;
+                    break;
+                case MarkdownInlineKind.Emphasis:
+                    run.FontStyle = FontStyles.Italic;
+                    break;
+                case MarkdownInlineKind.Strikethrough:
+                    run.TextDecorations = TextDecorations.Strikethrough;
+                    break;
+                case MarkdownInlineKind.Code:
+                    run.FontFamily = new FontFamily("Consolas");
+                    run.Background = Brushes.AliceBlue;
+                    break;
+            }
+            result.Inlines.Add(run);
+        }
+        return result;
+    }
 }

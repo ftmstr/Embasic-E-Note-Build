@@ -48,3 +48,10 @@ libraries; **no new NuGet, font, SDK or remote image loader**.
 Logo-Light/Logo-Dark and official new E-Note ICO/512 PNG bits remain
 unchanged. Legal inventory and binary runtime/license/SBOM acceptance
 remain required before signed installer release.
+
+## Tur 13 dependency note
+Inline Markdown and table rendering use only the pre-existing .NET 10
+Core/WPF libraries; **no new NuGet, font, network SDK or account**.
+Official original Embasic light/dark logo and new E-Note ICO/512 PNG
+asset content remains unchanged. Final runtime NOTICE, SBOM, licensing,
+trademark provenance and installer security review are still REQUIRED.

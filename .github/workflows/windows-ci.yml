@@ -53,3 +53,6 @@ jobs:
 
       - name: Run Tur12 inert Markdown visual-preview regression tests
         run: dotnet run --project tests/Embasic.ENote.Tur12.Tests/Embasic.ENote.Tur12.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur13 inert inline Markdown and table escaping tests
+        run: dotnet run --project tests/Embasic.ENote.Tur13.Tests/Embasic.ENote.Tur13.Tests.csproj --configuration Release --no-restore

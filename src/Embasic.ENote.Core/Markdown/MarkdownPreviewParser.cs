@@ -124,8 +124,40 @@ public static class MarkdownPreviewParser
         { numbered = true; text = line[(n+2)..]; return true; }
         return false;
     }
-    private static List<string> Cells(string row) =>
-        row.Trim().Trim('|').Split('|').Select(c => c.Trim()).ToList();
+    private static List<string> Cells(string row)
+    {
+        string text = row.Trim();
+        if (text.StartsWith('|')) text = text[1..];
+        if (text.EndsWith('|') && (text.Length < 2 || text[^2] != '\\'))
+            text = text[..^1];
+        var cells = new List<string>();
+        var cell = new System.Text.StringBuilder();
+        bool inCode = false;
+        for (int i = 0; i < text.Length; i++)
+        {
+            char current = text[i];
+            if (current == '\\' && i + 1 < text.Length && text[i + 1] == '|')
+            {
+                cell.Append('|');
+                i++;
+                continue;
+            }
+            if (current == '\u0060')
+            {
+                inCode = !inCode;
+                cell.Append(current);
+                continue;
+            }
+            if (current == '|' && !inCode)
+            {
+                cells.Add(cell.ToString().Trim());
+                cell.Clear();
+            }
+            else cell.Append(current);
+        }
+        cells.Add(cell.ToString().Trim());
+        return cells;
+    }
     private static bool Separator(string line, out int count)
     {
         count = 0;
