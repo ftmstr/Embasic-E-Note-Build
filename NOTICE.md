@@ -72,3 +72,12 @@ The original Embasic Light/Dark and official E-Note ICO/512 PNG Git
 blobs remain unchanged. This is NOT an SBOM, NOTICE transitive dependency
 or distribution trademark/license clearance; full review remains BLOCKED
 for public installer publishing.
+
+## Tur 16 dependency statement (2026-11-07)
+The authenticated ELV1 snapshot *prototype* uses only existing
+System.Security.Cryptography (SHA256 and fixed-time digest comparison),
+the pre-existing EMD AES-GCM/Argon2id code and local .NET/WPF assemblies.
+No new NuGet package, paid service, account, SDK, remote image or font.
+Official original Embasic logos and E-Note ICO/512 PNG remain byte-identical.
+Runtime SBOM/transitive notices/trademark provenance and full license
+review are mandatory before release and have NOT been completed.
