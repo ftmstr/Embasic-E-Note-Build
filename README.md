@@ -159,3 +159,27 @@ Experimental synthetic security tests exercise independent ELK1 factors, authent
 
 Code HEAD Windows CI: https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42265556341
 Windows .NET 10 Release 0 errors and 0 warnings, **418/418 automated PASS** including 45 Tur15 checks. Headless CI does not establish physical Windows GUI/DPI, disk-full/ACL/TOCTOU, cross-account DPAPI, print/PDF/UDF acceptance. See docs/CI-EVIDENCE-TUR15.md and docs/SECURITY-RISKS-TUR15.md. No signed installer released.
+
+## Tur 16 (2026-11-07) — experimental ELV1 snapshot pin
+
+[Draft PR #17](https://github.com/ftmstr/Embasic-E-Note-Build/pull/17)
+stacks on Tur15. `VaultSnapshotPin` authenticates an existing ELV1
+envelope, captures its SHA-256 digest and a **caller-asserted** epoch,
+and rejects a different snapshot on its optional pinned-open path
+before deriving a secret. `LayerVaultDiskStore.UnlockPinned` is an
+optional wrapper. [Code CI 42411730279](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42411730279):
+Windows .NET10 WPF Release, **0 errors/warnings and 439/439 tests PASS**.
+
+**THIS IS NOT A COMPLETE ANTI-ROLLBACK MECHANISM.**
+The old `LayerKeyVault.Open` / `LayerVaultDiskStore.Unlock` APIs remain
+available, and an attacker can supply an older pin and epoch if no
+independent rollback-resistant trusted store exists. ELV1 itself has
+no authenticated monotonic revision. An attacker with old vault
+ciphertext plus old password can still extract the historical factor.
+See [threat model](docs/ROLLBACK-THREAT-MODEL-TUR16.md),
+[CI evidence](docs/CI-EVIDENCE-TUR16.md) and
+[risk register](docs/SECURITY-RISKS-TUR16.md).
+
+No WPF secure `.emd` enablement, changes to Markdown/RTF/DOCX/ODT,
+new packages/SDKs, browser/network integration, installer or main merge.
+Actual Windows GUI/DPI/UYAP/NTFS and cross-user recovery remain NOT RUN.
