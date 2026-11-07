@@ -62,3 +62,6 @@ jobs:
 
       - name: Run Tur15 bounded triple Markdown and table safety checks
         run: dotnet run --project tests/Embasic.ENote.Tur15.Tests/Embasic.ENote.Tur15.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur16 experimental vault snapshot rollback pin tests
+        run: dotnet run --project tests/Embasic.ENote.Tur16.Tests/Embasic.ENote.Tur16.Tests.csproj --configuration Release --no-restore

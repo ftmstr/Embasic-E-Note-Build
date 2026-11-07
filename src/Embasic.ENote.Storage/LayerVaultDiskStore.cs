@@ -43,6 +43,22 @@ public sealed class LayerVaultDiskStore
         finally { CryptographicOperations.ZeroMemory(encrypted); }
     }
 
+    /// <summary>
+    /// Optional experimental pinned read. The caller MUST obtain the pin and
+    /// monotonic trustedMinimumEpoch from independently rollback-protected
+    /// storage. This class does not provide such storage, and the legacy
+    /// Unlock method remains unguarded. NOT a production security boundary.
+    /// </summary>
+    public LayerSecret UnlockPinned(string path, VaultSnapshotPin trustedPin,
+        string credential, long trustedMinimumEpoch, bool recovery = false)
+    {
+        ArgumentNullException.ThrowIfNull(trustedPin);
+        string full = Validate(path);
+        byte[] encrypted = File.ReadAllBytes(full);
+        try { return trustedPin.OpenPinned(encrypted, credential, trustedMinimumEpoch, recovery); }
+        finally { CryptographicOperations.ZeroMemory(encrypted); }
+    }
+
     private static string Validate(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
