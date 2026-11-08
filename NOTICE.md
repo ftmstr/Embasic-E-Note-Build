@@ -91,3 +91,12 @@ light/dark logos and new E-Note ICO/512 PNG were not modified.
 This is a source-level statement only, not a complete license audit,
 third-party NOTICE/SBOM, binary/provenance or trademark clearance.
 Release review is still BLOCKED.
+
+## Tur18 new-dependency status
+The 174-byte bounded encrypted vault read uses existing .NET 10
+FileStream, existing System.Security.Cryptography and current Storage
+and EMD code. Test suite uses only framework assemblies. No new
+NuGet package, cloud API, subscription, account, advertising SDK, font
+or icon. Original Embasic theme logos and E-Note ICO/512 PNG assets
+remain byte-identical. This is not final SBOM, transitive NuGet license,
+font/icon legal provenance or cryptographic distribution approval.
