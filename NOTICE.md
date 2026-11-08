@@ -109,3 +109,10 @@ mandatory online service, account, fonts, image, or ad SDK added.
 Original Embasic Light/Dark and E-Note ICO/512 PNG Git blobs are
 unchanged. Complete third-party notice, license/SBOM and logo
 redistribution rights review is still required before release.
+
+## Tur 20 dependency inventory
+
+The experimental Windows vault identity probe uses the operating system's
+kernel32 file information API through existing .NET interop. The tests use
+framework assemblies and Windows tools. Tur 20 adds no NuGet package or
+binary asset. Logo redistribution and full SBOM/NOTICE acceptance are open.

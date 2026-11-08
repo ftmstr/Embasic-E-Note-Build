@@ -50,7 +50,15 @@ public sealed class LayerVaultDiskStore
     /// Unlock method remains unguarded. NOT a production security boundary.
     /// </summary>
     public LayerSecret UnlockPinned(string path, VaultSnapshotPin trustedPin,
-        string credential, long trustedMinimumEpoch, bool recovery = false)
+        string credential, long trustedMinimumEpoch, bool recovery = false) =>
+        UnlockPinnedCore(path, trustedPin, credential, trustedMinimumEpoch, recovery, null);
+
+    internal LayerSecret UnlockPinnedAtIdentity(string path, VaultSnapshotPin trustedPin,
+        string credential, long trustedMinimumEpoch, bool recovery, WindowsVaultFileIdentity identity) =>
+        UnlockPinnedCore(path, trustedPin, credential, trustedMinimumEpoch, recovery, identity);
+
+    private static LayerSecret UnlockPinnedCore(string path, VaultSnapshotPin trustedPin,
+        string credential, long trustedMinimumEpoch, bool recovery, WindowsVaultFileIdentity? identity)
     {
         ArgumentNullException.ThrowIfNull(trustedPin);
         string full = Validate(path);
@@ -61,6 +69,8 @@ public sealed class LayerVaultDiskStore
         // anti-TOCTOU or reliable cross-process CAS enforcement.
         using var stream = new FileStream(full, FileMode.Open, FileAccess.Read,
             FileShare.Read, 4096, FileOptions.SequentialScan);
+        if (identity is { } expected && WindowsVaultFileIdentity.Read(stream.SafeFileHandle) != expected)
+            throw new CryptographicException("Vault file identity does not match trusted policy.");
         if (stream.Length != LayerKeyVault.Size)
             throw new InvalidDataException("Invalid encrypted vault envelope length.");
         byte[] encrypted = new byte[LayerKeyVault.Size];
