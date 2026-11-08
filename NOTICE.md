@@ -81,3 +81,13 @@ No new NuGet package, paid service, account, SDK, remote image or font.
 Official original Embasic logos and E-Note ICO/512 PNG remain byte-identical.
 Runtime SBOM/transitive notices/trademark provenance and full license
 review are mandatory before release and have NOT been completed.
+
+## Tur17 local dependency inventory — 2026-11-08
+The experimental vault-policy gate and 23 tests use only the existing
+.NET 10 framework, WPF/Storage/EMD assemblies and System.Security.Cryptography.
+No new paid API, NuGet package, remote service, font, cloud account or
+advertising SDK was introduced. Source assets for original Embasic
+light/dark logos and new E-Note ICO/512 PNG were not modified.
+This is a source-level statement only, not a complete license audit,
+third-party NOTICE/SBOM, binary/provenance or trademark clearance.
+Release review is still BLOCKED.

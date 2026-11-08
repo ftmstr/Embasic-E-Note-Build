@@ -65,3 +65,6 @@ jobs:
 
       - name: Run Tur16 experimental vault snapshot rollback pin tests
         run: dotnet run --project tests/Embasic.ENote.Tur16.Tests/Embasic.ENote.Tur16.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur17 fail-closed vault policy gate and OS FileShare tests
+        run: dotnet run --project tests/Embasic.ENote.Tur17.Tests/Embasic.ENote.Tur17.Tests.csproj --configuration Release --no-restore

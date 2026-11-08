@@ -183,3 +183,26 @@ See [threat model](docs/ROLLBACK-THREAT-MODEL-TUR16.md),
 No WPF secure `.emd` enablement, changes to Markdown/RTF/DOCX/ODT,
 new packages/SDKs, browser/network integration, installer or main merge.
 Actual Windows GUI/DPI/UYAP/NTFS and cross-user recovery remain NOT RUN.
+
+## Tur 17 (2026-11-08) — fail-closed ELV1 policy gate experiment
+
+[Stacked Draft PR #18](https://github.com/ftmstr/Embasic-E-Note-Build/pull/18)
+introduces `TrustedVaultOpenGate` and an
+`IExternalVaultAnchorReader` contract. The *new, opt-in path* refuses
+vault unlocking if a source of trusted policy is absent, unavailable,
+wrongly bound to the workspace/factor, or below its supplied epoch floor.
+[Code HEAD Windows CI](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42483708395):
+.NET 10 Release **0 warnings, 0 errors, 462/462 automated PASS**,
+including 23 Tur17 cases and a real Windows Actions `FileShare.None`
+sharing-lock refusal.
+
+**WARNING: Not an anti-rollback solution.** No authenticated monotonic
+policy anchor exists; fake/rolled-back anchors still allow old ELV1
+copies with previous passwords. Old `LayerKeyVault.Open` and
+`LayerVaultDiskStore.Unlock` bypass this opt-in gate. The new tests
+**intentionally prove these flaws persist**. This is NOT secure
+root-key recovery, old-backup revocation or production cryptography.
+See [design gates](docs/ROLLBACK-GATE-DESIGN-TUR17.md),
+[CI evidence](docs/CI-EVIDENCE-TUR17.md) and
+[security risks](docs/SECURITY-RISKS-TUR17.md).
+Secure `.emd` WPF workflow remains DISABLED; no main merge or installer.
