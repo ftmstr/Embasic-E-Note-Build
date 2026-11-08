@@ -100,3 +100,12 @@ NuGet package, cloud API, subscription, account, advertising SDK, font
 or icon. Original Embasic theme logos and E-Note ICO/512 PNG assets
 remain byte-identical. This is not final SBOM, transitive NuGet license,
 font/icon legal provenance or cryptographic distribution approval.
+
+## Tur 19 new dependency inventory (2026-11-08)
+The optional path-policy gate uses only the existing .NET 10 Path/
+OperatingSystem libraries, current Storage/EMD projects and the
+existing encrypted ELV1 format. No new NuGet package, subscription,
+mandatory online service, account, fonts, image, or ad SDK added.
+Original Embasic Light/Dark and E-Note ICO/512 PNG Git blobs are
+unchanged. Complete third-party notice, license/SBOM and logo
+redistribution rights review is still required before release.
