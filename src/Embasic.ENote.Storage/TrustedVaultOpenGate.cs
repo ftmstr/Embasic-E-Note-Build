@@ -23,7 +23,10 @@ public interface IExternalVaultAnchorReader
 public sealed record VaultAnchorGrant(
     Guid WorkspaceId, Guid LockId, LayerKind Kind,
     VaultSnapshotPin Pin, long MinimumEpoch,
-    string? BoundVaultPath = null);
+    string? BoundVaultPath = null)
+{
+    public WindowsVaultFileIdentity? BoundVaultFileIdentity { get; init; }
+}
 
 /// <summary>
 /// Fail-closed entry point when an external trust anchor is absent,
@@ -33,6 +36,8 @@ public sealed record VaultAnchorGrant(
 /// </summary>
 public sealed class TrustedVaultOpenGate
 {
+    private enum Binding { None, Path, WindowsFile }
+
     private readonly IExternalVaultAnchorReader? _anchor;
     private readonly LayerVaultDiskStore _disk;
 
@@ -52,7 +57,7 @@ public sealed class TrustedVaultOpenGate
     public LayerSecret Unlock(string path, Guid workspaceId, Guid lockId,
         LayerKind kind, string credential, bool recovery = false) =>
         UnlockCore(path, workspaceId, lockId, kind, credential, recovery,
-            requirePathBinding: false);
+            Binding.None);
 
     /// <summary>
     /// EXTRA experimental guard: fail closed without an absolute path
@@ -65,10 +70,25 @@ public sealed class TrustedVaultOpenGate
         Guid lockId, LayerKind kind, string credential,
         bool recovery = false) =>
         UnlockCore(path, workspaceId, lockId, kind, credential, recovery,
-            requirePathBinding: true);
+            Binding.Path);
+
+    /// <summary>
+    /// Experimental Windows-only unlock. The external policy must supply
+    /// an exact absolute path and an independently enrolled file identity.
+    /// Identity and ciphertext are acquired from the same open file handle.
+    /// The policy still needs independent rollback protection.
+    /// </summary>
+    public LayerSecret UnlockFileBound(string path, Guid workspaceId, Guid lockId,
+        LayerKind kind, string credential, bool recovery = false)
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException("File-bound vault unlock requires Windows.");
+        return UnlockCore(path, workspaceId, lockId, kind, credential, recovery,
+            Binding.WindowsFile);
+    }
 
     private LayerSecret UnlockCore(string path, Guid workspaceId, Guid lockId,
-        LayerKind kind, string credential, bool recovery, bool requirePathBinding)
+        LayerKind kind, string credential, bool recovery, Binding binding)
     {
         if (workspaceId == Guid.Empty || lockId == Guid.Empty)
             throw new CryptographicException("Missing vault policy identity.");
@@ -83,7 +103,7 @@ public sealed class TrustedVaultOpenGate
             grant.Pin.TrustedEpoch < grant.MinimumEpoch)
             throw new CryptographicException("Untrusted or stale vault policy.");
 
-        if (requirePathBinding)
+        if (binding != Binding.None)
         {
             if (string.IsNullOrWhiteSpace(grant.BoundVaultPath) ||
                 !Path.IsPathFullyQualified(grant.BoundVaultPath))
@@ -92,14 +112,24 @@ public sealed class TrustedVaultOpenGate
 
             // Lexical canonicalization only; reparse points and malicious
             // parent-directory swaps are NOT resolved by Path.GetFullPath.
+            if (binding == Binding.WindowsFile && !Path.IsPathFullyQualified(path))
+                throw new CryptographicException("Requested vault path must be absolute.");
             string expected = Path.GetFullPath(grant.BoundVaultPath);
             string actual = Path.GetFullPath(path);
-            var comparison = OperatingSystem.IsWindows()
+            var comparison = binding == Binding.Path && OperatingSystem.IsWindows()
                 ? StringComparison.OrdinalIgnoreCase
                 : StringComparison.Ordinal;
             if (!string.Equals(expected, actual, comparison))
                 throw new CryptographicException(
                     "Vault path does not match trusted policy.");
+
+            if (binding == Binding.WindowsFile)
+            {
+                if (grant.BoundVaultFileIdentity is not { IsUsable: true } identity)
+                    throw new CryptographicException("No independently enrolled vault file identity.");
+                return _disk.UnlockPinnedAtIdentity(actual, grant.Pin, credential,
+                    grant.MinimumEpoch, recovery, identity);
+            }
         }
 
         return _disk.UnlockPinned(path, grant.Pin, credential,

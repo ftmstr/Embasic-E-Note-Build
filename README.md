@@ -258,3 +258,14 @@ remains DISABLED. The implementation is NOT production anti-rollback.
 See [path binding design](docs/PATH-POLICY-IDENTITY-TUR19.md),
 [CI evidence](docs/CI-EVIDENCE-TUR19.md) and
 [risk matrix](docs/SECURITY-RISKS-TUR19.md).
+
+## Tur 20 — experimental Windows vault file identity
+
+The opt-in `TrustedVaultOpenGate.UnlockFileBound` checks an externally
+enrolled exact path and Windows file identity. The existing bounded ELV1
+read uses that same handle to authenticate the snapshot. The path and
+legacy gates are still available. A rolled-back grant and historical bytes
+on the enrolled object still open in the risk test.
+
+See [the file identity and offline recovery design](docs/VAULT-FILE-IDENTITY-TUR20.md).
+W007 / SEC-EMD-05 is blocked. WPF secure `.emd` is disabled.
