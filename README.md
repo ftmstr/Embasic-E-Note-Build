@@ -227,3 +227,34 @@ See `docs/CI-EVIDENCE-TUR18.md`,
 `docs/ROLLBACK-RECOVERY-DECISION-TUR18.md`, and
 `docs/SECURITY-RISKS-TUR18.md`.
 WPF secure .emd remains **DISABLED**, no installer, no main merge.
+
+## Tur 19 (2026-11-08) — experimental vault path-policy binding
+
+[Stacked Draft PR #20](https://github.com/ftmstr/Embasic-E-Note-Build/pull/20)
+adds the optional `TrustedVaultOpenGate.UnlockPathBound` method.
+Its policy grant has a new, optional `BoundVaultPath` string.
+This route fails closed when the path is absent, relative, or lexically
+different from the trusted grant's absolute normalized path. It still
+calls the previous Tur18 174-byte bounded `UnlockPinned` implementation.
+The *historical* `Unlock` method remains unchanged for test/backward
+compatibility, and still accepts ciphertext cloned to another filename.
+
+[Code HEAD Windows CI 42510423535](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42510423535):
+.NET 10 WPF Release **0 warnings, 0 errors, 507/507 automated PASS**,
+including 25 Tur19 regression tests. Positive tests cover the bound
+path and independent recovery; negative tests cover cloned paths,
+missing/relative/incorrect policies, broken/truncated/oversized vaults,
+wrong password and real Windows FileShare.None refusal. Intentional
+PASS-ing risk tests confirm that legacy APIs and old grant/epoch +
+old ciphertext still unlock.
+
+**NOT secure physical NTFS file identity.** This is lexical canonical
+path comparison only, not volume/file-ID validation or a handle-bound
+anti-reparse/symlink/junction/TOCTOU check. Neither an independently
+trusted rollback-resistant anchor nor mandatory enforcement on every
+ELV1/ELK1/EMD2 open exists. Historical copied ciphertext and old
+passwords remain recoverable through old readers. Secure WPF `.emd`
+remains DISABLED. The implementation is NOT production anti-rollback.
+See [path binding design](docs/PATH-POLICY-IDENTITY-TUR19.md),
+[CI evidence](docs/CI-EVIDENCE-TUR19.md) and
+[risk matrix](docs/SECURITY-RISKS-TUR19.md).
