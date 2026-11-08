@@ -206,3 +206,24 @@ See [design gates](docs/ROLLBACK-GATE-DESIGN-TUR17.md),
 [CI evidence](docs/CI-EVIDENCE-TUR17.md) and
 [security risks](docs/SECURITY-RISKS-TUR17.md).
 Secure `.emd` WPF workflow remains DISABLED; no main merge or installer.
+
+## Tur 18 (2026-11-08) — bounded pinned ELV1 snapshot read
+
+[Stacked Draft PR #19](https://github.com/ftmstr/Embasic-E-Note-Build/pull/19)
+hardens only the **opt-in** `LayerVaultDiskStore.UnlockPinned` read:
+it opens an ELV1 file with a standard `FileShare.Read` stream, rejects
+all lengths except the 174-byte `LayerKeyVault.Size` BEFORE allocating
+the envelope buffer, uses `ReadExactly`, and zeroes the buffer.
+It does not change the unguarded legacy `Unlock` API. It does
+not provide anti-TOCTOU, cross-process CAS, path-bound identity,
+trusted monotonic anchor or old-key revocation.
+
+[Tur18 code Windows CI 42506028582](https://github.com/ftmstr/Embasic-E-Note-Build/actions/runs/42506028582):
+Windows .NET10 Release **0 warnings/errors, 482/482 automated PASS**
+(462 prior + **20 Tur18**). Tests cover wrong/old credentials and epochs,
+missing files, Windows sharing conflict, empty/short/oversized/tampered
+envelopes and intentional passing legacy and cloned-path RISK proofs.
+See `docs/CI-EVIDENCE-TUR18.md`,
+`docs/ROLLBACK-RECOVERY-DECISION-TUR18.md`, and
+`docs/SECURITY-RISKS-TUR18.md`.
+WPF secure .emd remains **DISABLED**, no installer, no main merge.

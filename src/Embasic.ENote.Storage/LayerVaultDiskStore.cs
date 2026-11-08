@@ -54,8 +54,22 @@ public sealed class LayerVaultDiskStore
     {
         ArgumentNullException.ThrowIfNull(trustedPin);
         string full = Validate(path);
-        byte[] encrypted = File.ReadAllBytes(full);
-        try { return trustedPin.OpenPinned(encrypted, credential, trustedMinimumEpoch, recovery); }
+        // The pinned path has a fixed-size ELV1 envelope. Do NOT allow a
+        // malicious oversized file to force unbounded File.ReadAllBytes
+        // allocation; hold a standard Windows file-sharing read handle
+        // during snapshot acquisition. This is NOT handle-bound ancestry,
+        // anti-TOCTOU or reliable cross-process CAS enforcement.
+        using var stream = new FileStream(full, FileMode.Open, FileAccess.Read,
+            FileShare.Read, 4096, FileOptions.SequentialScan);
+        if (stream.Length != LayerKeyVault.Size)
+            throw new InvalidDataException("Invalid encrypted vault envelope length.");
+        byte[] encrypted = new byte[LayerKeyVault.Size];
+        try
+        {
+            stream.ReadExactly(encrypted);
+            return trustedPin.OpenPinned(encrypted, credential,
+                trustedMinimumEpoch, recovery);
+        }
         finally { CryptographicOperations.ZeroMemory(encrypted); }
     }
 
