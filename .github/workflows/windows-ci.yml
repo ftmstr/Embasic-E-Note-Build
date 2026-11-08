@@ -71,3 +71,6 @@ jobs:
 
       - name: Run Tur18 bounded ELV1 guarded read and risk tests
         run: dotnet run --project tests/Embasic.ENote.Tur18.Tests/Embasic.ENote.Tur18.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur19 experimental vault path policy binding and rollback-risk tests
+        run: dotnet run --project tests/Embasic.ENote.Tur19.Tests/Embasic.ENote.Tur19.Tests.csproj --configuration Release --no-restore
