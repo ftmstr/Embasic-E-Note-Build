@@ -279,3 +279,12 @@ readback. The test adapters simulate interruptions and contention. See
 [the recovery protocol and trust limits](docs/VAULT-GENERATION-RECOVERY-TUR21.md).
 A real independent anchor and durable generation store are pending.
 W007 / SEC-EMD-05 and V1.0 remain blocked.
+
+## Tur 22 — verified generation manifest disk store
+
+The experimental disk adapter verifies the full canonical manifest digest
+before restoring grants and publishes staged files with no replacement.
+Tests reopen from separate processes, exercise competing publishers and
+prove that corrupt or missing selected data fails closed. See
+[the format, staging and acceptance limits](docs/VAULT-GENERATION-DISK-STORE-TUR22.md).
+The independent anchor and physical durability acceptance remain open.

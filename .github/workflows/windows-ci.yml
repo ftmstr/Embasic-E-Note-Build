@@ -80,3 +80,6 @@ jobs:
 
       - name: Run Tur21 vault generation recovery and CAS tests
         run: dotnet run --project tests/Embasic.ENote.Tur21.Tests/Embasic.ENote.Tur21.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur22 bounded manifest reader and disk staging tests
+        run: dotnet run --project tests/Embasic.ENote.Tur22.Tests/Embasic.ENote.Tur22.Tests.csproj --configuration Release --no-restore

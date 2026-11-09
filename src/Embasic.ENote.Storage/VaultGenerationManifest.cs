@@ -28,15 +28,21 @@ public sealed record VaultGenerationStamp
 /// Experimental immutable collection of Windows vault grants. Its digest authenticates
 /// the collection only when matched against an independently trusted stamp.
 /// </summary>
-public sealed class VaultGenerationManifest
+public sealed partial class VaultGenerationManifest
 {
+    private const string Domain = "Embasic.ENote.VaultGeneration.1";
+    private const int MaximumBytes = 16 * 1024 * 1024;
+    private const int MaximumPathBytes = 128 * 1024;
+    private const int EntryFixedBytes = 16 + 1 + 3 * sizeof(ulong) + 32;
+    private static readonly UTF8Encoding Utf8 = new(false, true);
+    private static readonly int HeaderBytes = StringSize(Utf8.GetByteCount(Domain)) + 16 + sizeof(long) + sizeof(int);
     private readonly Dictionary<Guid, VaultAnchorGrant> _grants;
     public VaultGenerationStamp Stamp { get; }
 
     private VaultGenerationManifest(Guid workspaceId, long epoch, Dictionary<Guid, VaultAnchorGrant> grants)
     {
         _grants = grants;
-        Stamp = new VaultGenerationStamp(workspaceId, epoch, Digest(workspaceId, epoch, grants));
+        Stamp = new VaultGenerationStamp(workspaceId, epoch, Digest(workspaceId, epoch));
     }
 
     public static VaultGenerationManifest Create(Guid workspaceId, long epoch, IEnumerable<VaultAnchorGrant> grants)
@@ -48,6 +54,7 @@ public sealed class VaultGenerationManifest
         var indexed = new Dictionary<Guid, VaultAnchorGrant>();
         var paths = new HashSet<string>(StringComparer.Ordinal);
         var identities = new HashSet<WindowsVaultFileIdentity>();
+        int encodedBytes = HeaderBytes;
         foreach (var grant in grants)
         {
             if (grant is null || grant.WorkspaceId != workspaceId || grant.LockId == Guid.Empty ||
@@ -59,6 +66,12 @@ public sealed class VaultGenerationManifest
                 throw new ArgumentException("Invalid generation grant.", nameof(grants));
 
             string fullPath = Path.GetFullPath(path);
+            int pathBytes = Utf8.GetByteCount(fullPath);
+            if (pathBytes > MaximumPathBytes)
+                throw new ArgumentException("Vault path exceeds the manifest byte limit.", nameof(grants));
+            encodedBytes += EntryFixedBytes + StringSize(pathBytes);
+            if (encodedBytes > MaximumBytes)
+                throw new ArgumentException("Vault generation exceeds the manifest byte limit.", nameof(grants));
             if (!Path.GetExtension(fullPath).Equals(".elkey", StringComparison.OrdinalIgnoreCase) ||
                 !paths.Add(fullPath) || !identities.Add(identity) ||
                 !indexed.TryAdd(grant.LockId, grant with { BoundVaultPath = fullPath }))
@@ -74,29 +87,38 @@ public sealed class VaultGenerationManifest
     internal bool RetainsFactorsFrom(VaultGenerationManifest prior) =>
         prior._grants.Values.All(grant => Find(grant.LockId, grant.Kind) is not null);
 
-    private static string Digest(Guid workspaceId, long epoch, Dictionary<Guid, VaultAnchorGrant> grants)
+    internal void WriteCanonical(Stream destination) =>
+        WriteCanonical(destination, Stamp.WorkspaceId, Stamp.Epoch);
+
+    private string Digest(Guid workspaceId, long epoch)
     {
         using var hash = SHA256.Create();
         using var stream = new CryptoStream(Stream.Null, hash, CryptoStreamMode.Write);
-        using (var writer = new BinaryWriter(stream, new UTF8Encoding(false, true), leaveOpen: true))
-        {
-            writer.Write("Embasic.ENote.VaultGeneration.1");
-            writer.Write(workspaceId.ToByteArray());
-            writer.Write(epoch);
-            writer.Write(grants.Count);
-            foreach (var grant in grants.Values.OrderBy(grant => grant.LockId))
-            {
-                var identity = grant.BoundVaultFileIdentity!.Value;
-                writer.Write(grant.LockId.ToByteArray());
-                writer.Write((byte)grant.Kind);
-                writer.Write(grant.BoundVaultPath!);
-                writer.Write(identity.VolumeSerialNumber);
-                writer.Write(identity.FileIdPart1);
-                writer.Write(identity.FileIdPart2);
-                writer.Write(Convert.FromHexString(grant.Pin.CiphertextSha256));
-            }
-        }
+        WriteCanonical(stream, workspaceId, epoch);
         stream.FlushFinalBlock();
         return Convert.ToHexString(hash.Hash!);
     }
+
+    private void WriteCanonical(Stream destination, Guid workspaceId, long epoch)
+    {
+        using var writer = new BinaryWriter(destination, Utf8, leaveOpen: true);
+        writer.Write(Domain);
+        writer.Write(workspaceId.ToByteArray());
+        writer.Write(epoch);
+        writer.Write(_grants.Count);
+        foreach (var grant in _grants.Values.OrderBy(grant => grant.LockId))
+        {
+            var identity = grant.BoundVaultFileIdentity!.Value;
+            writer.Write(grant.LockId.ToByteArray());
+            writer.Write((byte)grant.Kind);
+            writer.Write(grant.BoundVaultPath!);
+            writer.Write(identity.VolumeSerialNumber);
+            writer.Write(identity.FileIdPart1);
+            writer.Write(identity.FileIdPart2);
+            writer.Write(Convert.FromHexString(grant.Pin.CiphertextSha256));
+        }
+    }
+
+    private static int StringSize(int utf8Bytes) =>
+        utf8Bytes + (utf8Bytes < 128 ? 1 : utf8Bytes < 16_384 ? 2 : 3);
 }
