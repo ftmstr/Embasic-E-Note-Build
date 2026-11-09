@@ -150,3 +150,11 @@ The experimental provider and rekey staging use existing .NET file and
 cryptographic APIs, with no new NuGet dependency or binary asset. No
 existing encrypted wire format changed. Logo distribution rights and
 complete release SBOM/NOTICE acceptance remain open.
+
+## Tur 26 dependency inventory
+
+Provider identity, operation-scoped reads and catalog-bound rekey use the
+existing .NET file and cryptographic APIs. No new NuGet package or binary
+asset was added. EVP2 and generation manifest v2 are optional prototype
+records. Existing encrypted note formats are unchanged. Complete release
+SBOM/NOTICE and logo distribution rights remain open.
