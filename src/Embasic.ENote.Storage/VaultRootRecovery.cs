@@ -56,7 +56,8 @@ public sealed class VaultRootRecovery
         string backupPassword)
     {
         var manifest = _generation.ReadForKeyDelivery(workspaceId);
-        var proof = _authority.ReadRootRecovery(workspaceId);
+        var authorization = ReadAuthorization(workspaceId);
+        var proof = authorization.Proof;
         if (proof is null || proof.Generation != manifest.Stamp ||
             manifest.Find(proof.RootFactorId, LayerKind.Folder) is null)
             throw new CryptographicException("No authorized root recovery for the selected generation.");
@@ -76,7 +77,7 @@ public sealed class VaultRootRecovery
             try
             {
                 WorkspaceLockIndex.Open(encryptedIndex, workspaceId, root);
-                if (_authority.ReadRootRecovery(workspaceId) != proof)
+                if (ReadAuthorization(workspaceId) != authorization)
                     throw new CryptographicException("Root recovery authorization changed before delivery.");
                 _generation.RequireCurrent(manifest.Stamp);
                 return root;
@@ -88,6 +89,18 @@ public sealed class VaultRootRecovery
             }
         }
         finally { CryptographicOperations.ZeroMemory(raw); }
+    }
+
+    private VaultRootRecoveryAuthorization ReadAuthorization(Guid workspaceId)
+    {
+        if (_authority is not IVaultRootRecoveryLifecycle lifecycle)
+            return new VaultRootRecoveryAuthorization(0, _authority.ReadRootRecovery(workspaceId));
+
+        var observed = lifecycle.ReadAuthorization(workspaceId);
+        if (observed is null || observed.Revision < 0 ||
+            (observed.Revision == 0 && observed.Proof is not null))
+            throw new CryptographicException("Invalid independent root recovery revision.");
+        return observed;
     }
 
     private static byte[] SnapshotIndex(ReadOnlySpan<byte> index)
