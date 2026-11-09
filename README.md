@@ -304,3 +304,10 @@ uses an independently approved ERB1/ELH1 pair. Per-document rekey rebuilds
 the encrypted payload with fresh key material. See
 [the prototype and release boundaries](docs/VAULT-TRANSITION-ROOT-REKEY-TUR24.md).
 W007 / SEC-EMD-05 and W012 release acceptance remain blocked.
+
+## Tur 25 — transition provider reference and restartable rekey staging
+
+The opt-in file provider exercises reservation and commit receipt across
+cooperating processes. This round adds scoped Windows key use, revisioned
+root recovery authorization and digest-verified preparation of an affected
+rekey inventory. See [the protocol and open release gates](docs/VAULT-PROVIDER-LIFECYCLE-TUR25.md).

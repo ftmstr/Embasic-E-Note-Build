@@ -143,3 +143,10 @@ The transition contract, root recovery and per-document rekey use the
 existing .NET runtime and Embasic E-Note projects. No NuGet package, wire
 format, font or binary asset was added. Final SBOM/NOTICE and logo
 redistribution rights acceptance remain open.
+
+## Tur 25 dependency inventory
+
+The experimental provider and rekey staging use existing .NET file and
+cryptographic APIs, with no new NuGet dependency or binary asset. No
+existing encrypted wire format changed. Logo distribution rights and
+complete release SBOM/NOTICE acceptance remain open.

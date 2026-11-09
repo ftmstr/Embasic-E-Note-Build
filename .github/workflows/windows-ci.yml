@@ -99,3 +99,6 @@ jobs:
 
       - name: Run Tur24 bound transition, root recovery and rekey tests
         run: dotnet run --project tests/Embasic.ENote.Tur24.Tests/Embasic.ENote.Tur24.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur25 vault provider, lifecycle and rekey staging tests
+        run: dotnet run --project tests/Embasic.ENote.Tur25.Tests/Embasic.ENote.Tur25.Tests.csproj --configuration Release --no-restore
