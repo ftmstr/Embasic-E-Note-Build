@@ -319,3 +319,11 @@ gate performs a built-in fenced read without exporting the enrolled key.
 The coordinator binds rekey preparation to the selected source catalog
 and exact candidate commitment. See
 [the protocol, risk tests and open release gates](docs/VAULT-AUTHORITY-AND-REKEY-TUR26.md).
+
+## Tur 27 — authority IPC, snapshot and restart
+
+The experimental local host separates observation from publication.
+Publication verifies a frozen source catalog, exact target objects and an
+authenticated restart plan before selecting a generation. Root authorization
+can be re-enrolled from a separately approved archive at an exact vacant
+revision. See [the protocol and its release limits](docs/VAULT-IPC-SNAPSHOT-RESTART-TUR27.md).

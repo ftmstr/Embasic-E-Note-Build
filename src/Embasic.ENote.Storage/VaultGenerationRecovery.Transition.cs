@@ -36,9 +36,41 @@ public sealed partial class VaultGenerationRecovery
             ?? throw new CryptographicException("Provider did not establish an independent key use fence.");
     }
 
+    /// <summary>Enroll the first verified workspace catalog with the exact prior vault grants.</summary>
+    public VaultGenerationAdvanceState EnrollCatalog(VaultGenerationStamp expected, VaultWorkspaceSnapshot snapshot,
+        Embasic.ENote.Emd.LayerSecret root, string liveRoot)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(snapshot);
+        ArgumentNullException.ThrowIfNull(root);
+        if (_anchor is not IExternalVaultTransitionAnchor anchor)
+            throw new NotSupportedException("An independent transition provider is required.");
+        var source = ReadExact(expected);
+        if (source.Bindings is not null) throw new CryptographicException("The catalog is already enrolled.");
+        long epoch = checked(expected.Epoch + 1);
+        var grants = source.Grants.Select(grant => grant with
+        {
+            MinimumEpoch = epoch,
+            Pin = Embasic.ENote.Emd.VaultSnapshotPin.RestoreVerifiedDigest(grant.LockId, grant.Kind, epoch,
+                Convert.FromHexString(grant.Pin.CiphertextSha256))
+        });
+        var next = VaultGenerationManifest.Create(expected.WorkspaceId, epoch, grants,
+            new VaultGenerationBindings(snapshot.CatalogSha256));
+        return StageBound(anchor, new VaultRetryIntent(expected, next.Stamp), next, () =>
+        {
+            snapshot.VerifyAgainst(source, root);
+            snapshot.VerifyLive(liveRoot, source);
+        });
+    }
+
     /// <summary>Prepare or retry only this catalog-bound candidate with the same complete staged set.</summary>
     public VaultGenerationAdvanceState StageAndAdvanceRekey(VaultRekeyCommitment commitment,
-        VaultGenerationManifest next, VaultRekeyStaging staging, Func<VaultRekeyArtifact, Stream?> openSource)
+        VaultGenerationManifest next, VaultRekeyStaging staging, Func<VaultRekeyArtifact, Stream?> openSource) =>
+        StageAndAdvanceRekey(commitment, next, staging, openSource, null);
+
+    internal VaultGenerationAdvanceState StageAndAdvanceRekey(VaultRekeyCommitment commitment,
+        VaultGenerationManifest next, VaultRekeyStaging staging, Func<VaultRekeyArtifact, Stream?> openSource,
+        Action? verifyPublication)
     {
         ArgumentNullException.ThrowIfNull(commitment);
         ArgumentNullException.ThrowIfNull(next);
@@ -51,7 +83,10 @@ public sealed partial class VaultGenerationRecovery
         var intent = new VaultRetryIntent(expected, next.Stamp);
         commitment.RequireMatch(ReadExact(expected), next);
         return StageBound(anchor, intent, next, () =>
-            staging.RequirePrepared(commitment.Inventory, commitment.Targets, openSource));
+        {
+            staging.RequirePrepared(commitment.Inventory, commitment.Targets, openSource);
+            verifyPublication?.Invoke();
+        });
     }
 
     private VaultGenerationAdvanceState StageBound(IExternalVaultTransitionAnchor anchor,

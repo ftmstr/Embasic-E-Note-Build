@@ -105,3 +105,6 @@ jobs:
 
       - name: Run Tur26 provider identity, bound rekey and recovery race tests
         run: dotnet run --project tests/Embasic.ENote.Tur26.Tests/Embasic.ENote.Tur26.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur27 IPC, workspace publication restart and root archive tests
+        run: dotnet run --project tests/Embasic.ENote.Tur27.Tests/Embasic.ENote.Tur27.Tests.csproj --configuration Release --no-restore
