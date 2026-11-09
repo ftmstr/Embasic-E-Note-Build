@@ -158,3 +158,11 @@ existing .NET file and cryptographic APIs. No new NuGet package or binary
 asset was added. EVP2 and generation manifest v2 are optional prototype
 records. Existing encrypted note formats are unchanged. Complete release
 SBOM/NOTICE and logo distribution rights remain open.
+
+## Tur 27 dependency inventory
+
+The local IPC host uses existing .NET named pipes, HMAC and P-256 signing.
+Snapshot publication and root archive handling use existing file and
+cryptographic APIs. ERJ1 and ERA1 are experimental metadata records.
+Existing encrypted note formats, binaries and NuGet dependencies are
+unchanged. Full release SBOM/NOTICE and logo distribution rights remain open.
