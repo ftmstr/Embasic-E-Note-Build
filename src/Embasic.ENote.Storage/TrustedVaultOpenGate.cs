@@ -94,7 +94,7 @@ public sealed class TrustedVaultOpenGate
             throw new CryptographicException("Missing vault policy identity.");
         if (binding == Binding.WindowsFile && _anchor is VaultGenerationRecovery generation)
         {
-            var manifest = generation.ReadCommitted(workspaceId);
+            var manifest = generation.ReadForKeyDelivery(workspaceId);
             var bound = manifest.Find(lockId, kind)
                 ?? throw new CryptographicException("No independently trusted vault policy.");
             var secret = UnlockWithGrant(path, workspaceId, lockId, kind, credential, recovery, binding, bound);

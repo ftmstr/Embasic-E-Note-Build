@@ -42,7 +42,7 @@ public enum VaultGenerationAdvanceState
 /// Experimental restart selection and stage-before-CAS protocol. The
 /// coordinator provides neither anchor trust nor a durable store.
 /// </summary>
-public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
+public sealed partial class VaultGenerationRecovery : IExternalVaultAnchorReader
 {
     private readonly IExternalVaultGenerationAnchor _anchor;
     private readonly IVaultGenerationStore _store;
@@ -83,8 +83,10 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
         ArgumentNullException.ThrowIfNull(expected);
         ArgumentNullException.ThrowIfNull(next);
         var intent = new VaultRetryIntent(expected, next.Stamp);
-        if (_intents?.Read(expected.WorkspaceId, expected.Epoch) is { } existing && existing != intent)
-            throw new CryptographicException("The candidate differs from the recorded retry intent.");
+        if (_anchor is IExternalVaultTransitionAnchor transition)
+            return StageBound(transition, intent, next);
+
+        CheckLocalIntent(intent);
 
         var observed = ReadStamp(expected.WorkspaceId);
         if (observed != expected) return Resolve(expected, next.Stamp, observed);
@@ -100,6 +102,9 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
     public VaultGenerationAdvanceState Resume(VaultGenerationStamp expected)
     {
         ArgumentNullException.ThrowIfNull(expected);
+        if (_anchor is IExternalVaultTransitionAnchor transition)
+            return ResumeBound(transition, expected);
+
         var intent = _intents?.Read(expected.WorkspaceId, expected.Epoch);
         if (intent is null || intent.Expected != expected)
             throw new CryptographicException("No matching retry intent for this generation.");
@@ -111,10 +116,36 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
         return Advance(intent);
     }
 
+    internal VaultGenerationManifest ReadForKeyDelivery(Guid workspaceId)
+    {
+        if (_anchor is not IExternalVaultTransitionAnchor transition)
+            return ReadCommitted(workspaceId);
+
+        var state = ReadTransition(transition, workspaceId);
+        if (state.Pending is not null)
+            throw new CryptographicException("A trusted transition is pending.");
+
+        var manifest = ReadExact(state.Current);
+        RequireCurrent(state.Current);
+        return manifest;
+    }
+
     internal void RequireCurrent(VaultGenerationStamp expected)
     {
-        if (ReadStamp(expected.WorkspaceId) != expected)
-            throw new CryptographicException("The trusted generation changed before key delivery.");
+        if (_anchor is IExternalVaultTransitionAnchor transition)
+        {
+            var state = ReadTransition(transition, expected.WorkspaceId);
+            if (state.Current == expected && state.Pending is null) return;
+        }
+        else if (ReadStamp(expected.WorkspaceId) == expected) return;
+
+        throw new CryptographicException("The trusted generation changed or a transition is pending before key delivery.");
+    }
+
+    private void CheckLocalIntent(VaultRetryIntent intent)
+    {
+        if (_intents?.Read(intent.Expected.WorkspaceId, intent.Expected.Epoch) is { } existing && existing != intent)
+            throw new CryptographicException("The candidate differs from the recorded retry intent.");
     }
 
     private void VerifyFactorContinuity(VaultGenerationStamp expected, VaultGenerationManifest candidate)
@@ -141,6 +172,9 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
     private VaultGenerationStamp ReadStamp(Guid workspaceId)
     {
         if (workspaceId == Guid.Empty) throw new ArgumentException("Missing workspace.", nameof(workspaceId));
+        if (_anchor is IExternalVaultTransitionAnchor transition)
+            return ReadTransition(transition, workspaceId).Current;
+
         var stamp = _anchor.Read(workspaceId);
         if (stamp is null || stamp.WorkspaceId != workspaceId)
             throw new CryptographicException("Trusted generation anchor is absent or mismatched.");
