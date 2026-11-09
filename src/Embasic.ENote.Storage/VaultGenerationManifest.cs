@@ -31,6 +31,7 @@ public sealed record VaultGenerationStamp
 public sealed partial class VaultGenerationManifest
 {
     private const string Domain = "Embasic.ENote.VaultGeneration.1";
+    private const string BoundDomain = "Embasic.ENote.VaultGeneration.2";
     private const int MaximumBytes = 16 * 1024 * 1024;
     private const int MaximumPathBytes = 128 * 1024;
     private const int EntryFixedBytes = 16 + 1 + 3 * sizeof(ulong) + 32;
@@ -38,14 +39,22 @@ public sealed partial class VaultGenerationManifest
     private static readonly int HeaderBytes = StringSize(Utf8.GetByteCount(Domain)) + 16 + sizeof(long) + sizeof(int);
     private readonly Dictionary<Guid, VaultAnchorGrant> _grants;
     public VaultGenerationStamp Stamp { get; }
+    public VaultGenerationBindings? Bindings { get; }
+    internal IEnumerable<VaultAnchorGrant> Grants => _grants.Values;
 
-    private VaultGenerationManifest(Guid workspaceId, long epoch, Dictionary<Guid, VaultAnchorGrant> grants)
+    private VaultGenerationManifest(Guid workspaceId, long epoch, Dictionary<Guid, VaultAnchorGrant> grants,
+        VaultGenerationBindings? bindings)
     {
         _grants = grants;
+        Bindings = bindings;
         Stamp = new VaultGenerationStamp(workspaceId, epoch, Digest(workspaceId, epoch));
     }
 
-    public static VaultGenerationManifest Create(Guid workspaceId, long epoch, IEnumerable<VaultAnchorGrant> grants)
+    public static VaultGenerationManifest Create(Guid workspaceId, long epoch, IEnumerable<VaultAnchorGrant> grants) =>
+        Create(workspaceId, epoch, grants, null);
+
+    public static VaultGenerationManifest Create(Guid workspaceId, long epoch, IEnumerable<VaultAnchorGrant> grants,
+        VaultGenerationBindings? bindings)
     {
         if (workspaceId == Guid.Empty) throw new ArgumentException("Missing workspace.", nameof(workspaceId));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(epoch);
@@ -54,7 +63,7 @@ public sealed partial class VaultGenerationManifest
         var indexed = new Dictionary<Guid, VaultAnchorGrant>();
         var paths = new HashSet<string>(StringComparer.Ordinal);
         var identities = new HashSet<WindowsVaultFileIdentity>();
-        int encodedBytes = HeaderBytes;
+        int encodedBytes = HeaderBytes + (bindings is null ? 0 : bindings.RekeySha256 is null ? 33 : 65);
         foreach (var grant in grants)
         {
             if (grant is null || grant.WorkspaceId != workspaceId || grant.LockId == Guid.Empty ||
@@ -78,7 +87,7 @@ public sealed partial class VaultGenerationManifest
                 throw new ArgumentException("Invalid or duplicate vault enrollment.", nameof(grants));
         }
         if (indexed.Count == 0) throw new ArgumentException("Generation has no grants.", nameof(grants));
-        return new VaultGenerationManifest(workspaceId, epoch, indexed);
+        return new VaultGenerationManifest(workspaceId, epoch, indexed, bindings);
     }
 
     public VaultAnchorGrant? Find(Guid lockId, LayerKind kind) =>
@@ -102,9 +111,15 @@ public sealed partial class VaultGenerationManifest
     private void WriteCanonical(Stream destination, Guid workspaceId, long epoch)
     {
         using var writer = new BinaryWriter(destination, Utf8, leaveOpen: true);
-        writer.Write(Domain);
+        writer.Write(Bindings is null ? Domain : BoundDomain);
         writer.Write(workspaceId.ToByteArray());
         writer.Write(epoch);
+        if (Bindings is { } bindings)
+        {
+            writer.Write(Convert.FromHexString(bindings.CatalogSha256));
+            writer.Write(bindings.RekeySha256 is not null);
+            if (bindings.RekeySha256 is { } rekey) writer.Write(Convert.FromHexString(rekey));
+        }
         writer.Write(_grants.Count);
         foreach (var grant in _grants.Values.OrderBy(grant => grant.LockId))
         {
@@ -121,4 +136,17 @@ public sealed partial class VaultGenerationManifest
 
     private static int StringSize(int utf8Bytes) =>
         utf8Bytes + (utf8Bytes < 128 ? 1 : utf8Bytes < 16_384 ? 2 : 3);
+}
+
+/// <summary>Catalog and optional rekey commitment authenticated by the exact generation stamp.</summary>
+public sealed record VaultGenerationBindings
+{
+    public string CatalogSha256 { get; }
+    public string? RekeySha256 { get; }
+
+    public VaultGenerationBindings(string catalogSha256, string? rekeySha256 = null)
+    {
+        CatalogSha256 = VaultRekeyInventory.NormalizeDigest(catalogSha256);
+        RekeySha256 = rekeySha256 is null ? null : VaultRekeyInventory.NormalizeDigest(rekeySha256);
+    }
 }

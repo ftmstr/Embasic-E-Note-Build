@@ -36,17 +36,36 @@ public sealed partial class VaultGenerationRecovery
             ?? throw new CryptographicException("Provider did not establish an independent key use fence.");
     }
 
+    /// <summary>Prepare or retry only this catalog-bound candidate with the same complete staged set.</summary>
+    public VaultGenerationAdvanceState StageAndAdvanceRekey(VaultRekeyCommitment commitment,
+        VaultGenerationManifest next, VaultRekeyStaging staging, Func<VaultRekeyArtifact, Stream?> openSource)
+    {
+        ArgumentNullException.ThrowIfNull(commitment);
+        ArgumentNullException.ThrowIfNull(next);
+        ArgumentNullException.ThrowIfNull(staging);
+        ArgumentNullException.ThrowIfNull(openSource);
+        if (_anchor is not IExternalVaultTransitionAnchor anchor)
+            throw new NotSupportedException("An independent transition provider is required.");
+
+        var expected = commitment.Inventory.Generation;
+        var intent = new VaultRetryIntent(expected, next.Stamp);
+        commitment.RequireMatch(ReadExact(expected), next);
+        return StageBound(anchor, intent, next, () =>
+            staging.RequirePrepared(commitment.Inventory, commitment.Targets, openSource));
+    }
+
     private VaultGenerationAdvanceState StageBound(IExternalVaultTransitionAnchor anchor,
-        VaultRetryIntent intent, VaultGenerationManifest next)
+        VaultRetryIntent intent, VaultGenerationManifest next, Action? verifyPrepared = null)
     {
         var expected = intent.Expected;
         var state = ReadTransition(anchor, expected.WorkspaceId);
-        if (state.Current != expected) return ResolveBound(intent, state);
+        if (state.Current != expected) return ResolveBound(intent, state, verifyPrepared);
         if (state.Pending is not null && state.Pending != intent)
             throw new CryptographicException("A different candidate is independently reserved.");
 
         CheckLocalIntent(intent);
-        VerifyFactorContinuity(expected, next);
+        VerifyFactorContinuity(expected, next, boundRekey: verifyPrepared is not null);
+        verifyPrepared?.Invoke();
         _store.Stage(next);
         ReadExact(intent.Candidate);
 
@@ -58,7 +77,7 @@ public sealed partial class VaultGenerationRecovery
                 // Only exact independent readback can authorize a commit.
             }
         }
-        return CommitBound(anchor, intent);
+        return CommitBound(anchor, intent, verifyPrepared);
     }
 
     private VaultGenerationAdvanceState ResumeBound(IExternalVaultTransitionAnchor anchor,
@@ -68,7 +87,11 @@ public sealed partial class VaultGenerationRecovery
         if (state.Current != expected)
         {
             if (state.LastCommitted is { } receipt && receipt.Expected == expected)
+            {
+                if (ReadExact(receipt.Candidate).Bindings is not null)
+                    throw new CryptographicException("Catalog-bound receipts require the bound rekey entry point.");
                 return ResolveBound(receipt, state);
+            }
             throw new CryptographicException("No matching independent commit receipt.");
         }
 
@@ -78,11 +101,12 @@ public sealed partial class VaultGenerationRecovery
         return CommitBound(anchor, intent);
     }
 
-    private VaultGenerationAdvanceState CommitBound(IExternalVaultTransitionAnchor anchor, VaultRetryIntent intent)
+    private VaultGenerationAdvanceState CommitBound(IExternalVaultTransitionAnchor anchor, VaultRetryIntent intent,
+        Action? verifyPrepared = null)
     {
         var expected = intent.Expected;
         var state = ReadTransition(anchor, expected.WorkspaceId);
-        if (state.Current != expected) return ResolveBound(intent, state);
+        if (state.Current != expected) return ResolveBound(intent, state, verifyPrepared);
         if (state.Pending is null)
             throw new VaultGenerationOutcomeUnknownException("Independent reservation is not confirmed.");
         if (state.Pending != intent)
@@ -92,23 +116,27 @@ public sealed partial class VaultGenerationRecovery
         if (_intents is not null && _intents.Read(expected.WorkspaceId, expected.Epoch) != intent)
             throw new CryptographicException("The local retry intent failed readback.");
         ReadExact(intent.Candidate);
+        verifyPrepared?.Invoke();
 
         try { anchor.CommitTransition(intent); }
         catch (VaultGenerationOutcomeUnknownException)
         {
             // Resolve against the authoritative transition state.
         }
-        return ResolveBound(intent, ReadTransition(anchor, expected.WorkspaceId));
+        return ResolveBound(intent, ReadTransition(anchor, expected.WorkspaceId), verifyPrepared);
     }
 
-    private VaultGenerationAdvanceState ResolveBound(VaultRetryIntent intent, VaultTransitionState state)
+    private VaultGenerationAdvanceState ResolveBound(VaultRetryIntent intent, VaultTransitionState state,
+        Action? verifyPrepared = null)
     {
         if (state.Current == intent.Candidate && state.LastCommitted != intent)
             throw new CryptographicException("The independent commit receipt does not match the retry intent.");
         if (state.Current == intent.Expected && state.Pending != intent)
             throw new CryptographicException("The independent reservation changed before commit was confirmed.");
 
-        return Resolve(intent.Expected, intent.Candidate, state.Current);
+        var result = Resolve(intent.Expected, intent.Candidate, state.Current);
+        if (result == VaultGenerationAdvanceState.Committed) verifyPrepared?.Invoke();
+        return result;
     }
 
     private static VaultTransitionState ReadTransition(IExternalVaultTransitionAnchor anchor, Guid workspaceId)

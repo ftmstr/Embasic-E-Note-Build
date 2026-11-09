@@ -311,3 +311,11 @@ The opt-in file provider exercises reservation and commit receipt across
 cooperating processes. This round adds scoped Windows key use, revisioned
 root recovery authorization and digest-verified preparation of an affected
 rekey inventory. See [the protocol and open release gates](docs/VAULT-PROVIDER-LIFECYCLE-TUR25.md).
+
+## Tur 26 — provider identity and catalog-bound rekey
+
+The optional file provider pins its configured identity. An opt-in Windows
+gate performs a built-in fenced read without exporting the enrolled key.
+The coordinator binds rekey preparation to the selected source catalog
+and exact candidate commitment. See
+[the protocol, risk tests and open release gates](docs/VAULT-AUTHORITY-AND-REKEY-TUR26.md).

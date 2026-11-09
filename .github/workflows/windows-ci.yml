@@ -102,3 +102,6 @@ jobs:
 
       - name: Run Tur25 vault provider, lifecycle and rekey staging tests
         run: dotnet run --project tests/Embasic.ENote.Tur25.Tests/Embasic.ENote.Tur25.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur26 provider identity, bound rekey and recovery race tests
+        run: dotnet run --project tests/Embasic.ENote.Tur26.Tests/Embasic.ENote.Tur26.Tests.csproj --configuration Release --no-restore

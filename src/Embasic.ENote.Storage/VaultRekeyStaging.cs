@@ -44,7 +44,7 @@ public sealed class VaultRekeyStaging
         }
     }
 
-    private static Dictionary<string, string> ValidateTargets(VaultRekeyInventory inventory,
+    internal static Dictionary<string, string> ValidateTargets(VaultRekeyInventory inventory,
         IReadOnlyDictionary<string, string> candidateDigests)
     {
         ArgumentNullException.ThrowIfNull(inventory);

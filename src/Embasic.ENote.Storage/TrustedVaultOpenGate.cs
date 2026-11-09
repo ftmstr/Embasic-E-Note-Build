@@ -40,12 +40,17 @@ public sealed class TrustedVaultOpenGate
 
     private readonly IExternalVaultAnchorReader? _anchor;
     private readonly LayerVaultDiskStore _disk;
+    private readonly bool _requireOperationScope;
 
-    public TrustedVaultOpenGate(IExternalVaultAnchorReader? anchor,
+    public TrustedVaultOpenGate(IExternalVaultAnchorReader? anchor, LayerVaultDiskStore? disk = null)
+        : this(anchor, requireOperationScope: false, disk) { }
+
+    public TrustedVaultOpenGate(IExternalVaultAnchorReader? anchor, bool requireOperationScope,
         LayerVaultDiskStore? disk = null)
     {
         _anchor = anchor;
         _disk = disk ?? new LayerVaultDiskStore();
+        _requireOperationScope = requireOperationScope;
     }
 
     /// <summary>
@@ -95,9 +100,33 @@ public sealed class TrustedVaultOpenGate
     public void UseFileBound(string path, Guid workspaceId, Guid lockId, LayerKind kind,
         string credential, Action<LayerSecret> use, bool recovery = false)
     {
+        RejectRawKeyAccess();
+        ArgumentNullException.ThrowIfNull(use);
+        var (generation, stamp, grant) = SelectFencedGrant(workspaceId, lockId, kind);
+        using var fence = generation.EnterKeyUseFence(stamp);
+        using var secret = UnlockWithGrant(path, workspaceId, lockId, kind, credential,
+            recovery, Binding.WindowsFile, grant);
+        use(secret);
+    }
+
+    /// <summary>Run the built-in ELK1 read inside the fence without exposing the enrolled key.</summary>
+    public string ReadLayeredMarkdownFileBound(string path, Guid workspaceId, Guid lockId, LayerKind kind,
+        string vaultCredential, ReadOnlySpan<byte> document, string documentPassword,
+        IReadOnlyList<LayerSecret>? innerLayers = null, bool recovery = false)
+    {
+        var (generation, stamp, grant) = SelectFencedGrant(workspaceId, lockId, kind);
+        using var fence = generation.EnterKeyUseFence(stamp);
+        using var secret = UnlockWithGrant(path, workspaceId, lockId, kind, vaultCredential,
+            recovery, Binding.WindowsFile, grant);
+        LayerSecret[] factors = innerLayers is null ? [secret] : [secret, .. innerLayers];
+        return LayeredEmd3.Open(document, factors, documentPassword);
+    }
+
+    private (VaultGenerationRecovery Generation, VaultGenerationStamp Stamp, VaultAnchorGrant Grant)
+        SelectFencedGrant(Guid workspaceId, Guid lockId, LayerKind kind)
+    {
         if (!OperatingSystem.IsWindows())
             throw new PlatformNotSupportedException("File-bound vault use requires Windows.");
-        ArgumentNullException.ThrowIfNull(use);
         if (workspaceId == Guid.Empty || lockId == Guid.Empty)
             throw new CryptographicException("Missing vault policy identity.");
         if (_anchor is not VaultGenerationRecovery generation)
@@ -106,15 +135,19 @@ public sealed class TrustedVaultOpenGate
         var manifest = generation.ReadForKeyDelivery(workspaceId);
         var grant = manifest.Find(lockId, kind)
             ?? throw new CryptographicException("No independently trusted vault policy.");
-        using var fence = generation.EnterKeyUseFence(manifest.Stamp);
-        using var secret = UnlockWithGrant(path, workspaceId, lockId, kind, credential,
-            recovery, Binding.WindowsFile, grant);
-        use(secret);
+        return (generation, manifest.Stamp, grant);
+    }
+
+    private void RejectRawKeyAccess()
+    {
+        if (_requireOperationScope)
+            throw new NotSupportedException("This gate only permits built-in fenced operations.");
     }
 
     private LayerSecret UnlockCore(string path, Guid workspaceId, Guid lockId,
         LayerKind kind, string credential, bool recovery, Binding binding)
     {
+        RejectRawKeyAccess();
         if (workspaceId == Guid.Empty || lockId == Guid.Empty)
             throw new CryptographicException("Missing vault policy identity.");
         if (binding == Binding.WindowsFile && _anchor is VaultGenerationRecovery generation)

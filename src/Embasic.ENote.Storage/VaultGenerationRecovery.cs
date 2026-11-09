@@ -82,6 +82,8 @@ public sealed partial class VaultGenerationRecovery : IExternalVaultAnchorReader
     {
         ArgumentNullException.ThrowIfNull(expected);
         ArgumentNullException.ThrowIfNull(next);
+        if (next.Bindings is not null)
+            throw new CryptographicException("Catalog-bound candidates require the bound rekey entry point.");
         var intent = new VaultRetryIntent(expected, next.Stamp);
         if (_anchor is IExternalVaultTransitionAnchor transition)
             return StageBound(transition, intent, next);
@@ -148,9 +150,13 @@ public sealed partial class VaultGenerationRecovery : IExternalVaultAnchorReader
             throw new CryptographicException("The candidate differs from the recorded retry intent.");
     }
 
-    private void VerifyFactorContinuity(VaultGenerationStamp expected, VaultGenerationManifest candidate)
+    private void VerifyFactorContinuity(VaultGenerationStamp expected, VaultGenerationManifest candidate,
+        bool boundRekey = false)
     {
-        if (!candidate.RetainsFactorsFrom(ReadExact(expected)))
+        var prior = ReadExact(expected);
+        if (!boundRekey && (prior.Bindings is not null || candidate.Bindings is not null))
+            throw new CryptographicException("A catalog-bound generation requires a verified rekey commitment.");
+        if (!candidate.RetainsFactorsFrom(prior))
             throw new ArgumentException("Candidate dropped an enrolled factor.", nameof(candidate));
     }
 
