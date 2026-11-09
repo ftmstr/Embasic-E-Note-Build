@@ -15,7 +15,7 @@ public static class LayeredEmd3
     private const int NonceBytes = 12;
     private const int TagBytes = 16;
     private const int HeaderBytes = 4 + 1 + 1 + 16 + NonceBytes + 4;
-    private const int MaxBytes = 32 * 1024 * 1024;
+    internal const int MaxBytes = 32 * 1024 * 1024;
 
     public static byte[] Seal(PortableEmdResult document, IReadOnlyList<LayerSecret> outerToInner)
     {
