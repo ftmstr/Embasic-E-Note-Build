@@ -35,13 +35,26 @@ public sealed partial class VaultGenerationManifest
         {
             using var stream = new MemoryStream(bytes, writable: false);
             using var reader = new BinaryReader(stream, Utf8);
-            if (ReadString(reader, Utf8.GetByteCount(Domain)) != Domain)
+            string domain = ReadString(reader, Utf8.GetByteCount(Domain));
+            if (domain is not (Domain or BoundDomain))
                 throw new InvalidDataException("Unknown generation manifest version.");
             var workspace = new Guid(ReadBytes(reader, 16));
             long epoch = reader.ReadInt64();
             if (workspace != expected.WorkspaceId || epoch != expected.Epoch)
                 throw new CryptographicException("Generation workspace or epoch does not match the supplied stamp.");
 
+            VaultGenerationBindings? bindings = null;
+            if (domain == BoundDomain)
+            {
+                string catalog = Convert.ToHexString(ReadBytes(reader, 32));
+                string? rekey = reader.ReadByte() switch
+                {
+                    0 => null,
+                    1 => Convert.ToHexString(ReadBytes(reader, 32)),
+                    _ => throw new InvalidDataException("Invalid manifest binding flag.")
+                };
+                bindings = new VaultGenerationBindings(catalog, rekey);
+            }
             int count = reader.ReadInt32();
             if (count <= 0 || count > (stream.Length - stream.Position) / (EntryFixedBytes + 2))
                 throw new InvalidDataException("Invalid generation grant count.");
@@ -60,7 +73,7 @@ public sealed partial class VaultGenerationManifest
             if (stream.Position != stream.Length)
                 throw new InvalidDataException("Trailing bytes in generation manifest.");
 
-            var manifest = Create(workspace, epoch, grants);
+            var manifest = Create(workspace, epoch, grants, bindings);
             if (manifest.Stamp != expected)
                 throw new InvalidDataException("Noncanonical generation manifest.");
             return manifest;

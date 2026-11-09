@@ -19,14 +19,20 @@ public sealed class VaultRekeyInventory
 {
     public VaultGenerationStamp Generation { get; }
     public string IndexSha256 { get; }
+    public string CatalogSha256 { get; }
     public IReadOnlyList<VaultRekeyArtifact> Artifacts { get; }
+    internal Guid RootFactorId { get; }
+    internal IReadOnlyList<VaultRekeyDocument> Documents { get; }
 
-    private VaultRekeyInventory(VaultGenerationStamp generation, string indexSha256,
-        List<VaultRekeyArtifact> artifacts)
+    private VaultRekeyInventory(VaultGenerationStamp generation, Guid rootFactorId, string indexSha256,
+        string catalogSha256, List<VaultRekeyArtifact> artifacts, List<VaultRekeyDocument> documents)
     {
         Generation = generation;
+        RootFactorId = rootFactorId;
         IndexSha256 = indexSha256;
+        CatalogSha256 = catalogSha256;
         Artifacts = artifacts.AsReadOnly();
+        Documents = documents.AsReadOnly();
     }
 
     public static VaultRekeyInventory Create(VaultGenerationManifest manifest, ReadOnlySpan<byte> encryptedIndex,
@@ -71,12 +77,14 @@ public sealed class VaultRekeyInventory
                 null, indexDigest, Array.AsReadOnly(new[] { root.Id })));
 
         var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var documents = new List<VaultRekeyDocument>();
         foreach (var doc in catalog)
         {
             if (doc is null || !IsDocumentPath(doc.RelativePath, rootPath) || !paths.Add(doc.RelativePath))
                 throw new InvalidDataException("Invalid or duplicate rekey catalog path.");
 
             string digest = NormalizeDigest(doc.SourceSha256);
+            documents.Add(doc with { SourceSha256 = digest });
             var owner = FindOwner(doc.RelativePath);
             if (doc.RelativePath.Equals(owner.RelativePath, StringComparison.OrdinalIgnoreCase) !=
                 (owner.Kind == LayerKind.NoteAdditional))
@@ -100,7 +108,10 @@ public sealed class VaultRekeyInventory
         }
 
         artifacts.Sort((left, right) => StringComparer.Ordinal.Compare(left.Id, right.Id));
-        return new VaultRekeyInventory(manifest.Stamp, indexDigest, artifacts);
+        string catalogDigest = ComputeCatalogSha256(manifest.Stamp.WorkspaceId, root.Id, indexDigest, documents);
+        if (manifest.Bindings is { } binding && binding.CatalogSha256 != catalogDigest)
+            throw new CryptographicException("The rekey catalog or index differs from the source generation.");
+        return new VaultRekeyInventory(manifest.Stamp, root.Id, indexDigest, catalogDigest, artifacts, documents);
 
         WorkspaceLockEntry FindOwner(string path)
         {
@@ -127,6 +138,43 @@ public sealed class VaultRekeyInventory
             ids.Reverse();
             return ids;
         }
+    }
+
+    /// <summary>Canonical commitment for an authority-enrolled, separately verified catalog.</summary>
+    public static string ComputeCatalogSha256(Guid workspaceId, Guid rootFactorId, string indexSha256,
+        IEnumerable<VaultRekeyDocument> documents)
+    {
+        if (workspaceId == Guid.Empty || rootFactorId == Guid.Empty)
+            throw new ArgumentException("Catalog needs workspace and root identities.");
+        ArgumentNullException.ThrowIfNull(documents);
+        var ordered = documents.OrderBy(x => x?.RelativePath, StringComparer.Ordinal).ToArray();
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        return HashCanonical(writer =>
+        {
+            writer.Write("Embasic.ENote.RekeyCatalog.1");
+            writer.Write(workspaceId.ToByteArray());
+            writer.Write(rootFactorId.ToByteArray());
+            writer.Write(Convert.FromHexString(NormalizeDigest(indexSha256)));
+            writer.Write(ordered.Length);
+            foreach (var doc in ordered)
+            {
+                if (doc is null || string.IsNullOrEmpty(doc.RelativePath) || !paths.Add(doc.RelativePath))
+                    throw new InvalidDataException("Catalog paths must be present and unique.");
+                writer.Write(doc.RelativePath);
+                writer.Write(Convert.FromHexString(NormalizeDigest(doc.SourceSha256)));
+            }
+        });
+    }
+
+    internal static string HashCanonical(Action<BinaryWriter> write)
+    {
+        using var hash = SHA256.Create();
+        using var sink = new CryptoStream(Stream.Null, hash, CryptoStreamMode.Write);
+        using var writer = new BinaryWriter(sink, new System.Text.UTF8Encoding(false, true), leaveOpen: true);
+        write(writer);
+        writer.Flush();
+        sink.FlushFinalBlock();
+        return Convert.ToHexString(hash.Hash!);
     }
 
     internal static string NormalizeDigest(string? digest)
