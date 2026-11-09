@@ -13,7 +13,7 @@ public static class RecoveryBackupCodec
 {
     private static readonly byte[] Signature = "ERB1"u8.ToArray();
     private const int HeaderBytes = 4 + 1 + PortableEmd.SaltBytes + 4 + 4 + 1 + PortableEmd.NonceBytes;
-    private const int TotalBytes = HeaderBytes + PortableEmd.KeyBytes + PortableEmd.TagBytes;
+    internal const int TotalBytes = HeaderBytes + PortableEmd.KeyBytes + PortableEmd.TagBytes;
 
     public static byte[] Create(ReadOnlySpan<byte> recoverySecret, string backupPassword)
     {
