@@ -136,3 +136,10 @@ acceptance remain open.
 The retry journal uses the existing .NET HMAC and local publication
 primitives. The optional capability probe uses Windows' built-in
 TrustedPlatformModule cmdlet. No NuGet package or binary asset was added.
+
+## Tur 24 dependency inventory
+
+The transition contract, root recovery and per-document rekey use the
+existing .NET runtime and Embasic E-Note projects. No NuGet package, wire
+format, font or binary asset was added. Final SBOM/NOTICE and logo
+redistribution rights acceptance remain open.
