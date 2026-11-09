@@ -295,3 +295,12 @@ The optional retry journal authenticates one candidate per expected
 generation, rejects conflicting writers and supports exact restart
 recovery. The Windows generation-backed file unlock checks the trusted
 stamp again before key delivery. See [scope and open acceptance gates](docs/VAULT-RETRY-INTENT-TUR23.md).
+
+## Tur 24 — independent retry contract and recovery primitives
+
+The experimental transition-aware path reserves the exact retry intent and
+checks the selected generation before Windows key delivery. Root recovery
+uses an independently approved ERB1/ELH1 pair. Per-document rekey rebuilds
+the encrypted payload with fresh key material. See
+[the prototype and release boundaries](docs/VAULT-TRANSITION-ROOT-REKEY-TUR24.md).
+W007 / SEC-EMD-05 and W012 release acceptance remain blocked.

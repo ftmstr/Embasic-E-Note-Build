@@ -124,6 +124,41 @@ public static class LayeredEmd3
         finally { CryptographicOperations.ZeroMemory(current); }
     }
 
+    /// <summary>
+    /// Rebuild one document with a fresh inner DEK and the replacement factors.
+    /// The caller owns the new recovery secret and must zero it after use.
+    /// </summary>
+    public static byte[] Rekey(ReadOnlySpan<byte> wrapped, IReadOnlyList<LayerSecret> currentLayers,
+        IReadOnlyList<LayerSecret> replacementLayers, string nextPassword, out byte[] nextRecoverySecret,
+        string? currentPassword = null, byte[]? currentRecoverySecret = null,
+        IFileKeyProtector? currentWindowsProtector = null, IFileKeyProtector? nextWindowsProtector = null)
+    {
+        ArgumentNullException.ThrowIfNull(currentLayers);
+        ArgumentNullException.ThrowIfNull(replacementLayers);
+        var current = currentLayers.ToArray();
+        var replacement = replacementLayers.ToArray();
+        if (current.Length != replacement.Length)
+            throw new ArgumentException("Replacement must preserve the factor chain.", nameof(replacementLayers));
+        ValidateLayers(current);
+        ValidateLayers(replacement);
+        bool changed = false;
+        for (int i = 0; i < current.Length; i++)
+        {
+            if (current[i].Id != replacement[i].Id || current[i].Kind != replacement[i].Kind)
+                throw new ArgumentException("Replacement must preserve factor order and identity.", nameof(replacementLayers));
+            changed |= !current[i].HasSameSecret(replacement[i]);
+        }
+        if (!changed)
+            throw new ArgumentException("At least one factor must change.", nameof(replacementLayers));
+
+        string markdown = Open(wrapped, current, currentPassword, currentRecoverySecret, currentWindowsProtector);
+        using var document = PortableEmd.Encrypt(markdown, nextPassword, createRecoveryKey: true,
+            windowsKeyProtector: nextWindowsProtector);
+        byte[] sealedDocument = Seal(document, replacement);
+        nextRecoverySecret = document.RecoverySecret!;
+        return sealedDocument;
+    }
+
     private static void ValidateLayers(IReadOnlyList<LayerSecret> layers)
     {
         ArgumentNullException.ThrowIfNull(layers);
@@ -168,11 +203,31 @@ public sealed class LayerSecret : IDisposable
         _secret = secret.ToArray();
     }
 
-    public static LayerSecret Generate(LayerKind kind)
+    public static LayerSecret Generate(LayerKind kind) => Generate(Guid.NewGuid(), kind);
+
+    public static LayerSecret Regenerate(LayerSecret current)
+    {
+        ArgumentNullException.ThrowIfNull(current);
+        return Generate(current.Id, current.Kind);
+    }
+
+    private static LayerSecret Generate(Guid id, LayerKind kind)
     {
         byte[] random = RandomNumberGenerator.GetBytes(32);
-        try { return new LayerSecret(Guid.NewGuid(), kind, random); }
+        try { return new LayerSecret(id, kind, random); }
         finally { CryptographicOperations.ZeroMemory(random); }
+    }
+
+    internal bool HasSameSecret(LayerSecret other)
+    {
+        byte[] current = CopySecret();
+        try
+        {
+            byte[] replacement = other.CopySecret();
+            try { return CryptographicOperations.FixedTimeEquals(current, replacement); }
+            finally { CryptographicOperations.ZeroMemory(replacement); }
+        }
+        finally { CryptographicOperations.ZeroMemory(current); }
     }
 
     internal byte[] CopySecret()

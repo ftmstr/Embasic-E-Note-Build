@@ -11,6 +11,7 @@ public static class WorkspaceLockIndex
 {
     private const int HeaderSize = 4 + 1 + 16 + 16 + 12 + 4;
     private const int MaxCiphertext = 16 * 1024 * 1024;
+    internal const int MaximumEncodedBytes = HeaderSize + MaxCiphertext + 16;
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
 
     public static byte[] Protect(Guid workspaceId, LayerSecret rootFactor,
@@ -60,11 +61,23 @@ public static class WorkspaceLockIndex
         }
     }
 
+    public static byte[] RekeyRoot(ReadOnlySpan<byte> envelope, Guid workspaceId,
+        LayerSecret current, LayerSecret replacement)
+    {
+        ArgumentNullException.ThrowIfNull(current);
+        ArgumentNullException.ThrowIfNull(replacement);
+        if (current.Id != replacement.Id || current.Kind != LayerKind.Folder ||
+            replacement.Kind != LayerKind.Folder || current.HasSameSecret(replacement))
+            throw new ArgumentException("A fresh factor with the same root identity is required.", nameof(replacement));
+
+        return Protect(workspaceId, replacement, Open(envelope, workspaceId, current));
+    }
+
     public static IReadOnlyList<WorkspaceLockEntry> Open(ReadOnlySpan<byte> envelope,
         Guid expectedWorkspace, LayerSecret rootFactor)
     {
         if (envelope.Length < HeaderSize + 16 ||
-            envelope.Length > HeaderSize + MaxCiphertext + 16 ||
+            envelope.Length > MaximumEncodedBytes ||
             !envelope[..4].SequenceEqual("ELH1"u8))
             throw new InvalidDataException("Unknown workspace hierarchy index.");
         if (envelope[4] != 1) throw new NotSupportedException("Unknown hierarchy schema.");
