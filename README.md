@@ -269,3 +269,13 @@ on the enrolled object still open in the risk test.
 
 See [the file identity and offline recovery design](docs/VAULT-FILE-IDENTITY-TUR20.md).
 W007 / SEC-EMD-05 is blocked. WPF secure `.emd` is disabled.
+
+## Tur 21 — experimental vault generation recovery
+
+The generation coordinator selects an exact workspace, epoch and manifest
+digest supplied by an independent anchor interface. It verifies a staged
+candidate before compare-and-advance and resolves uncertain outcomes by
+readback. The test adapters simulate interruptions and contention. See
+[the recovery protocol and trust limits](docs/VAULT-GENERATION-RECOVERY-TUR21.md).
+A real independent anchor and durable generation store are pending.
+W007 / SEC-EMD-05 and V1.0 remain blocked.
