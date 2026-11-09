@@ -27,6 +27,14 @@ public sealed class VaultSnapshotPin
         _digest = digest;
     }
 
+    // Storage reconstructs these fields only from a digest-verified generation.
+    internal static VaultSnapshotPin RestoreVerifiedDigest(
+        Guid lockId, LayerKind kind, long epoch, ReadOnlySpan<byte> digest)
+    {
+        if (digest.Length != 32) throw new ArgumentException("Expected a SHA-256 digest.", nameof(digest));
+        return new VaultSnapshotPin(lockId, kind, epoch, digest.ToArray());
+    }
+
     /// <summary>
     /// Authenticate the envelope before recording a digest. The epoch is a
     /// caller assertion, NOT verified by ELV1; securely persisting and

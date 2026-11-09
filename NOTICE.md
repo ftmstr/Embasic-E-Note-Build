@@ -123,3 +123,10 @@ The experimental generation commitment and recovery protocol use existing
 .NET runtime cryptography, collections and I/O contracts. No new NuGet
 package or binary asset is introduced. The logo redistribution and full
 SBOM/NOTICE acceptance are still open.
+
+## Tur 22 dependency inventory
+
+The experimental manifest reader and store use existing .NET runtime
+libraries and operating-system file primitives. No new NuGet package
+or binary asset is introduced. Final SBOM/NOTICE and logo rights
+acceptance remain open.
