@@ -83,3 +83,16 @@ jobs:
 
       - name: Run Tur22 bounded manifest reader and disk staging tests
         run: dotnet run --project tests/Embasic.ENote.Tur22.Tests/Embasic.ENote.Tur22.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur23 authenticated retry and Windows key delivery tests
+        run: dotnet run --project tests/Embasic.ENote.Tur23.Tests/Embasic.ENote.Tur23.Tests.csproj --configuration Release --no-restore
+
+      - name: Probe Windows TPM capability without provisioning
+        shell: powershell
+        run: |
+          $result = ./tools/Get-VaultAnchorPreflight.ps1
+          $probe = $result | ConvertFrom-Json
+          if ($probe.probe -ne 'READ_ONLY_TPM_CAPABILITY' -or $probe.independent_anchor_cas -ne 'NOT_RUN') {
+            throw 'Invalid TPM preflight output'
+          }
+          Write-Output $result

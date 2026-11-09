@@ -46,11 +46,17 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
 {
     private readonly IExternalVaultGenerationAnchor _anchor;
     private readonly IVaultGenerationStore _store;
+    private readonly IVaultRetryIntentStore? _intents;
 
     public VaultGenerationRecovery(IExternalVaultGenerationAnchor anchor, IVaultGenerationStore store)
+        : this(anchor, store, null) { }
+
+    public VaultGenerationRecovery(IExternalVaultGenerationAnchor anchor, IVaultGenerationStore store,
+        IVaultRetryIntentStore? intents)
     {
         _anchor = anchor ?? throw new ArgumentNullException(nameof(anchor));
         _store = store ?? throw new ArgumentNullException(nameof(store));
+        _intents = intents;
     }
 
     public VaultGenerationManifest ReadCommitted(Guid workspaceId)
@@ -76,26 +82,60 @@ public sealed class VaultGenerationRecovery : IExternalVaultAnchorReader
     {
         ArgumentNullException.ThrowIfNull(expected);
         ArgumentNullException.ThrowIfNull(next);
-        if (expected.WorkspaceId != next.Stamp.WorkspaceId || expected.Epoch == long.MaxValue ||
-            next.Stamp.Epoch != expected.Epoch + 1)
-            throw new ArgumentException("Candidate must be the next epoch of the same workspace.", nameof(next));
+        var intent = new VaultRetryIntent(expected, next.Stamp);
+        if (_intents?.Read(expected.WorkspaceId, expected.Epoch) is { } existing && existing != intent)
+            throw new CryptographicException("The candidate differs from the recorded retry intent.");
 
         var observed = ReadStamp(expected.WorkspaceId);
         if (observed != expected) return Resolve(expected, next.Stamp, observed);
 
-        var prior = ReadExact(expected);
-        if (!next.RetainsFactorsFrom(prior))
-            throw new ArgumentException("Candidate dropped an enrolled factor.", nameof(next));
-
+        VerifyFactorContinuity(expected, next);
         _store.Stage(next);
         ReadExact(next.Stamp);
+        _intents?.Record(intent);
+        return Advance(intent);
+    }
 
-        try { _anchor.CompareAndAdvance(expected, next.Stamp); }
+    /// <summary>Resume only an authenticated, already recorded transition.</summary>
+    public VaultGenerationAdvanceState Resume(VaultGenerationStamp expected)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        var intent = _intents?.Read(expected.WorkspaceId, expected.Epoch);
+        if (intent is null || intent.Expected != expected)
+            throw new CryptographicException("No matching retry intent for this generation.");
+
+        var observed = ReadStamp(expected.WorkspaceId);
+        if (observed != expected) return Resolve(expected, intent.Candidate, observed);
+
+        VerifyFactorContinuity(expected, ReadExact(intent.Candidate));
+        return Advance(intent);
+    }
+
+    internal void RequireCurrent(VaultGenerationStamp expected)
+    {
+        if (ReadStamp(expected.WorkspaceId) != expected)
+            throw new CryptographicException("The trusted generation changed before key delivery.");
+    }
+
+    private void VerifyFactorContinuity(VaultGenerationStamp expected, VaultGenerationManifest candidate)
+    {
+        if (!candidate.RetainsFactorsFrom(ReadExact(expected)))
+            throw new ArgumentException("Candidate dropped an enrolled factor.", nameof(candidate));
+    }
+
+    private VaultGenerationAdvanceState Advance(VaultRetryIntent intent)
+    {
+        var expected = intent.Expected;
+        var candidate = intent.Candidate;
+        if (_intents is not null && _intents.Read(expected.WorkspaceId, expected.Epoch) != intent)
+            throw new CryptographicException("The retry intent is missing or changed before compare-and-advance.");
+
+        try { _anchor.CompareAndAdvance(expected, candidate); }
         catch (VaultGenerationOutcomeUnknownException)
         {
             // A lost reply cannot prove success or failure. Consult the anchor.
         }
-        return Resolve(expected, next.Stamp, ReadStamp(expected.WorkspaceId));
+        return Resolve(expected, candidate, ReadStamp(expected.WorkspaceId));
     }
 
     private VaultGenerationStamp ReadStamp(Guid workspaceId)

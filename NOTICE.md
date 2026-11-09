@@ -130,3 +130,9 @@ The experimental manifest reader and store use existing .NET runtime
 libraries and operating-system file primitives. No new NuGet package
 or binary asset is introduced. Final SBOM/NOTICE and logo rights
 acceptance remain open.
+
+## Tur 23 dependency inventory
+
+The retry journal uses the existing .NET HMAC and local publication
+primitives. The optional capability probe uses Windows' built-in
+TrustedPlatformModule cmdlet. No NuGet package or binary asset was added.

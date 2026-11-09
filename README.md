@@ -288,3 +288,10 @@ Tests reopen from separate processes, exercise competing publishers and
 prove that corrupt or missing selected data fails closed. See
 [the format, staging and acceptance limits](docs/VAULT-GENERATION-DISK-STORE-TUR22.md).
 The independent anchor and physical durability acceptance remain open.
+
+## Tur 23 — retry intents and key delivery
+
+The optional retry journal authenticates one candidate per expected
+generation, rejects conflicting writers and supports exact restart
+recovery. The Windows generation-backed file unlock checks the trusted
+stamp again before key delivery. See [scope and open acceptance gates](docs/VAULT-RETRY-INTENT-TUR23.md).
