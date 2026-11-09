@@ -4,6 +4,38 @@ namespace Embasic.ENote.Storage;
 
 public sealed partial class VaultGenerationRecovery
 {
+    /// <summary>Restore only the exact already reserved candidate. This never commits or cancels.</summary>
+    public void RestageReservedCandidate(VaultGenerationStamp expected, VaultGenerationManifest backup)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        ArgumentNullException.ThrowIfNull(backup);
+        var intent = new VaultRetryIntent(expected, backup.Stamp);
+        if (_anchor is not IExternalVaultTransitionAnchor anchor)
+            throw new NotSupportedException("An independent transition provider is required.");
+        RequireReserved();
+        CheckLocalIntent(intent);
+        VerifyFactorContinuity(expected, backup);
+        _store.Stage(backup);
+        ReadExact(intent.Candidate);
+        RequireReserved();
+
+        void RequireReserved()
+        {
+            var state = ReadTransition(anchor, expected.WorkspaceId);
+            if (state.Current != expected || state.Pending != intent)
+                throw new CryptographicException("Backup is not the independently reserved candidate.");
+        }
+    }
+
+    internal IDisposable EnterKeyUseFence(VaultGenerationStamp expected)
+    {
+        if (_anchor is not IExternalVaultTransitionAnchor || _anchor is not IVaultKeyUseFence fence)
+            throw new NotSupportedException("A transition-aware key use fence is required.");
+
+        return fence.EnterKeyUse(expected)
+            ?? throw new CryptographicException("Provider did not establish an independent key use fence.");
+    }
+
     private VaultGenerationAdvanceState StageBound(IExternalVaultTransitionAnchor anchor,
         VaultRetryIntent intent, VaultGenerationManifest next)
     {

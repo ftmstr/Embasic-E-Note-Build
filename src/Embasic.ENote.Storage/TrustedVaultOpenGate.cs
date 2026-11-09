@@ -87,6 +87,31 @@ public sealed class TrustedVaultOpenGate
             Binding.WindowsFile);
     }
 
+    /// <summary>
+    /// Use the enrolled key synchronously under a transition-aware provider fence.
+    /// The supplied key is disposed before releasing the fence. The callback
+    /// must not copy key material, start asynchronous work or re-enter the provider.
+    /// </summary>
+    public void UseFileBound(string path, Guid workspaceId, Guid lockId, LayerKind kind,
+        string credential, Action<LayerSecret> use, bool recovery = false)
+    {
+        if (!OperatingSystem.IsWindows())
+            throw new PlatformNotSupportedException("File-bound vault use requires Windows.");
+        ArgumentNullException.ThrowIfNull(use);
+        if (workspaceId == Guid.Empty || lockId == Guid.Empty)
+            throw new CryptographicException("Missing vault policy identity.");
+        if (_anchor is not VaultGenerationRecovery generation)
+            throw new NotSupportedException("A generation-backed policy is required.");
+
+        var manifest = generation.ReadForKeyDelivery(workspaceId);
+        var grant = manifest.Find(lockId, kind)
+            ?? throw new CryptographicException("No independently trusted vault policy.");
+        using var fence = generation.EnterKeyUseFence(manifest.Stamp);
+        using var secret = UnlockWithGrant(path, workspaceId, lockId, kind, credential,
+            recovery, Binding.WindowsFile, grant);
+        use(secret);
+    }
+
     private LayerSecret UnlockCore(string path, Guid workspaceId, Guid lockId,
         LayerKind kind, string credential, bool recovery, Binding binding)
     {
