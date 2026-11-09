@@ -17,6 +17,7 @@ public sealed class VaultSnapshotPin
     public Guid LockId { get; }
     public LayerKind LockKind { get; }
     public long TrustedEpoch { get; }
+    public string CiphertextSha256 => Convert.ToHexString(_digest);
 
     private VaultSnapshotPin(Guid id, LayerKind kind, long epoch, byte[] digest)
     {

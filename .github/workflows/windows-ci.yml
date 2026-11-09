@@ -77,3 +77,6 @@ jobs:
 
       - name: Run Tur20 Windows vault file identity and rollback-risk tests
         run: dotnet run --project tests/Embasic.ENote.Tur20.Tests/Embasic.ENote.Tur20.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur21 vault generation recovery and CAS tests
+        run: dotnet run --project tests/Embasic.ENote.Tur21.Tests/Embasic.ENote.Tur21.Tests.csproj --configuration Release --no-restore

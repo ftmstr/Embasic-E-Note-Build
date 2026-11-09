@@ -116,3 +116,10 @@ The experimental Windows vault identity probe uses the operating system's
 kernel32 file information API through existing .NET interop. The tests use
 framework assemblies and Windows tools. Tur 20 adds no NuGet package or
 binary asset. Logo redistribution and full SBOM/NOTICE acceptance are open.
+
+## Tur 21 dependency inventory
+
+The experimental generation commitment and recovery protocol use existing
+.NET runtime cryptography, collections and I/O contracts. No new NuGet
+package or binary asset is introduced. The logo redistribution and full
+SBOM/NOTICE acceptance are still open.
