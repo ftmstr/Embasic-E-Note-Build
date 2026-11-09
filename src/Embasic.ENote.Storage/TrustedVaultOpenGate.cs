@@ -92,10 +92,34 @@ public sealed class TrustedVaultOpenGate
     {
         if (workspaceId == Guid.Empty || lockId == Guid.Empty)
             throw new CryptographicException("Missing vault policy identity.");
+        if (binding == Binding.WindowsFile && _anchor is VaultGenerationRecovery generation)
+        {
+            var manifest = generation.ReadCommitted(workspaceId);
+            var bound = manifest.Find(lockId, kind)
+                ?? throw new CryptographicException("No independently trusted vault policy.");
+            var secret = UnlockWithGrant(path, workspaceId, lockId, kind, credential, recovery, binding, bound);
+            try
+            {
+                generation.RequireCurrent(manifest.Stamp);
+                return secret;
+            }
+            catch
+            {
+                secret.Dispose();
+                throw;
+            }
+        }
         if (_anchor is null ||
             !_anchor.TryRead(workspaceId, lockId, kind, out var grant) ||
             grant is null)
             throw new CryptographicException("No independently trusted vault policy.");
+
+        return UnlockWithGrant(path, workspaceId, lockId, kind, credential, recovery, binding, grant);
+    }
+
+    private LayerSecret UnlockWithGrant(string path, Guid workspaceId, Guid lockId, LayerKind kind,
+        string credential, bool recovery, Binding binding, VaultAnchorGrant grant)
+    {
         if (grant.WorkspaceId != workspaceId || grant.LockId != lockId ||
             grant.Kind != kind || grant.Pin is null ||
             grant.Pin.LockId != lockId || grant.Pin.LockKind != kind ||
