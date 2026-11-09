@@ -74,6 +74,22 @@ public sealed class VaultRekeyStaging
         }
     }
 
+    internal Stream OpenPrepared(VaultRekeyArtifact artifact, string digest)
+    {
+        var stream = _files.OpenRead(NameFor(digest)) ?? throw new InvalidDataException("Missing prepared ciphertext.");
+        try
+        {
+            Verify(artifact, stream, digest);
+            stream.Position = 0;
+            return stream;
+        }
+        catch
+        {
+            stream.Dispose();
+            throw;
+        }
+    }
+
     private bool VerifyStaged(VaultRekeyArtifact artifact, string digest)
     {
         using var staged = _files.OpenRead(NameFor(digest));
@@ -84,7 +100,7 @@ public sealed class VaultRekeyStaging
 
     private static string NameFor(string digest) => digest + ".rekey";
 
-    private static void Verify(VaultRekeyArtifact item, Stream source, string digest, Stream? destination = null)
+    internal static void Verify(VaultRekeyArtifact item, Stream source, string digest, Stream? destination = null)
     {
         long maximum = item.Kind switch
         {
