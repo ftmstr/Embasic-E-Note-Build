@@ -13,16 +13,25 @@ public sealed partial class VaultTransitionFilePrototype :
 {
     private readonly string _directory;
     private readonly byte[] _key;
+    private readonly Guid? _providerIdentity;
     private readonly object _keyGate = new();
     private bool _disposed;
 
     public VaultTransitionFilePrototype(string existingDirectory, ReadOnlySpan<byte> authenticationKey)
+        : this(existingDirectory, authenticationKey, null) { }
+
+    public VaultTransitionFilePrototype(string existingDirectory, ReadOnlySpan<byte> authenticationKey,
+        Guid? providerIdentity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(existingDirectory);
         if (authenticationKey.Length != 32)
             throw new ArgumentException("Expected a 32-byte authentication key.", nameof(authenticationKey));
+        if (providerIdentity == Guid.Empty)
+            throw new ArgumentException("A pinned provider identity must be nonempty.", nameof(providerIdentity));
         _directory = Path.GetFullPath(existingDirectory);
         if (!Directory.Exists(_directory)) throw new DirectoryNotFoundException(_directory);
+        _providerIdentity = providerIdentity;
+        CheckDirectory();
         _key = authenticationKey.ToArray();
     }
 
@@ -34,6 +43,7 @@ public sealed partial class VaultTransitionFilePrototype :
         lock (_keyGate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            CheckDirectory();
             using var marker = new FileStream(Slot(initial.WorkspaceId, "lock"), FileMode.CreateNew,
                 FileAccess.ReadWrite, FileShare.None);
             marker.Flush(flushToDisk: true);
@@ -96,6 +106,15 @@ public sealed partial class VaultTransitionFilePrototype :
         return Read(workspaceId).Recovery;
     }
 
+    public VaultRootRecoveryAuthorization ObserveAuthorization(VaultGenerationStamp expected)
+    {
+        ArgumentNullException.ThrowIfNull(expected);
+        using var marker = Enter(expected.WorkspaceId);
+        var state = Read(expected.WorkspaceId);
+        RequireQuiescent(expected, state.Transition);
+        return state.Recovery;
+    }
+
     public VaultRootRecoveryAuthorization CompareAndSetAuthorization(VaultGenerationStamp expected,
         long expectedRevision, VaultRootRecoveryProof? replacement)
     {
@@ -124,6 +143,8 @@ public sealed partial class VaultTransitionFilePrototype :
         long started = Stopwatch.GetTimestamp();
         while (true)
         {
+            CheckDirectory();
+            CheckFile(path);
             try { return new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None); }
             catch (IOException e) when (e is not (FileNotFoundException or DirectoryNotFoundException) &&
                 Stopwatch.GetElapsedTime(started) < TimeSpan.FromSeconds(2))
@@ -131,6 +152,24 @@ public sealed partial class VaultTransitionFilePrototype :
                 Thread.Sleep(15);
             }
         }
+    }
+
+    private void CheckDirectory()
+    {
+        if (_providerIdentity is null) return;
+        for (DirectoryInfo? folder = new(_directory); folder is not null; folder = folder.Parent)
+        {
+            if ((File.GetAttributes(folder.FullName) & (FileAttributes.Directory | FileAttributes.ReparsePoint)) !=
+                FileAttributes.Directory)
+                throw new IOException("Pinned provider requires an ordinary directory path.");
+        }
+    }
+
+    private void CheckFile(string path)
+    {
+        if (_providerIdentity is not null &&
+            (File.GetAttributes(path) & (FileAttributes.ReparsePoint | FileAttributes.Directory)) != 0)
+            throw new IOException("Pinned provider requires ordinary marker and state files.");
     }
 
     private string Slot(Guid workspaceId, string suffix)

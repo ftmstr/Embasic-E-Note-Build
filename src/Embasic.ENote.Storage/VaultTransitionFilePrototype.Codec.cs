@@ -12,9 +12,12 @@ public sealed partial class VaultTransitionFilePrototype
 
     private ProviderState Read(Guid workspaceId)
     {
-        using var file = new FileStream(Slot(workspaceId, "state"), FileMode.Open, FileAccess.Read, FileShare.Read);
+        string path = Slot(workspaceId, "state");
+        CheckFile(path);
+        using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         long length = file.Length;
-        if (length is < MinimumStateBytes or > MaximumStateBytes)
+        int identityBytes = _providerIdentity is null ? 0 : 16;
+        if (length < MinimumStateBytes + identityBytes || length > MaximumStateBytes + identityBytes)
             throw new InvalidDataException("Invalid provider state length.");
         byte[] bytes = new byte[(int)length];
         file.ReadExactly(bytes);
@@ -27,8 +30,9 @@ public sealed partial class VaultTransitionFilePrototype
 
         using var stream = new MemoryStream(bytes, 0, payloadLength, writable: false);
         using var reader = new BinaryReader(stream);
-        if (!reader.ReadBytes(4).AsSpan().SequenceEqual("EVP1"u8) ||
-            new Guid(reader.ReadBytes(16)) != workspaceId)
+        if (!reader.ReadBytes(4).AsSpan().SequenceEqual(_providerIdentity is null ? "EVP1"u8 : "EVP2"u8) ||
+            new Guid(reader.ReadBytes(16)) != workspaceId ||
+            (_providerIdentity is { } identity && new Guid(reader.ReadBytes(16)) != identity))
             throw new InvalidDataException("Invalid provider state identity.");
 
         var current = ReadStamp(reader, workspaceId);
@@ -47,14 +51,16 @@ public sealed partial class VaultTransitionFilePrototype
 
     private void Publish(ProviderState state, bool replace = true)
     {
+        CheckDirectory();
         var transition = state.Transition;
         string target = Slot(transition.Current.WorkspaceId, "state");
         string temporary = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
         using var payload = new MemoryStream(MaximumStateBytes);
         using (var writer = new BinaryWriter(payload, System.Text.Encoding.UTF8, leaveOpen: true))
         {
-            writer.Write("EVP1"u8);
+            writer.Write(_providerIdentity is null ? "EVP1"u8 : "EVP2"u8);
             writer.Write(transition.Current.WorkspaceId.ToByteArray());
+            if (_providerIdentity is { } identity) writer.Write(identity.ToByteArray());
             WriteStamp(writer, transition.Current);
             writer.Write(transition.Pending is not null);
             if (transition.Pending is { } pending) WriteStamp(writer, pending.Candidate);
@@ -82,6 +88,8 @@ public sealed partial class VaultTransitionFilePrototype
                 file.Write(tag);
                 file.Flush(flushToDisk: true);
             }
+            CheckDirectory();
+            if (replace) CheckFile(target);
             try { File.Move(temporary, target, overwrite: replace); }
             catch (IOException) when (replace)
             {
