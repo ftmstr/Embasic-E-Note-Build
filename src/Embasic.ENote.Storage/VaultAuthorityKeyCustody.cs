@@ -1,3 +1,4 @@
+using System.Runtime.Versioning;
 using System.Security.Cryptography;
 
 namespace Embasic.ENote.Storage;
@@ -57,6 +58,38 @@ public sealed class VaultAuthorityKeyCustody : IDisposable
             signer.ImportPkcs8PrivateKey(servicePrivateKey, out int consumed);
             if (consumed != servicePrivateKey.Length || Describe(expectedWorkspace, expectedEpoch, signer, reader, publisher) != approved)
                 throw new CryptographicException("Service signing or role key digest differs.");
+            return new VaultAuthorityKeyCustody(approved, signer, reader.ToArray(), publisher.ToArray());
+        }
+        catch
+        {
+            signer.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>Open a named non-exportable software KSP signing key pinned by independently approved policy.</summary>
+    [SupportedOSPlatform("windows")]
+    public static VaultAuthorityKeyCustody OpenWindowsKey(VaultAuthorityKeyEpoch approved, Guid expectedWorkspace,
+        long expectedEpoch, ReadOnlySpan<byte> approvalSignature, ReadOnlySpan<byte> approvalPublicKey,
+        string keyName, ReadOnlySpan<byte> reader, ReadOnlySpan<byte> publisher)
+    {
+        ArgumentNullException.ThrowIfNull(approved);
+        ArgumentException.ThrowIfNullOrWhiteSpace(keyName);
+        if (approved.Workspace != expectedWorkspace || approved.Epoch != expectedEpoch)
+            throw new CryptographicException("Service keys differ from the independently selected epoch.");
+        VaultRecoverySignatures.Verify(approvalPublicKey, approvalSignature, Domain, writer => WriteEpoch(writer, approved));
+
+        using var key = CngKey.Open(keyName, CngProvider.MicrosoftSoftwareKeyStorageProvider,
+            CngKeyOpenOptions.MachineKey | CngKeyOpenOptions.Silent);
+        if (!key.IsMachineKey || key.IsEphemeral || key.ExportPolicy != CngExportPolicies.None ||
+            key.KeyUsage != CngKeyUsages.Signing)
+            throw new CryptographicException("Expected a persisted non-exportable machine signing key.");
+
+        var signer = new ECDsaCng(key);
+        try
+        {
+            if (Describe(expectedWorkspace, expectedEpoch, signer, reader, publisher) != approved)
+                throw new CryptographicException("Software KSP signing or role key digest differs.");
             return new VaultAuthorityKeyCustody(approved, signer, reader.ToArray(), publisher.ToArray());
         }
         catch

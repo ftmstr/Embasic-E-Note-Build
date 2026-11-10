@@ -30,6 +30,15 @@ internal static partial class Program
             Console.WriteLine($"{_passed}/{_total} Tur29 catalog, recovery, cleanup and witness checks passed.");
             return _total == _passed ? 0 : 1;
         }
+        if (args is ["tur30"])
+        {
+            Tur30LiveChecks();
+            Tur30RecoveryChecks();
+            Console.WriteLine($"{_passed}/{_total} Tur30 live synchronization, inventory and recovery policy checks passed.");
+            return _total == _passed ? 0 : 1;
+        }
+        if (args.Length > 0 && args[0].StartsWith("cng-", StringComparison.Ordinal))
+            return OperatingSystem.IsWindows() ? await WindowsCngCommand(args) : 2;
         if (args.Length > 0)
             return OperatingSystem.IsWindows() ? await WindowsCommand(args) : 2;
         SelectionChecks();

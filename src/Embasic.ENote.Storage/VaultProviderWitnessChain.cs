@@ -10,6 +10,7 @@ public sealed class VaultProviderWitnessChain : IVaultProviderRecoveryWitness
 {
     private const string Domain = "Embasic.VaultProviderWitnessChain.v1";
     private readonly VaultProviderRecoveryCheckpoint _current;
+    public string TipSha256 { get; }
 
     public VaultProviderWitnessChain(VaultGenerationStamp genesis, Guid genesisProvider, string genesisSha256,
         IEnumerable<VaultProviderWitnessLink> links, string independentTipSha256, ReadOnlySpan<byte> witnessKey)
@@ -45,6 +46,7 @@ public sealed class VaultProviderWitnessChain : IVaultProviderRecoveryWitness
         if (current is null || previousHash != VaultRekeyInventory.NormalizeDigest(independentTipSha256))
             throw new CryptographicException("Missing independently selected recovery witness tip.");
         _current = current;
+        TipSha256 = previousHash;
     }
 
     public static VaultProviderWitnessLink Sign(VaultProviderRecoveryCheckpoint checkpoint, string previousSha256, ECDsa key)
@@ -85,8 +87,14 @@ public sealed partial class VaultTransitionFilePrototype
         return new WitnessedAnchor(this, witness);
     }
 
+    public IVaultRootRecoveryLifecycle RequireActiveRootWitness(IVaultProviderRecoveryWitness witness)
+    {
+        ArgumentNullException.ThrowIfNull(witness);
+        return new WitnessedAnchor(this, witness);
+    }
+
     private sealed class WitnessedAnchor(VaultTransitionFilePrototype provider, IVaultProviderRecoveryWitness witness)
-        : IExternalVaultTransitionAnchor
+        : IExternalVaultTransitionAnchor, IVaultRootRecoveryLifecycle
     {
         public VaultTransitionState? ReadTransition(Guid workspaceId) =>
             Run(workspaceId, state => state);
@@ -96,6 +104,16 @@ public sealed partial class VaultTransitionFilePrototype
 
         public void CommitTransition(VaultRetryIntent intent) =>
             Run(intent.Expected.WorkspaceId, _ => { provider.CommitTransition(intent); return true; });
+
+        public VaultRootRecoveryAuthorization ReadAuthorization(Guid workspaceId) =>
+            Run(workspaceId, _ => provider.ReadAuthorization(workspaceId));
+
+        public VaultRootRecoveryAuthorization ObserveAuthorization(VaultGenerationStamp expected) =>
+            Run(expected.WorkspaceId, _ => provider.ObserveAuthorization(expected));
+
+        public VaultRootRecoveryAuthorization CompareAndSetAuthorization(VaultGenerationStamp expected,
+            long expectedRevision, VaultRootRecoveryProof? replacement) =>
+            Run(expected.WorkspaceId, _ => provider.CompareAndSetAuthorization(expected, expectedRevision, replacement));
 
         private T Run<T>(Guid workspace, Func<VaultTransitionState, T> action)
         {

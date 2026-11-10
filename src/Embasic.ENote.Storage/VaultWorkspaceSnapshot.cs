@@ -118,6 +118,11 @@ public sealed class VaultWorkspaceSnapshot
     {
         if (!Documents.SequenceEqual(ObserveNotes(Path.GetFullPath(liveRoot), _rootPath)))
             throw new CryptographicException("Live workspace differs from the captured catalog.");
+        VerifyLiveVaults(manifest);
+    }
+
+    internal static void VerifyLiveVaults(VaultGenerationManifest manifest)
+    {
         foreach (var grant in manifest.Grants)
         {
             using var input = OpenFile(grant.BoundVaultPath!);
@@ -147,6 +152,16 @@ public sealed class VaultWorkspaceSnapshot
             Documents.Any(x => x.RelativePath == relative && x.SourceSha256 == item.SourceSha256))
             return OpenFile(Path.Combine(_directory, "notes", relative[(_rootPath.Length + 1)..]));
         throw new InvalidDataException("Source artifact is absent from the snapshot.");
+    }
+
+    internal IReadOnlyList<VaultRekeyDocument> ObserveLiveDocuments(string liveRoot) =>
+        ObserveNotes(Path.GetFullPath(liveRoot), _rootPath);
+
+    internal string LiveDocumentPath(string liveRoot, VaultRekeyDocument document)
+    {
+        string path = Path.Combine(liveRoot, document.RelativePath[(_rootPath.Length + 1)..]);
+        CheckPath(path, directory: false);
+        return path;
     }
 
     internal bool HasIndex(ReadOnlySpan<byte> index) => index.SequenceEqual(_index);

@@ -21,16 +21,10 @@ public sealed partial class VaultRekeyPublication
             throw new CryptographicException("Losing publication has a different parent.");
         loser.RequireMatch(source, ReadExact(candidate));
 
-        var retained = ReadRetainedPlans(candidate);
-        var ancestor = ReadExact(winner.Candidate);
-        if (!retained.TryGetValue(ancestor.Stamp, out var winningPlan) || winningPlan.Expected != winner.Expected)
+        var retained = ReadRetainedPlans(candidate.WorkspaceId, candidate);
+        if (!retained.TryGetValue(winner.Candidate, out var winningPlan) || winningPlan.Expected != winner.Expected)
             throw new CryptographicException("The independently selected receipt is missing its exact plan.");
-        while (ancestor.Bindings?.RekeySha256 is not null)
-        {
-            if (!retained.TryGetValue(ancestor.Stamp, out var plan))
-                throw new CryptographicException("Cannot establish complete selected ancestry for pruning.");
-            ancestor = ReadExact(plan.Expected);
-        }
+        _ = ReadSelectedAncestry(winner.Candidate, retained);
         var reachable = retained.Values.SelectMany(plan => plan.Targets)
             .Select(target => ObjectName(target.Key, target.Value)).ToHashSet(StringComparer.Ordinal);
         var deletable = loser.Inventory.Artifacts.Where(item => item.Kind != VaultRekeyArtifactKind.FactorVault)
@@ -48,7 +42,7 @@ public sealed partial class VaultRekeyPublication
         return removed;
     }
 
-    private Dictionary<VaultGenerationStamp, Plan> ReadRetainedPlans(VaultGenerationStamp excluded)
+    private Dictionary<VaultGenerationStamp, Plan> ReadRetainedPlans(Guid expectedWorkspace, VaultGenerationStamp? excluded = null)
     {
         var plans = new Dictionary<VaultGenerationStamp, Plan>();
         foreach (string path in Directory.EnumerateFiles(_journalPath, "*.erj"))
@@ -61,7 +55,7 @@ public sealed partial class VaultRekeyPublication
             _ = reader.ReadBytes(4);
             var workspace = new Guid(reader.ReadBytes(16));
             // This API assumes a dedicated workspace store. Refuse mixed storage even if its MAC verifies.
-            if (workspace != excluded.WorkspaceId)
+            if (workspace != expectedWorkspace)
                 throw new InvalidDataException("Pruning requires a workspace-private journal directory.");
             _ = ReadStamp(reader, workspace);
             var stamp = ReadStamp(reader, workspace);
@@ -71,6 +65,21 @@ public sealed partial class VaultRekeyPublication
             if (stamp != excluded) plans.Add(stamp, plan);
         }
         return plans;
+    }
+
+    private IReadOnlyList<VaultGenerationManifest> ReadSelectedAncestry(VaultGenerationStamp current,
+        Dictionary<VaultGenerationStamp, Plan> retained)
+    {
+        var ancestry = new List<VaultGenerationManifest>();
+        var ancestor = ReadExact(current);
+        while (true)
+        {
+            ancestry.Add(ancestor);
+            if (ancestor.Bindings?.RekeySha256 is null) return ancestry;
+            if (!retained.TryGetValue(ancestor.Stamp, out var plan))
+                throw new CryptographicException("Cannot establish complete selected ancestry.");
+            ancestor = ReadExact(plan.Expected);
+        }
     }
 
     private static string ObjectName(string id, string digest) => digest + (id switch
