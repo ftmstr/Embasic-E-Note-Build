@@ -115,3 +115,10 @@ jobs:
       - name: Run Tur28 disposable Windows service and cross-account ACL acceptance
         shell: pwsh
         run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0
+
+      - name: Run Tur29 multi-generation catalog and independent witness tests
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur29
+
+      - name: Run Tur29 dedicated service SID and standard-user acceptance
+        shell: pwsh
+        run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Dedicated

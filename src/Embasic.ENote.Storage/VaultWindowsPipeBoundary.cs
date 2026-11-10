@@ -14,23 +14,33 @@ public sealed class VaultWindowsPipeBoundary
 {
     private readonly SecurityIdentifier _service;
     private readonly SecurityIdentifier _client;
+    private readonly SecurityIdentifier _owner;
     private const PipeAccessRights ClientRights = PipeAccessRights.ReadData | PipeAccessRights.WriteData |
         PipeAccessRights.ReadAttributes | PipeAccessRights.Synchronize;
 
-    public VaultWindowsPipeBoundary(string serviceSid, string clientSid)
+    public VaultWindowsPipeBoundary(string serviceSid, string clientSid) : this(serviceSid, clientSid, serviceSid) { }
+
+    public VaultWindowsPipeBoundary(string serviceSid, string clientSid, string ownerSid)
     {
         _service = new SecurityIdentifier(serviceSid);
         _client = new SecurityIdentifier(clientSid);
-        if (_service == _client) throw new ArgumentException("Service and client SIDs must differ.");
+        _owner = new SecurityIdentifier(ownerSid);
+        if (_service == _client || _owner == _client) throw new ArgumentException("Service and client SIDs must differ.");
     }
 
     internal NamedPipeServerStream CreateServer(string name)
     {
         ValidateName(name);
         var security = new PipeSecurity();
-        security.SetOwner(_service);
+        security.SetOwner(_owner);
         security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
         security.AddAccessRule(new PipeAccessRule(_service, PipeAccessRights.FullControl, AccessControlType.Allow));
+        if (_owner != _service)
+        {
+            // Suppress implicit owner WRITE_DAC for peers sharing the LocalService account.
+            var ownerRights = new SecurityIdentifier("S-1-3-4");
+            security.AddAccessRule(new PipeAccessRule(ownerRights, PipeAccessRights.ReadPermissions, AccessControlType.Allow));
+        }
         security.AddAccessRule(new PipeAccessRule(_client, PipeAccessRights.CreateNewInstance, AccessControlType.Deny));
         security.AddAccessRule(new PipeAccessRule(_client, ClientRights, AccessControlType.Allow));
         byte[] descriptor = security.GetSecurityDescriptorBinaryForm();

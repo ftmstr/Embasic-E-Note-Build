@@ -61,13 +61,18 @@ public sealed class VaultSignedRootApproval : IVaultRootReEnrollmentApprovalRead
 {
     private const string Domain = "Embasic.VaultEraApproval.v1";
     private readonly VaultRootReEnrollmentApproval _approval;
+    private readonly IVaultRootReEnrollmentApprovalReader? _selection;
 
     public VaultSignedRootApproval(VaultRootReEnrollmentApproval approval, ReadOnlySpan<byte> signature,
-        ReadOnlySpan<byte> publicKey)
+        ReadOnlySpan<byte> publicKey) : this(approval, signature, publicKey, null) { }
+
+    public VaultSignedRootApproval(VaultRootReEnrollmentApproval approval, ReadOnlySpan<byte> signature,
+        ReadOnlySpan<byte> publicKey, IVaultRootReEnrollmentApprovalReader? currentSelection)
     {
         ArgumentNullException.ThrowIfNull(approval);
         VaultRecoverySignatures.Verify(publicKey, signature, Domain, writer => Write(writer, approval));
         _approval = approval;
+        _selection = currentSelection;
     }
 
     public static byte[] Sign(VaultRootReEnrollmentApproval approval, ECDsa approvalKey)
@@ -77,7 +82,8 @@ public sealed class VaultSignedRootApproval : IVaultRootReEnrollmentApprovalRead
     }
 
     public VaultRootReEnrollmentApproval? Read(VaultGenerationStamp generation) =>
-        _approval.Generation == generation ? _approval : null;
+        _approval.Generation == generation && (_selection is null || _selection.Read(generation) == _approval)
+            ? _approval : null;
 
     private static void Write(BinaryWriter writer, VaultRootReEnrollmentApproval approval)
     {

@@ -21,12 +21,13 @@ public sealed partial class VaultRekeyPublication
         using var fence = EnterLiveWrite();
         var selected = recovery.ReadCommitted(workspace);
         if (selected.Bindings is null) throw new InvalidDataException("Selected generation has no catalog.");
-        var snapshot = VaultWorkspaceSnapshot.Open(_snapshotPath, workspace, sourceRoot);
+        var snapshot = OpenRegisteredSnapshot(selected, sourceRoot);
         string? target = null;
-        if (selected.Bindings.RekeySha256 is not null)
+        if (snapshot is null && selected.Bindings.RekeySha256 is not null)
         {
             var plan = ReadPlan(selected.Stamp);
             var source = ReadExact(plan.Expected);
+            snapshot = OpenSourceSnapshot(source, sourceRoot);
             var inventory = snapshot.BuildInventory(source, sourceRoot, plan.Factors);
             var commitment = new VaultRekeyCommitment(inventory, plan.Targets);
             commitment.RequireMatch(source, selected);
@@ -34,6 +35,7 @@ public sealed partial class VaultRekeyPublication
         }
         else
         {
+            snapshot ??= OpenSourceSnapshot(selected, sourceRoot);
             snapshot.VerifyAgainst(selected, sourceRoot);
         }
 
