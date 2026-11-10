@@ -12,6 +12,7 @@ public sealed partial class VaultRekeyPublication : IDisposable
     private readonly string _publishedPath;
     private readonly VaultAtomicFileDirectory _published;
     private readonly VaultAtomicFileDirectory _journal;
+    private readonly string _journalPath;
     private readonly IVaultGenerationStore _store;
     private readonly VaultRekeyStaging _staging;
     private readonly string _snapshotPath;
@@ -26,7 +27,8 @@ public sealed partial class VaultRekeyPublication : IDisposable
         if (journalKey.Length != 32) throw new ArgumentException("Expected a 32-byte journal key.", nameof(journalKey));
         _publishedPath = Path.GetFullPath(publishedDirectory);
         _published = new VaultAtomicFileDirectory(_publishedPath);
-        _journal = new VaultAtomicFileDirectory(journalDirectory);
+        _journalPath = Path.GetFullPath(journalDirectory);
+        _journal = new VaultAtomicFileDirectory(_journalPath);
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _staging = staging ?? throw new ArgumentNullException(nameof(staging));
         _snapshotPath = Path.GetFullPath(snapshotDirectory);
@@ -44,7 +46,7 @@ public sealed partial class VaultRekeyPublication : IDisposable
         ArgumentNullException.ThrowIfNull(commitment);
         using var fence = EnterLiveWrite();
         var source = ReadExact(commitment.Inventory.Generation);
-        var snapshot = VaultWorkspaceSnapshot.Open(_snapshotPath, source.Stamp.WorkspaceId, root);
+        var snapshot = OpenSourceSnapshot(source, root);
         snapshot.VerifyAgainst(source, root);
         snapshot.VerifyLive(_liveRoot, source);
         if (source.Bindings?.CatalogSha256 != commitment.Inventory.CatalogSha256)
@@ -105,7 +107,7 @@ public sealed partial class VaultRekeyPublication : IDisposable
         var plan = ReadPlan(candidate);
         var source = ReadExact(plan.Expected);
         var next = ReadExact(candidate);
-        var snapshot = VaultWorkspaceSnapshot.Open(_snapshotPath, candidate.WorkspaceId, root);
+        var snapshot = OpenSourceSnapshot(source, root);
         var inventory = snapshot.BuildInventory(source, root, plan.Factors);
         var commitment = new VaultRekeyCommitment(inventory, plan.Targets);
         return recovery.StageAndAdvanceRekey(commitment, next, _staging, snapshot.OpenSource, () =>

@@ -149,6 +149,33 @@ public sealed class VaultWorkspaceSnapshot
         throw new InvalidDataException("Source artifact is absent from the snapshot.");
     }
 
+    internal bool HasIndex(ReadOnlySpan<byte> index) => index.SequenceEqual(_index);
+
+    internal void Materialize(string directory, VaultGenerationManifest source,
+        Func<VaultRekeyArtifact, string?> targetDigest, Func<VaultRekeyArtifact, string, Stream> openTarget)
+    {
+        Directory.CreateDirectory(Path.Combine(directory, "notes"));
+        Directory.CreateDirectory(Path.Combine(directory, "vaults"));
+        Copy(new("index", VaultRekeyArtifactKind.RootIndex, null, Digest(_index), [RootFactorId]), "index.elh");
+        foreach (var grant in source.Grants)
+            Copy(new("vault:" + grant.LockId.ToString("N"), VaultRekeyArtifactKind.FactorVault, null,
+                grant.Pin.CiphertextSha256, [grant.LockId]), Path.Combine("vaults", VaultName(grant.LockId)));
+        foreach (var doc in Documents)
+            Copy(new("note:" + doc.RelativePath, VaultRekeyArtifactKind.Document, doc.RelativePath,
+                doc.SourceSha256, []), Path.Combine("notes", doc.RelativePath[(_rootPath.Length + 1)..]));
+
+        void Copy(VaultRekeyArtifact artifact, string path)
+        {
+            string? digest = targetDigest(artifact);
+            using var input = digest is null ? OpenSource(artifact) : openTarget(artifact, digest);
+            string destination = Path.Combine(directory, path);
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            using var output = CreateFile(destination);
+            VaultRekeyStaging.Verify(artifact, input, digest ?? artifact.SourceSha256, output);
+            output.Flush(flushToDisk: true);
+        }
+    }
+
     private static VaultRekeyDocument[] ObserveNotes(string directory, string rootPath, string? copyTo = null)
     {
         CheckPath(directory, directory: true);

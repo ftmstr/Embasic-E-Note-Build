@@ -23,6 +23,13 @@ internal static partial class Program
             await Task.Delay(TimeSpan.FromSeconds(35));
             return 0;
         }
+        if (args is ["tur29"])
+        {
+            LineageChecks();
+            WitnessChecks();
+            Console.WriteLine($"{_passed}/{_total} Tur29 catalog, recovery, cleanup and witness checks passed.");
+            return _total == _passed ? 0 : 1;
+        }
         if (args.Length > 0)
             return OperatingSystem.IsWindows() ? await WindowsCommand(args) : 2;
         SelectionChecks();

@@ -85,6 +85,21 @@ public sealed class VaultAuthorityKeyCustody : IDisposable
             throw new CryptographicException("Rotation requires the next epoch and fresh signing and role keys.");
     }
 
+    /// <summary>Install a client pin only from the signed successor selected outside the endpoint.</summary>
+    public static VaultAuthorityPipeClient AdvanceWindowsClientPin(string pipeName,
+        VaultAuthorityKeyEpoch current, VaultAuthorityKeyEpoch successor, long independentlySelectedEpoch,
+        ReadOnlySpan<byte> approvalSignature, ReadOnlySpan<byte> approvalPublicKey,
+        ReadOnlySpan<byte> servicePublicKey, ReadOnlySpan<byte> readerKey)
+    {
+        VerifySuccessor(current, successor);
+        VaultAuthorityPipeProtocol.RequireKey(readerKey);
+        if (successor.Epoch != independentlySelectedEpoch ||
+            successor.SigningSha256 != Digest(servicePublicKey) || successor.ReaderSha256 != Digest(readerKey))
+            throw new CryptographicException("Endpoint pin or reader credential differs from the selected epoch.");
+        VaultRecoverySignatures.Verify(approvalPublicKey, approvalSignature, Domain, writer => WriteEpoch(writer, successor));
+        return VaultAuthorityPipeClient.ForWindowsService(pipeName, servicePublicKey);
+    }
+
     private static string Digest(ReadOnlySpan<byte> bytes) => Convert.ToHexString(SHA256.HashData(bytes));
 
     private static void WriteEpoch(BinaryWriter writer, VaultAuthorityKeyEpoch epoch)
