@@ -42,6 +42,7 @@ public sealed partial class VaultRekeyPublication : IDisposable
         LayerSecret root, Func<Guid, WindowsVaultFileIdentity>? nonWindowsIdentity = null)
     {
         ArgumentNullException.ThrowIfNull(commitment);
+        using var fence = EnterLiveWrite();
         var source = ReadExact(commitment.Inventory.Generation);
         var snapshot = VaultWorkspaceSnapshot.Open(_snapshotPath, source.Stamp.WorkspaceId, root);
         snapshot.VerifyAgainst(source, root);
@@ -100,6 +101,7 @@ public sealed partial class VaultRekeyPublication : IDisposable
     {
         ArgumentNullException.ThrowIfNull(recovery);
         ArgumentNullException.ThrowIfNull(candidate);
+        using var fence = EnterLiveWrite();
         var plan = ReadPlan(candidate);
         var source = ReadExact(plan.Expected);
         var next = ReadExact(candidate);

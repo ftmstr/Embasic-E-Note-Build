@@ -73,6 +73,34 @@ internal sealed class VaultAtomicFileDirectory
         }
     }
 
+    internal FileStream OpenExclusiveLock(string name)
+    {
+        CheckDirectory();
+        string path = Path.Combine(_directory, name);
+        RejectLink(path);
+        return new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+    }
+
+    internal bool DeleteFile(string name)
+    {
+        CheckDirectory();
+        string path = Path.Combine(_directory, name);
+        if (!RejectLink(path)) return false;
+        File.Delete(path);
+        return true;
+    }
+
+    private static bool RejectLink(string path)
+    {
+        try
+        {
+            if ((File.GetAttributes(path) & (FileAttributes.ReparsePoint | FileAttributes.Directory)) != 0)
+                throw new IOException("Vault coordination file must be an ordinary file.");
+            return true;
+        }
+        catch (FileNotFoundException) { return false; }
+    }
+
     private void CheckDirectory()
     {
         const FileAttributes relevant = FileAttributes.Directory | FileAttributes.ReparsePoint;

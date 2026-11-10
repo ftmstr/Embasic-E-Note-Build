@@ -19,6 +19,7 @@ public sealed class VaultAuthorityPipeService : IDisposable
     private readonly VaultGenerationRecovery _recovery;
     private readonly VaultRekeyPublication _publication;
     private readonly LayerSecret _root;
+    private readonly VaultWindowsPipeBoundary? _windowsBoundary;
     private bool _disposed;
 
     public VaultAuthorityPipeService(string pipeName, Guid workspace, ReadOnlySpan<byte> readKey,
@@ -43,11 +44,18 @@ public sealed class VaultAuthorityPipeService : IDisposable
         _signer = signer;
     }
 
+    public VaultAuthorityPipeService(string pipeName, Guid workspace, ReadOnlySpan<byte> readKey,
+        ReadOnlySpan<byte> publishKey, ECDsa signer, VaultGenerationRecovery recovery,
+        VaultRekeyPublication publication, VaultWindowsPipeBoundary boundary, LayerSecret root)
+        : this(pipeName, workspace, readKey, publishKey, signer, recovery, publication, root)
+    {
+        _windowsBoundary = boundary ?? throw new ArgumentNullException(nameof(boundary));
+    }
+
     public async Task ServeOnceAsync(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        using var pipe = new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 1,
-            PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var pipe = CreateEndpoint();
         await pipe.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
         using var io = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         io.CancelAfter(TimeSpan.FromSeconds(15));
@@ -96,6 +104,15 @@ public sealed class VaultAuthorityPipeService : IDisposable
         byte[] response = Response(status, stamp, challenge, request, _signer);
         await pipe.WriteAsync(response, io.Token).ConfigureAwait(false);
         await pipe.FlushAsync(io.Token).ConfigureAwait(false);
+    }
+
+    private NamedPipeServerStream CreateEndpoint()
+    {
+        if (_windowsBoundary is null)
+            return new NamedPipeServerStream(_pipeName, PipeDirection.InOut, 1,
+                PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("Windows pipe ACLs require Windows.");
+        return _windowsBoundary.CreateServer(_pipeName);
     }
 
     public void Dispose()

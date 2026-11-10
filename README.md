@@ -327,3 +327,10 @@ Publication verifies a frozen source catalog, exact target objects and an
 authenticated restart plan before selecting a generation. Root authorization
 can be re-enrolled from a separately approved archive at an exact vacant
 revision. See [the protocol and its release limits](docs/VAULT-IPC-SNAPSHOT-RESTART-TUR27.md).
+
+## Tur 28 — selected catalog and service recovery
+
+The experimental selected-document reader resolves both affected and
+unaffected ciphertext. The Windows service boundary, authenticated ERJ1
+restore and signed provider replacement have dedicated acceptance checks.
+See [the protocol and release limits](docs/VAULT-SELECTED-READ-RECOVERY-TUR28.md).

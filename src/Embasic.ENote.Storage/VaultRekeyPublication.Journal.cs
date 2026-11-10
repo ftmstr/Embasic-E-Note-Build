@@ -46,8 +46,52 @@ public sealed partial class VaultRekeyPublication
     private Plan ReadPlan(VaultGenerationStamp candidate)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        return DecodePlan(candidate, ReadJournalBytes(candidate));
+    }
+
+    private byte[] ReadJournalBytes(VaultGenerationStamp candidate)
+    {
         using var file = _journal.OpenRead(JournalName(candidate)) ?? throw new InvalidDataException("Candidate has no registered restart plan.");
-        byte[] bytes = ReadBounded(file);
+        return ReadBounded(file);
+    }
+
+    public byte[] ExportRestartJournal(VaultGenerationStamp candidate)
+    {
+        ArgumentNullException.ThrowIfNull(candidate);
+        using var fence = EnterLiveWrite();
+        byte[] bytes = ReadJournalBytes(candidate);
+        _ = DecodePlan(candidate, bytes);
+        return bytes;
+    }
+
+    public void RestoreRestartJournal(VaultGenerationRecovery recovery, VaultGenerationStamp candidate,
+        ReadOnlySpan<byte> backup)
+    {
+        ArgumentNullException.ThrowIfNull(recovery);
+        ArgumentNullException.ThrowIfNull(candidate);
+        if (backup.Length is < 140 or > MaximumPlanBytes) throw new InvalidDataException("Invalid restart backup size.");
+        using var fence = EnterLiveWrite();
+        byte[] bytes = backup.ToArray();
+        var plan = DecodePlan(candidate, bytes);
+        var intent = new VaultRetryIntent(plan.Expected, candidate);
+        var state = recovery.ReadAuthorityState(candidate.WorkspaceId);
+        if (state.Pending != intent && !(state.Current == candidate && state.LastCommitted == intent))
+            throw new CryptographicException("Only an independently reserved or committed exact journal may be restored.");
+        _ = ReadExact(plan.Expected);
+        _ = ReadExact(candidate);
+        string name = JournalName(candidate);
+        _journal.Publish(name, file => file.Write(bytes), () =>
+        {
+            using var file = _journal.OpenRead(name);
+            if (file is null) return false;
+            if (!ReadBounded(file).AsSpan().SequenceEqual(bytes))
+                throw new CryptographicException("A differing restart journal already exists.");
+            return true;
+        });
+    }
+
+    private Plan DecodePlan(VaultGenerationStamp candidate, byte[] bytes)
+    {
         int payloadSize = bytes.Length - 32;
         if (!CryptographicOperations.FixedTimeEquals(HMACSHA256.HashData(_journalKey, bytes.AsSpan(0, payloadSize)),
                 bytes.AsSpan(payloadSize)))

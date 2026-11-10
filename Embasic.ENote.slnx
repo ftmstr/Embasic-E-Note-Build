@@ -28,5 +28,6 @@
   <Project Path="tests/Embasic.ENote.Tur25.Tests/Embasic.ENote.Tur25.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.Tur26.Tests/Embasic.ENote.Tur26.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.Tur27.Tests/Embasic.ENote.Tur27.Tests.csproj" />
+  <Project Path="tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj" />
 </Solution>

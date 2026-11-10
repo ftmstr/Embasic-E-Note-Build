@@ -108,3 +108,10 @@ jobs:
 
       - name: Run Tur27 IPC, workspace publication restart and root archive tests
         run: dotnet run --project tests/Embasic.ENote.Tur27.Tests/Embasic.ENote.Tur27.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur28 selected reads, recovery and service key tests
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore
+
+      - name: Run Tur28 disposable Windows service and cross-account ACL acceptance
+        shell: pwsh
+        run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0

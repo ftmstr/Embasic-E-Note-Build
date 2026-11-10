@@ -174,6 +174,11 @@ public sealed partial class VaultGenerationRecovery
         return result;
     }
 
+    internal VaultTransitionState ReadAuthorityState(Guid workspace) =>
+        _anchor is IExternalVaultTransitionAnchor transition
+            ? ReadTransition(transition, workspace)
+            : throw new NotSupportedException("An independent transition anchor is required.");
+
     private static VaultTransitionState ReadTransition(IExternalVaultTransitionAnchor anchor, Guid workspaceId)
     {
         if (workspaceId == Guid.Empty) throw new ArgumentException("Missing workspace.", nameof(workspaceId));
