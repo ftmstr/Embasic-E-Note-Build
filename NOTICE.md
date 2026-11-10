@@ -166,3 +166,10 @@ Snapshot publication and root archive handling use existing file and
 cryptographic APIs. ERJ1 and ERA1 are experimental metadata records.
 Existing encrypted note formats, binaries and NuGet dependencies are
 unchanged. Full release SBOM/NOTICE and logo distribution rights remain open.
+
+## Tur 28 dependency inventory
+
+Windows service acceptance uses existing .NET APIs and Win32 interop.
+Selection and recovery use existing cryptography and filesystem APIs.
+No NuGet package, binary asset or encrypted note format was changed.
+Complete release SBOM/NOTICE and logo rights remain open.
