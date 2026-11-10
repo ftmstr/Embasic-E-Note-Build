@@ -26,6 +26,14 @@ jobs:
         run: dotnet restore Embasic.ENote.slnx
       - name: Build Windows WPF solution
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
+      - name: Run Tur32 Windows preopened process thread and token boundary
+        shell: pwsh
+        run: ./tools/Test-Tur32StartupBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0
+      - name: Run Tur32 Windows wrapped role and fallback deployment
+        shell: pwsh
+        run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Tur32
+      - name: Run Tur32 midcopy recovery catalog backup and selector
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur32
       - name: Run Tur30 Windows software KSP and separate LocalService peer acceptance
         shell: pwsh
         run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -CngRotation

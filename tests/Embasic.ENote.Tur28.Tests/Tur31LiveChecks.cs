@@ -126,6 +126,17 @@ internal static partial class Program
             factor, LayerKind.Folder, NewPassword);
         using var provider = new VaultTransitionFilePrototype(Path.Combine(home, "authority"), ProviderKey, Guid.Parse(args[3]));
         using var publication = Publication(home);
+        if (args[0] == "tur32-copy-worker")
+        {
+            publication.SynchronizeSelectedLiveTree(new VaultGenerationRecovery(provider, store), candidate, priorRoot, nextRoot,
+                int.MaxValue, output =>
+                {
+                    output.Flush(flushToDisk: true);
+                    File.WriteAllText(Path.Combine(home, "midcopy-confirmed"), "partial ELK1 flushed");
+                    Thread.Sleep(TimeSpan.FromSeconds(35));
+                });
+            return 3;
+        }
         var observed = new PausingAnchor(provider, home, args[7]);
         publication.SynchronizeSelectedLiveTree(new VaultGenerationRecovery(observed, store), candidate, priorRoot, nextRoot);
         return 3;

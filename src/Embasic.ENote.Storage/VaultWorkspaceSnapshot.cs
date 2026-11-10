@@ -99,6 +99,8 @@ public sealed class VaultWorkspaceSnapshot
         return new VaultWorkspaceSnapshot(path, workspaceId, root.Id, rootPath, index, Array.AsReadOnly(docs));
     }
 
+    internal static void CheckDirectoryPath(string path) => CheckPath(path, directory: true);
+
     internal void VerifyAgainst(VaultGenerationManifest manifest, LayerSecret root)
     {
         var observed = Open(_directory, WorkspaceId, root);

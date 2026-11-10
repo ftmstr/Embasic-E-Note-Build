@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Embasic.ENote.Tur28.Tests" />
     <ProjectReference Include="../Embasic.ENote.Core/Embasic.ENote.Core.csproj" />
     <ProjectReference Include="../Embasic.ENote.Emd/Embasic.ENote.Emd.csproj" />
   </ItemGroup>
