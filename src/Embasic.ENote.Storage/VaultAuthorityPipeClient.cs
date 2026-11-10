@@ -9,6 +9,7 @@ public sealed class VaultAuthorityPipeClient
 {
     private readonly string _pipeName;
     private readonly byte[] _serverPublicKey;
+    private readonly bool _windowsBoundary;
 
     public VaultAuthorityPipeClient(string pipeName, ReadOnlySpan<byte> serverPublicKey)
     {
@@ -20,6 +21,12 @@ public sealed class VaultAuthorityPipeClient
         _pipeName = pipeName;
         _serverPublicKey = serverPublicKey.ToArray();
     }
+
+    public static VaultAuthorityPipeClient ForWindowsService(string pipeName, ReadOnlySpan<byte> serverPublicKey) =>
+        new(pipeName, serverPublicKey, windowsBoundary: true);
+
+    private VaultAuthorityPipeClient(string pipeName, ReadOnlySpan<byte> serverPublicKey, bool windowsBoundary)
+        : this(pipeName, serverPublicKey) => _windowsBoundary = windowsBoundary;
 
     public async Task<VaultGenerationStamp> ObserveAsync(Guid workspace, ReadOnlyMemory<byte> readerKey,
         CancellationToken cancellationToken = default)
@@ -53,8 +60,11 @@ public sealed class VaultAuthorityPipeClient
         RequireKey(key.Span);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(30));
-        using var pipe = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut,
-            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        using var pipe = _windowsBoundary
+            ? OperatingSystem.IsWindows() ? VaultWindowsPipeBoundary.CreateClient(_pipeName)
+                : throw new PlatformNotSupportedException("Windows pipe ACLs require Windows.")
+            : new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut,
+                PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
         await pipe.ConnectAsync(timeout.Token).ConfigureAwait(false);
         byte[] challenge = new byte[ChallengeSize];
         await pipe.ReadExactlyAsync(challenge, timeout.Token).ConfigureAwait(false);
