@@ -14,8 +14,9 @@ internal static partial class Program
     [SupportedOSPlatform("windows")]
     private static async Task<int> WindowsCngCommand(string[] args)
     {
-        bool hardened = args.Contains("--hardened", StringComparer.Ordinal);
-        if (hardened) args = args.Where(x => x != "--hardened").ToArray();
+        bool wrapped = args.Contains("--tur32", StringComparer.Ordinal);
+        bool hardened = wrapped || args.Contains("--hardened", StringComparer.Ordinal);
+        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32")).ToArray();
         string mode = args[0], home = args[1], shared = args[2], name = args[3];
         string serviceSid = args[4], clientSid = args[5];
         string result = Path.Combine(Path.GetDirectoryName(shared)!, "result");
@@ -23,12 +24,17 @@ internal static partial class Program
         string PublisherFile(int epoch) => Path.Combine(home, $"publisher-{epoch}.bin");
         string ReaderFile(string directory, int epoch) => Path.Combine(directory, $"reader-{epoch}.bin");
         string KeyName(int epoch) => name + "-key-" + epoch;
+        string RoleKey(bool publisher) => name + (publisher ? "-role-pub" : "-role-read");
+        byte[] ReadRole(bool publisher, string path) => wrapped
+            ? VaultWindowsRoleCustody.Unwrap(RoleKey(publisher), path)
+            : File.ReadAllBytes(path);
         if (mode == "cng-cleanup")
         {
-            foreach (int epoch in new[] { 1, 2 })
-                if (CngKey.Exists(KeyName(epoch), CngProvider.MicrosoftSoftwareKeyStorageProvider, CngKeyOpenOptions.MachineKey))
+            var keys = wrapped ? new[] { KeyName(1), KeyName(2), RoleKey(false), RoleKey(true) } : [KeyName(1), KeyName(2)];
+            foreach (string keyName in keys)
+                if (CngKey.Exists(keyName, CngProvider.MicrosoftSoftwareKeyStorageProvider, CngKeyOpenOptions.MachineKey))
                 {
-                    using var key = CngKey.Open(KeyName(epoch), CngProvider.MicrosoftSoftwareKeyStorageProvider,
+                    using var key = CngKey.Open(keyName, CngProvider.MicrosoftSoftwareKeyStorageProvider,
                         CngKeyOpenOptions.MachineKey);
                     key.Delete();
                 }
@@ -40,6 +46,8 @@ internal static partial class Program
             using var offline = ECDsa.Create(ECCurve.NamedCurves.nistP256);
             using var identity = WindowsIdentity.GetCurrent();
             string publisherSid = identity.User!.Value;
+            byte[] readerRecipient = wrapped ? CreateRoleRecipient(RoleKey(false), clientSid) : [];
+            byte[] publisherRecipient = wrapped ? CreateRoleRecipient(RoleKey(true), publisherSid) : [];
             using var replacement = LayerSecret.Regenerate(fixture.Child);
             var candidate = fixture.Prepare(replacement).Manifest.Stamp;
             var first = Provision(1);
@@ -49,6 +57,23 @@ internal static partial class Program
                 fixture.Enrolled!.Stamp, candidate, clientSid, publisherSid, offline.ExportSubjectPublicKeyInfo(), first, second);
             File.WriteAllText(configuration, JsonSerializer.Serialize(info));
             return 0;
+
+            byte[] CreateRoleRecipient(string keyName, string recipientSid)
+            {
+                var parameters = new CngKeyCreationParameters
+                {
+                    Provider = CngProvider.MicrosoftSoftwareKeyStorageProvider,
+                    KeyCreationOptions = CngKeyCreationOptions.MachineKey,
+                    ExportPolicy = CngExportPolicies.None,
+                    KeyUsage = CngKeyUsages.Decryption
+                };
+                parameters.Parameters.Add(new CngProperty("Length", BitConverter.GetBytes(2048), CngPropertyOptions.None));
+                using var key = CngKey.Create(CngAlgorithm.Rsa, keyName, parameters);
+                SetCngKeyAcl(key, serviceSid, publisherSid, recipientSid);
+                using var recipient = new RSACng(key);
+                Throws<CryptographicException>(() => recipient.ExportPkcs8PrivateKey());
+                return recipient.ExportSubjectPublicKeyInfo();
+            }
 
             CngEpoch Provision(int epoch)
             {
@@ -64,12 +89,13 @@ internal static partial class Program
                 Throws<CryptographicException>(() => signer.ExportPkcs8PrivateKey());
                 byte[] reader = RandomNumberGenerator.GetBytes(32), publisher = RandomNumberGenerator.GetBytes(32);
                 var keys = VaultAuthorityKeyCustody.Describe(fixture.Workspace, epoch, signer, reader, publisher);
-                File.WriteAllBytes(PublisherFile(epoch), publisher);
+                File.WriteAllBytes(PublisherFile(epoch), wrapped ? VaultWindowsRoleCustody.Wrap(publisherRecipient, publisher) : publisher);
                 CryptographicOperations.ZeroMemory(publisher);
                 if (hardened)
                 {
-                    File.WriteAllBytes(ReaderFile(home, epoch), reader);
-                    if (epoch == 1) File.WriteAllBytes(ReaderFile(shared, epoch), reader);
+                    byte[] payload = wrapped ? VaultWindowsRoleCustody.Wrap(readerRecipient, reader) : reader;
+                    File.WriteAllBytes(ReaderFile(home, epoch), payload);
+                    if (epoch == 1) File.WriteAllBytes(ReaderFile(shared, epoch), payload);
                     CryptographicOperations.ZeroMemory(reader);
                 }
                 return new(keys, signer.ExportSubjectPublicKeyInfo(), hardened ? null : reader, VaultAuthorityKeyCustody.Approve(keys, offline));
@@ -99,6 +125,8 @@ internal static partial class Program
                     if (hardened)
                     {
                         Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(ReaderFile(home, 2)));
+                        if (wrapped)
+                            Throws<CryptographicException>(() => OpenRecipient(RoleKey(false)));
                         VerifyPeerProcessRightsDenied(int.Parse(args[8], System.Globalization.CultureInfo.InvariantCulture));
                     }
                     VerifyPipeInstanceDenied(name);
@@ -120,8 +148,8 @@ internal static partial class Program
                     if (hardened) VaultWindowsServiceProcessBoundary.RestrictCurrentProcess(serviceSid);
                     var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
                     var active = epoch == 1 ? config.First : config.Second;
-                    byte[] publisher = File.ReadAllBytes(PublisherFile(epoch));
-                    byte[] reader = active.Reader ?? File.ReadAllBytes(ReaderFile(home, epoch));
+                    byte[] publisher = ReadRole(true, PublisherFile(epoch));
+                    byte[] reader = active.Reader ?? ReadRole(false, ReaderFile(home, epoch));
                     if (phase == 0)
                     {
                         try
@@ -189,7 +217,7 @@ internal static partial class Program
             using var identity = WindowsIdentity.GetCurrent();
             Equal(config.PublisherSid, identity.User!.Value);
             var publish = VaultAuthorityPipeClient.ForWindowsService(name, config.Second.ServicePublic);
-            byte[] key = File.ReadAllBytes(PublisherFile(2));
+            byte[] key = ReadRole(true, PublisherFile(2));
             try { Equal(VaultGenerationAdvanceState.Committed, await publish.PublishAsync(config.Candidate, key)); }
             finally { CryptographicOperations.ZeroMemory(key); }
             Console.WriteLine("PASS separate publisher obtained a signed receipt for the exact candidate");
@@ -210,7 +238,8 @@ internal static partial class Program
             Throws<UnauthorizedAccessException>(() => File.Open(ReaderFile(shared, 1), FileMode.Open, FileAccess.Write).Dispose());
             Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(ReaderFile(home, 2)));
         }
-        byte[] firstReader = config.First.Reader ?? File.ReadAllBytes(ReaderFile(shared, 1));
+        if (wrapped) Throws<CryptographicException>(() => OpenRecipient(RoleKey(true)));
+        byte[] firstReader = config.First.Reader ?? ReadRole(false, ReaderFile(shared, 1));
         if (mode == "cng-before")
         {
             Throws<CryptographicException>(() => VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name,
@@ -241,9 +270,14 @@ internal static partial class Program
             catch (EndOfStreamException) { }
             Console.WriteLine("PASS missing next credential had no authenticated fallback");
         }
+        else if (mode == "cng-reject-envelope")
+        {
+            Throws<CryptographicException>(() => ReadRole(false, ReaderFile(shared, 2)));
+            Console.WriteLine("PASS corrupt recipient envelope rejected before IPC");
+        }
         else if (mode == "cng-after")
         {
-            byte[] nextReader = config.Second.Reader ?? File.ReadAllBytes(ReaderFile(shared, 2));
+            byte[] nextReader = config.Second.Reader ?? ReadRole(false, ReaderFile(shared, 2));
             var nextClient = VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name, config.First.Keys, config.Second.Keys, 2,
                 config.Second.Approval, config.ApprovalPublic, config.Second.ServicePublic, nextReader);
             try
@@ -280,6 +314,13 @@ internal static partial class Program
         catch (Exception error) { WriteFixtureReceipt(path, error.ToString()); throw; }
     }
 
+    [SupportedOSPlatform("windows")]
+    private static void OpenRecipient(string keyName)
+    {
+        using var key = CngKey.Open(keyName, CngProvider.MicrosoftSoftwareKeyStorageProvider,
+            CngKeyOpenOptions.MachineKey | CngKeyOpenOptions.Silent);
+    }
+
     private static void WriteFixtureReceipt(string path, string value)
     {
         string staged = path + ".writing";
@@ -288,9 +329,10 @@ internal static partial class Program
     }
 
     [SupportedOSPlatform("windows")]
-    private static void SetCngKeyAcl(CngKey key, string serviceSid, string provisioningSid)
+    private static void SetCngKeyAcl(CngKey key, string serviceSid, string provisioningSid, string? recipientSid = null)
     {
-        var descriptor = new RawSecurityDescriptor($"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;{provisioningSid})(A;;GR;;;{serviceSid})");
+        string recipient = recipientSid is null || recipientSid == provisioningSid ? "" : $"(A;;GR;;;{recipientSid})";
+        var descriptor = new RawSecurityDescriptor($"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GA;;;{provisioningSid})(A;;GR;;;{serviceSid})" + recipient);
         byte[] bytes = new byte[descriptor.BinaryLength];
         descriptor.GetBinaryForm(bytes, 0);
         using var handle = key.Handle;

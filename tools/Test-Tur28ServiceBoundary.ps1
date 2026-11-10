@@ -1,4 +1,5 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32)
+if ($Tur32) { $Hardened = $true }
 if ($Hardened) { $CngRotation = $true }
 if ($CngRotation) { $Dedicated = $true }
 
@@ -24,6 +25,7 @@ $peerCreated = $false
 $cngStarted = $false
 $hardeningFlag = @()
 if ($Hardened) { $hardeningFlag = @('--hardened') }
+if ($Tur32) { $hardeningFlag = @('--tur32') }
 
 function Invoke-Harness([string]$Mode) {
     if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value @hardeningFlag }
@@ -33,7 +35,7 @@ function Invoke-Harness([string]$Mode) {
 
 function Invoke-StandardClient([string]$Mode) {
     $clientArgs = '"{0}" {1} "{2}" "{3}" "{4}" "{5}" "{6}"' -f $harness,$Mode,$private,$public,$service,$serviceSid.Value,$clientSid.Value
-    if ($Hardened) { $clientArgs += ' --hardened' }
+    if ($Hardened) { $clientArgs += ' ' + $hardeningFlag[0] }
     $stdout = Join-Path $resultDir "$Mode-output.txt"
     $stderr = Join-Path $resultDir "$Mode-error.txt"
     $process = Start-Process -FilePath $hostPath -ArgumentList $clientArgs -Credential $credential -WorkingDirectory $runtime -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
@@ -130,7 +132,7 @@ try {
     $mode = if ($CngRotation) { 'cng-service' } else { 'service' }
     $binary = '"{0}" "{1}" {2} "{3}" "{4}" "{5}"' -f $hostPath,$harness,$mode,$private,$public,$service
     if ($Dedicated) { $binary += ' "{0}" "{1}"' -f $serviceSid.Value,$clientSid.Value }
-    if ($Hardened) { $binary += ' --hardened' }
+    if ($Hardened) { $binary += ' ' + $hardeningFlag[0] }
     $initialBinary = if ($CngRotation) { $binary + ' 1' } else { $binary }
     & sc.exe create $service binPath= $initialBinary start= demand obj= 'NT AUTHORITY\LocalService'
     if ($LASTEXITCODE -ne 0) { throw 'Disposable service registration failed.' }
@@ -156,7 +158,7 @@ try {
             while (!(Test-Path -LiteralPath $pidFile) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 100 }
             $targetPid = [int](Get-Content -LiteralPath $pidFile -Raw)
             Get-Process -Id $targetPid -ErrorAction Stop | Out-Null
-            $peerBinary += " $targetPid --hardened"
+            $peerBinary += " $targetPid " + $hardeningFlag[0]
         }
         & sc.exe create $peer binPath= $peerBinary start= demand obj= 'NT AUTHORITY\LocalService'
         if ($LASTEXITCODE -ne 0) { throw 'Peer service registration failed.' }
@@ -183,6 +185,19 @@ try {
         }
         Invoke-StandardClient 'cng-offline'
 
+        if ($Tur32) {
+            Remove-Item -LiteralPath (Join-Path $public 'epoch-1.stop'),(Join-Path $resultDir 'epoch-1.txt')
+            & sc.exe config $service binPath= ($binary + ' 1')
+            if ($LASTEXITCODE -ne 0) { throw 'Approved prior service configuration failed.' }
+            & sc.exe start $service
+            if ($LASTEXITCODE -ne 0) { throw 'Approved prior service start failed.' }
+            Invoke-StandardClient 'cng-before'
+            [IO.File]::WriteAllText((Join-Path $public 'epoch-1.stop'), 'retire-epoch-1')
+            Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
+            (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+            Write-Output 'PASS approved prior endpoint restarted before new pin selection'
+        }
+
         & sc.exe config $service binPath= ($binary + ' 2')
         if ($LASTEXITCODE -ne 0) { throw 'Second key epoch service config failed.' }
         & sc.exe start $service
@@ -190,13 +205,21 @@ try {
         if ($Hardened) {
             Invoke-StandardClient 'cng-pin-gap'
             $pendingReader = Join-Path $public 'reader-2.pending'
+            $activeReader = Join-Path $public 'reader-2.bin'
+            if ($Tur32) {
+                $wrong = [IO.File]::ReadAllBytes((Join-Path $private 'reader-2.bin'))
+                $wrong[0] = $wrong[0] -bxor 1
+                [IO.File]::WriteAllBytes($activeReader, $wrong)
+                Invoke-StandardClient 'cng-reject-envelope'
+            }
             [IO.File]::Copy((Join-Path $private 'reader-2.bin'), $pendingReader)
-            [IO.File]::Move($pendingReader, (Join-Path $public 'reader-2.bin'))
+            [IO.File]::Move($pendingReader, $activeReader, $Tur32.IsPresent)
         }
         Invoke-StandardClient 'cng-after'
         Invoke-Harness 'cng-publish'
         Wait-Receipt 'epoch-2.txt' 'PASS'
-        if ($Hardened) { Write-Output '6/6 Tur31 process DACL, role custody, wrong KSP and interrupted pin distribution checks passed.' }
+        if ($Tur32) { Write-Output '6/6 Tur32 wrapped roles, distributor boundary, rejected envelope and approved fallback checks passed.' }
+        elseif ($Hardened) { Write-Output '6/6 Tur31 process DACL, role custody, wrong KSP and interrupted pin distribution checks passed.' }
         else { Write-Output '7/7 Tur30 persisted KSP, peer LocalService, shutdown, rotation and signed publisher checks passed.' }
     } else {
         if ($Dedicated) { Invoke-StandardClient 'client' } else { Invoke-Harness 'client' }

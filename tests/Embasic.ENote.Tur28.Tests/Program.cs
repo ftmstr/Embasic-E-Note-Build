@@ -44,6 +44,16 @@ internal static partial class Program
             Console.WriteLine($"{_passed}/{_total} Tur31 crash, catalog and pin selection checks passed.");
             return _total == _passed ? 0 : 1;
         }
+        if (args is ["tur32"])
+        {
+            Tur32LiveChecks();
+            Tur32SelectorChecks();
+            Console.WriteLine($"{_passed}/{_total} Tur32 midcopy recovery, catalog backup and selector checks passed.");
+            return _total == _passed ? 0 : 1;
+        }
+        if (args is ["tur32-copy-worker", ..]) return RunLiveWorker(args);
+        if (args.Length > 0 && args[0].StartsWith("tur32-win-", StringComparison.Ordinal))
+            return OperatingSystem.IsWindows() ? WindowsStartupExperiment(args) : 2;
         if (args is ["tur31-live-worker", ..]) return RunLiveWorker(args);
         if (args is ["tur31-windows-live"])
             return OperatingSystem.IsWindows() ? RunWindowsLiveAcceptance() : 2;
