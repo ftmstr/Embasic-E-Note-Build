@@ -40,14 +40,20 @@ public sealed partial class VaultTransitionFilePrototype :
     {
         ArgumentNullException.ThrowIfNull(initial);
         if (initial.Epoch != 1) throw new ArgumentException("Provisioning requires epoch one.", nameof(initial));
+        Initialize(initial, 0);
+    }
+
+    private void Initialize(VaultGenerationStamp initial, long revision, Action? authorize = null)
+    {
         lock (_keyGate)
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
             CheckDirectory();
+            authorize?.Invoke();
             using var marker = new FileStream(Slot(initial.WorkspaceId, "lock"), FileMode.CreateNew,
                 FileAccess.ReadWrite, FileShare.None);
             marker.Flush(flushToDisk: true);
-            Publish(new ProviderState(new VaultTransitionState(initial), new VaultRootRecoveryAuthorization(0, null)),
+            Publish(new ProviderState(new VaultTransitionState(initial), new VaultRootRecoveryAuthorization(revision, null)),
                 replace: false);
         }
     }
