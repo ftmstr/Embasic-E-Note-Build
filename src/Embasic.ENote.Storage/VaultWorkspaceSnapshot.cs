@@ -149,6 +149,16 @@ public sealed class VaultWorkspaceSnapshot
         throw new InvalidDataException("Source artifact is absent from the snapshot.");
     }
 
+    internal IReadOnlyList<VaultRekeyDocument> ObserveLiveDocuments(string liveRoot) =>
+        ObserveNotes(Path.GetFullPath(liveRoot), _rootPath);
+
+    internal string LiveDocumentPath(string liveRoot, VaultRekeyDocument document)
+    {
+        string path = Path.Combine(liveRoot, document.RelativePath[(_rootPath.Length + 1)..]);
+        CheckPath(path, directory: false);
+        return path;
+    }
+
     internal bool HasIndex(ReadOnlySpan<byte> index) => index.SequenceEqual(_index);
 
     internal void Materialize(string directory, VaultGenerationManifest source,
