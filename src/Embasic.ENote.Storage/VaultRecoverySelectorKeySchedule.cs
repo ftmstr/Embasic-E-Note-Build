@@ -8,11 +8,11 @@ public sealed record VaultRecoverySelectorKeyTransition(long FirstRevision, byte
 
 internal sealed class VaultRecoverySelectorKeySchedule
 {
-    private const string Domain = "Embasic.VaultRecoverySelectorRotation.v1";
+    private const string SelectorDomain = "Embasic.VaultRecoverySelectorRotation.v1";
     private readonly List<(long FirstRevision, byte[] Key)> _keys;
 
     internal VaultRecoverySelectorKeySchedule(Guid workspace, ReadOnlySpan<byte> initialKey,
-        IEnumerable<VaultRecoverySelectorKeyTransition> transitions)
+        IEnumerable<VaultRecoverySelectorKeyTransition> transitions, string domain = SelectorDomain)
     {
         _keys = [(1, initialKey.ToArray())];
         foreach (var transition in transitions)
@@ -22,9 +22,9 @@ internal sealed class VaultRecoverySelectorKeySchedule
             if (transition.FirstRevision <= previous.FirstRevision ||
                 _keys.Any(entry => entry.Key.AsSpan().SequenceEqual(next)))
                 throw new CryptographicException("Selector rotation is non-monotonic or reuses a key.");
-            VaultRecoverySignatures.Verify(previous.Key, transition.OutgoingSignature, Domain,
+            VaultRecoverySignatures.Verify(previous.Key, transition.OutgoingSignature, domain,
                 writer => Write(writer, workspace, transition.FirstRevision, previous.Key, next));
-            VaultRecoverySignatures.Verify(next, transition.IncomingSignature, Domain,
+            VaultRecoverySignatures.Verify(next, transition.IncomingSignature, domain,
                 writer => Write(writer, workspace, transition.FirstRevision, previous.Key, next));
             _keys.Add((transition.FirstRevision, next));
         }
@@ -37,13 +37,13 @@ internal sealed class VaultRecoverySelectorKeySchedule
         return _keys[0].Key;
     }
 
-    internal static VaultRecoverySelectorKeyTransition Sign(Guid workspace, long firstRevision, ECDsa outgoing, ECDsa incoming)
+    internal static VaultRecoverySelectorKeyTransition Sign(Guid workspace, long firstRevision, ECDsa outgoing, ECDsa incoming, string domain = SelectorDomain)
     {
         if (workspace == Guid.Empty || firstRevision < 2) throw new ArgumentException("Invalid selector rotation position.");
         byte[] old = outgoing.ExportSubjectPublicKeyInfo(), next = incoming.ExportSubjectPublicKeyInfo();
         void Encode(BinaryWriter writer) => Write(writer, workspace, firstRevision, old, next);
-        return new(firstRevision, next, VaultRecoverySignatures.Sign(outgoing, Domain, Encode),
-            VaultRecoverySignatures.Sign(incoming, Domain, Encode));
+        return new(firstRevision, next, VaultRecoverySignatures.Sign(outgoing, domain, Encode),
+            VaultRecoverySignatures.Sign(incoming, domain, Encode));
     }
 
     private static void Write(BinaryWriter writer, Guid workspace, long firstRevision, byte[] prior, byte[] next)

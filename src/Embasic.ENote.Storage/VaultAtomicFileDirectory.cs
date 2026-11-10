@@ -119,7 +119,7 @@ internal sealed class VaultAtomicFileDirectory
             throw new IOException("Unable to publish the staged generation.", new Win32Exception(Marshal.GetLastPInvokeError()));
     }
 
-    private static string WindowsPath(string path)
+    internal static string WindowsPath(string path)
     {
         if (path.StartsWith(@"\\?\", StringComparison.Ordinal)) return path;
         return path.StartsWith(@"\\", StringComparison.Ordinal) ? @"\\?\UNC\" + path[2..] : @"\\?\" + path;

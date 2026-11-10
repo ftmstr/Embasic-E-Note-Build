@@ -53,7 +53,7 @@ public sealed partial class VaultRekeyPublication
         }
 
         VaultWorkspaceSnapshot.VerifyLiveVaults(manifest);
-        int reclaimed = ReclaimLiveStages(candidate, selected, RequireCurrent);
+        int reclaimed = ReclaimLiveStages(candidate, parent.Stamp, selected, RequireCurrent);
         int replacements = Math.Min(maximumReplacements, remaining.Count);
         for (int i = 0; i < replacements; i++)
         {
@@ -61,6 +61,7 @@ public sealed partial class VaultRekeyPublication
             string path = selected.LiveDocumentPath(_liveRoot, pair.Next);
             string temporary = Path.Combine(Path.GetDirectoryName(path)!, StageName(candidate, pair.Next.RelativePath, Guid.NewGuid()));
             bool created = false;
+            WindowsVaultFileIdentity? stagedIdentity = null;
             try
             {
                 var target = new VaultRekeyArtifact("note:" + pair.Next.RelativePath, VaultRekeyArtifactKind.Document,
@@ -70,6 +71,8 @@ public sealed partial class VaultRekeyPublication
                     4096, FileOptions.WriteThrough))
                 {
                     created = true;
+                    if (OperatingSystem.IsWindows())
+                        stagedIdentity = WindowsVaultFileIdentity.Read(output.SafeFileHandle);
                     VaultRekeyStaging.Verify(target, input, pair.Next.SourceSha256, output,
                         afterHeader is null ? null : () => afterHeader(output));
                     output.Flush(flushToDisk: true);
@@ -78,6 +81,13 @@ public sealed partial class VaultRekeyPublication
                 using (var old = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
                     VaultRekeyStaging.Verify(target, old, pair.Prior.SourceSha256);
                 RequireCurrent();
+                using (var stage = OpenLiveStage(temporary, allowDelete: false))
+                {
+                    if (stagedIdentity.HasValue && WindowsVaultFileIdentity.Read(stage.SafeFileHandle) != stagedIdentity.Value)
+                        throw new IOException("The live stage file object was substituted.");
+                    VaultRekeyStaging.Verify(target, stage, pair.Next.SourceSha256);
+                    RequireCurrent();
+                }
                 if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(temporary, File.GetUnixFileMode(path));
                 File.Replace(temporary, path, destinationBackupFileName: null);
                 created = false;
@@ -85,7 +95,7 @@ public sealed partial class VaultRekeyPublication
             }
             finally
             {
-                if (created) File.Delete(temporary);
+                if (created) RemoveOwnedLiveStage(temporary, stagedIdentity);
             }
         }
 
