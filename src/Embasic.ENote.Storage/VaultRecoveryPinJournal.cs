@@ -13,16 +13,21 @@ public sealed class VaultRecoveryPinJournal
     private readonly VaultAtomicFileDirectory _files;
     private readonly string _directory;
     private readonly Guid _workspace;
-    private readonly byte[] _publicKey;
+    private readonly VaultRecoverySelectorKeySchedule _keys;
 
-    public VaultRecoveryPinJournal(string directory, Guid workspace, ReadOnlySpan<byte> selectorPublicKey)
+    public VaultRecoveryPinJournal(string directory, Guid workspace, ReadOnlySpan<byte> selectorPublicKey,
+        params VaultRecoverySelectorKeyTransition[] transitions)
     {
         if (workspace == Guid.Empty) throw new ArgumentException("Missing workspace.", nameof(workspace));
         _directory = Path.GetFullPath(directory);
         _files = new(_directory);
         _workspace = workspace;
-        _publicKey = selectorPublicKey.ToArray();
+        _keys = new(workspace, selectorPublicKey, transitions);
     }
+
+    public static VaultRecoverySelectorKeyTransition AuthorizeRotation(Guid workspace, long firstRevision,
+        ECDsa outgoingKey, ECDsa incomingKey) =>
+        VaultRecoverySelectorKeySchedule.Sign(workspace, firstRevision, outgoingKey, incomingKey);
 
     public static byte[] Sign(VaultRecoveryPolicyPin? expected, VaultRecoveryPolicyPin next, ECDsa selectorKey)
     {
@@ -35,7 +40,7 @@ public sealed class VaultRecoveryPinJournal
     {
         ValidateSuccessor(expected, next);
         if (next.Workspace != _workspace) throw new CryptographicException("Pin belongs to another workspace.");
-        VaultRecoverySignatures.Verify(_publicKey, signature, Domain, writer => Write(writer, expected, next));
+        VaultRecoverySignatures.Verify(_keys.KeyAt(next.Revision), signature, Domain, writer => Write(writer, expected, next));
         using var fence = _files.OpenExclusiveLock("pin-selection.lock");
         var current = ReadChain(expected);
         if (current == next) return;
@@ -99,7 +104,7 @@ public sealed class VaultRecoveryPinJournal
         ValidateSuccessor(previous, next);
         if (next.Workspace != _workspace || file.ReadByte() != -1)
             throw new CryptographicException("Selection slot has an unexpected workspace or tail.");
-        VaultRecoverySignatures.Verify(_publicKey, signature, Domain, writer => Write(writer, previous, next));
+        VaultRecoverySignatures.Verify(_keys.KeyAt(next.Revision), signature, Domain, writer => Write(writer, previous, next));
         return next;
     }
 

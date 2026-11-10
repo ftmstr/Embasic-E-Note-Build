@@ -3,7 +3,10 @@ using Embasic.ENote.Emd;
 
 namespace Embasic.ENote.Storage;
 
-public sealed record VaultLiveSyncResult(int Replaced, int Remaining);
+public sealed record VaultLiveSyncResult(int Replaced, int Remaining)
+{
+    public int ReclaimedStages { get; init; }
+}
 
 public sealed partial class VaultRekeyPublication
 {
@@ -12,7 +15,11 @@ public sealed partial class VaultRekeyPublication
     /// Each note is replaceable independently. A later call may resume a mixture of exact parent and selected notes.
     /// </summary>
     public VaultLiveSyncResult SynchronizeSelectedLiveTree(VaultGenerationRecovery recovery, VaultGenerationStamp candidate,
-        LayerSecret sourceRoot, LayerSecret selectedRoot, int maximumReplacements = int.MaxValue)
+        LayerSecret sourceRoot, LayerSecret selectedRoot, int maximumReplacements = int.MaxValue) =>
+        SynchronizeSelectedLiveTree(recovery, candidate, sourceRoot, selectedRoot, maximumReplacements, null);
+
+    internal VaultLiveSyncResult SynchronizeSelectedLiveTree(VaultGenerationRecovery recovery, VaultGenerationStamp candidate,
+        LayerSecret sourceRoot, LayerSecret selectedRoot, int maximumReplacements, Action<FileStream>? afterHeader)
     {
         ArgumentNullException.ThrowIfNull(recovery);
         ArgumentNullException.ThrowIfNull(candidate);
@@ -46,12 +53,13 @@ public sealed partial class VaultRekeyPublication
         }
 
         VaultWorkspaceSnapshot.VerifyLiveVaults(manifest);
+        int reclaimed = ReclaimLiveStages(candidate, selected, RequireCurrent);
         int replacements = Math.Min(maximumReplacements, remaining.Count);
         for (int i = 0; i < replacements; i++)
         {
             var pair = remaining[i];
             string path = selected.LiveDocumentPath(_liveRoot, pair.Next);
-            string temporary = Path.Combine(Path.GetDirectoryName(path)!, $".{Guid.NewGuid():N}.enote-sync");
+            string temporary = Path.Combine(Path.GetDirectoryName(path)!, StageName(candidate, pair.Next.RelativePath, Guid.NewGuid()));
             bool created = false;
             try
             {
@@ -62,7 +70,8 @@ public sealed partial class VaultRekeyPublication
                     4096, FileOptions.WriteThrough))
                 {
                     created = true;
-                    VaultRekeyStaging.Verify(target, input, pair.Next.SourceSha256, output);
+                    VaultRekeyStaging.Verify(target, input, pair.Next.SourceSha256, output,
+                        afterHeader is null ? null : () => afterHeader(output));
                     output.Flush(flushToDisk: true);
                 }
                 _ = selected.LiveDocumentPath(_liveRoot, pair.Next);
@@ -82,7 +91,7 @@ public sealed partial class VaultRekeyPublication
 
         if (remaining.Count == replacements) selected.VerifyLive(_liveRoot, manifest);
         RequireCurrent();
-        return new VaultLiveSyncResult(replacements, remaining.Count - replacements);
+        return new VaultLiveSyncResult(replacements, remaining.Count - replacements) { ReclaimedStages = reclaimed };
 
         void RequireCurrent()
         {

@@ -100,7 +100,7 @@ public sealed class VaultRekeyStaging
 
     private static string NameFor(string digest) => digest + ".rekey";
 
-    internal static void Verify(VaultRekeyArtifact item, Stream source, string digest, Stream? destination = null)
+    internal static void Verify(VaultRekeyArtifact item, Stream source, string digest, Stream? destination = null, Action? afterHeader = null)
     {
         long maximum = item.Kind switch
         {
@@ -124,6 +124,7 @@ public sealed class VaultRekeyStaging
         using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         hash.AppendData(header);
         destination?.Write(header);
+        afterHeader?.Invoke();
         byte[] buffer = new byte[8192];
         long total = header.Length;
         int read;

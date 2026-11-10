@@ -145,6 +145,9 @@ public sealed class VaultRecoveryPolicyReader : IVaultProviderRecoveryWitness, I
         return provider.RequireActiveAuthority(this);
     }
 
+    public VaultManagedAuthority OpenManagedProvider(string directory, ReadOnlySpan<byte> key, Guid providerIdentity) =>
+        new(this, directory, key, providerIdentity);
+
     public VaultProviderRecoveryCheckpoint? Read(Guid workspace)
     {
         var record = ReadCurrent(workspace);
