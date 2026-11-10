@@ -44,8 +44,14 @@ function Invoke-StandardClient([string]$Mode) {
 function Wait-Receipt([string]$Name, [string]$Expected) {
     $path = Join-Path $resultDir $Name
     $deadline = [DateTime]::UtcNow.AddSeconds(25)
-    while (!(Test-Path -LiteralPath $path) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 100 }
-    $receipt = Get-Content -LiteralPath $path -Raw
+    $receipt = ''
+    do {
+        if (Test-Path -LiteralPath $path) {
+            try { $receipt = [IO.File]::ReadAllText($path) } catch [System.IO.IOException] { }
+        }
+        if ([string]::IsNullOrWhiteSpace($receipt)) { Start-Sleep -Milliseconds 100 }
+    } while ([string]::IsNullOrWhiteSpace($receipt) -and [DateTime]::UtcNow -lt $deadline)
+    if ([string]::IsNullOrWhiteSpace($receipt)) { throw "Service receipt $Name did not arrive." }
     if ($receipt.Trim() -ne $Expected) { throw "Service did not complete: $receipt" }
     Write-Output "$Name $($receipt.Trim())"
 }

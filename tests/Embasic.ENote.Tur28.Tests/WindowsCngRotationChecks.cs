@@ -132,7 +132,7 @@ internal static partial class Program
                         }
                         catch (CryptographicException)
                         {
-                            File.WriteAllText(receipt, "PASS wrong KSP rejected before endpoint creation");
+                            WriteFixtureReceipt(receipt, "PASS wrong KSP rejected before endpoint creation");
                             return;
                         }
                         finally
@@ -158,7 +158,7 @@ internal static partial class Program
                     if (epoch == 1)
                     {
                         if (hardened)
-                            File.WriteAllText(Path.Combine(result, "epoch-1.pid"),
+                            WriteFixtureReceipt(Path.Combine(result, "epoch-1.pid"),
                                 Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                         await endpoint.ServeOnceAsync(stop);
                         string stopRequest = Path.Combine(shared, "epoch-1.stop");
@@ -172,11 +172,11 @@ internal static partial class Program
                         for (int i = 0; i < requests; i++) await endpoint.ServeOnceAsync(stop);
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
-                    File.WriteAllText(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
+                    WriteFixtureReceipt(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
                 }
                 catch (Exception error)
                 {
-                    File.WriteAllText(receipt, error.ToString());
+                    WriteFixtureReceipt(receipt, error.ToString());
                     throw;
                 }
             }, TimeSpan.FromMinutes(3));
@@ -276,8 +276,15 @@ internal static partial class Program
 
     private static void RunWithReceipt(string path, Action test)
     {
-        try { test(); File.WriteAllText(path, "PASS"); }
-        catch (Exception error) { File.WriteAllText(path, error.ToString()); throw; }
+        try { test(); WriteFixtureReceipt(path, "PASS"); }
+        catch (Exception error) { WriteFixtureReceipt(path, error.ToString()); throw; }
+    }
+
+    private static void WriteFixtureReceipt(string path, string value)
+    {
+        string staged = path + ".writing";
+        File.WriteAllText(staged, value);
+        File.Move(staged, path, overwrite: true);
     }
 
     [SupportedOSPlatform("windows")]

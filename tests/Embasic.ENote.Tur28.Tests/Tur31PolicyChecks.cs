@@ -71,7 +71,14 @@ internal static partial class Program
             Equal(11L, guarded.ObserveAuthorization(selected).Revision);
             var withdrawn = policyRecord with { Revision = 2, WitnessTipSha256 = null };
             var second = policy.Stage(withdrawn, VaultRecoveryPolicyDiskStore.Sign(withdrawn, key));
-            selector.Append(first, second, VaultRecoveryPinJournal.Sign(first, second, key));
+            byte[] secondSignature = VaultRecoveryPinJournal.Sign(first, second, key);
+            int observations = 0;
+            var changingSelection = policy.Select(_ =>
+            {
+                if (++observations == 2) selector.Append(first, second, secondSignature);
+                return selector.ReadRequired(minimum);
+            }, chain);
+            Throws<VaultGenerationOutcomeUnknownException>(() => changingSelection.Read(f.Workspace));
             Throws<CryptographicException>(() => guarded.ReadTransition(f.Workspace));
             Throws<CryptographicException>(() => guarded.CompareAndSetAuthorization(selected, 11, null));
             minimum = null;
