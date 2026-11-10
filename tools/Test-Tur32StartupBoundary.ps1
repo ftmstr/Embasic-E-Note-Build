@@ -71,6 +71,11 @@ try {
         Start-Probe $target 'tur33-win-target' $targetSid
         Start-Probe $peer 'tur33-win-peer' $peerSid
         Wait-Result 'tur33-win-peer'
+        (Get-Service -Name $peer).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        (Get-Service -Name $target).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
+        $targetService = Get-Service -Name $target
+        if (!$targetService.CanStop) { throw 'SCM reports the running target as non-stoppable.' }
+        & sc.exe queryex $target
         & sc.exe stop $target
         if ($LASTEXITCODE -ne 0) { throw 'Native SCM STOP failed.' }
         (Get-Service -Name $target).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
@@ -85,6 +90,7 @@ try {
     }
 }
 catch {
+    foreach ($name in $created) { & sc.exe queryex $name }
     foreach ($entry in @(Get-ChildItem -LiteralPath $control -Filter '*.result' -ErrorAction SilentlyContinue)) {
         Write-Output "$($entry.Name) $(Get-Content -LiteralPath $entry.FullName -Raw)"
     }
@@ -92,8 +98,13 @@ catch {
 }
 finally {
     foreach ($name in $created) {
-        & sc.exe stop $name | Out-Null
+        $service = Get-Service -Name $name -ErrorAction SilentlyContinue
+        if ($service -and $service.Status -ne 'Stopped') {
+            & sc.exe stop $name | Out-Null
+            try { $service.WaitForStatus('Stopped', [TimeSpan]::FromSeconds(10)) }
+            catch { Write-Warning "Fixture service $name did not stop during cleanup." }
+        }
         & sc.exe delete $name | Out-Null
     }
-    if (Test-Path -LiteralPath $base) { Remove-Item -LiteralPath $base -Recurse -Force }
+    if (Test-Path -LiteralPath $base) { Remove-Item -LiteralPath $base -Recurse -Force -ErrorAction Continue }
 }
