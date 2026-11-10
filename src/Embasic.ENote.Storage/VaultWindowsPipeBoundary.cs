@@ -15,17 +15,21 @@ public sealed class VaultWindowsPipeBoundary
     private readonly SecurityIdentifier _service;
     private readonly SecurityIdentifier _client;
     private readonly SecurityIdentifier _owner;
+    private readonly SecurityIdentifier? _publisher;
     private const PipeAccessRights ClientRights = PipeAccessRights.ReadData | PipeAccessRights.WriteData |
         PipeAccessRights.ReadAttributes | PipeAccessRights.Synchronize;
 
     public VaultWindowsPipeBoundary(string serviceSid, string clientSid) : this(serviceSid, clientSid, serviceSid) { }
 
-    public VaultWindowsPipeBoundary(string serviceSid, string clientSid, string ownerSid)
+    public VaultWindowsPipeBoundary(string serviceSid, string clientSid, string ownerSid, string? publisherSid = null)
     {
         _service = new SecurityIdentifier(serviceSid);
         _client = new SecurityIdentifier(clientSid);
         _owner = new SecurityIdentifier(ownerSid);
-        if (_service == _client || _owner == _client) throw new ArgumentException("Service and client SIDs must differ.");
+        _publisher = publisherSid is null ? null : new SecurityIdentifier(publisherSid);
+        if (_service == _client || _owner == _client ||
+            (_publisher is not null && (_publisher == _client || _publisher == _service || _publisher == _owner)))
+            throw new ArgumentException("Service, reader and optional publisher SIDs must differ.");
     }
 
     internal NamedPipeServerStream CreateServer(string name)
@@ -43,6 +47,11 @@ public sealed class VaultWindowsPipeBoundary
         }
         security.AddAccessRule(new PipeAccessRule(_client, PipeAccessRights.CreateNewInstance, AccessControlType.Deny));
         security.AddAccessRule(new PipeAccessRule(_client, ClientRights, AccessControlType.Allow));
+        if (_publisher is not null)
+        {
+            security.AddAccessRule(new PipeAccessRule(_publisher, PipeAccessRights.CreateNewInstance, AccessControlType.Deny));
+            security.AddAccessRule(new PipeAccessRule(_publisher, ClientRights, AccessControlType.Allow));
+        }
         byte[] descriptor = security.GetSecurityDescriptorBinaryForm();
         GCHandle pin = GCHandle.Alloc(descriptor, GCHandleType.Pinned);
         try
