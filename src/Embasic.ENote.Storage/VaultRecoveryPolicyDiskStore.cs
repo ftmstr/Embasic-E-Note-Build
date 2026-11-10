@@ -138,6 +138,13 @@ public sealed class VaultRecoveryPolicyReader : IVaultProviderRecoveryWitness, I
         _chain = chain;
     }
 
+    /// <summary>Construct the generation and root authority surface with the same independently selected policy.</summary>
+    public IVaultWitnessedAuthority BindProvider(VaultTransitionFilePrototype provider)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+        return provider.RequireActiveAuthority(this);
+    }
+
     public VaultProviderRecoveryCheckpoint? Read(Guid workspace)
     {
         var record = ReadCurrent(workspace);

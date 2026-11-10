@@ -14,11 +14,14 @@ internal static partial class Program
     [SupportedOSPlatform("windows")]
     private static async Task<int> WindowsCngCommand(string[] args)
     {
+        bool hardened = args.Contains("--hardened", StringComparer.Ordinal);
+        if (hardened) args = args.Where(x => x != "--hardened").ToArray();
         string mode = args[0], home = args[1], shared = args[2], name = args[3];
         string serviceSid = args[4], clientSid = args[5];
         string result = Path.Combine(Path.GetDirectoryName(shared)!, "result");
         string configuration = Path.Combine(shared, "cng-endpoint.json");
         string PublisherFile(int epoch) => Path.Combine(home, $"publisher-{epoch}.bin");
+        string ReaderFile(string directory, int epoch) => Path.Combine(directory, $"reader-{epoch}.bin");
         string KeyName(int epoch) => name + "-key-" + epoch;
         if (mode == "cng-cleanup")
         {
@@ -63,7 +66,13 @@ internal static partial class Program
                 var keys = VaultAuthorityKeyCustody.Describe(fixture.Workspace, epoch, signer, reader, publisher);
                 File.WriteAllBytes(PublisherFile(epoch), publisher);
                 CryptographicOperations.ZeroMemory(publisher);
-                return new(keys, signer.ExportSubjectPublicKeyInfo(), reader, VaultAuthorityKeyCustody.Approve(keys, offline));
+                if (hardened)
+                {
+                    File.WriteAllBytes(ReaderFile(home, epoch), reader);
+                    if (epoch == 1) File.WriteAllBytes(ReaderFile(shared, epoch), reader);
+                    CryptographicOperations.ZeroMemory(reader);
+                }
+                return new(keys, signer.ExportSubjectPublicKeyInfo(), hardened ? null : reader, VaultAuthorityKeyCustody.Approve(keys, offline));
             }
         }
 
@@ -87,29 +96,57 @@ internal static partial class Program
                         using var signer = new ECDsaCng(key);
                         _ = signer.SignData("untrusted peer"u8, HashAlgorithmName.SHA256);
                     });
+                    if (hardened)
+                    {
+                        Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(ReaderFile(home, 2)));
+                        VerifyPeerProcessRightsDenied(int.Parse(args[8], System.Globalization.CultureInfo.InvariantCulture));
+                    }
                     VerifyPipeInstanceDenied(name);
                 });
                 return Task.CompletedTask;
             });
         }
 
-        var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
         if (mode == "cng-service")
         {
-            int epoch = int.Parse(args[6], System.Globalization.CultureInfo.InvariantCulture);
+            int phase = int.Parse(args[6], System.Globalization.CultureInfo.InvariantCulture);
+            int epoch = phase == 0 ? 2 : phase;
             return RunService(name, async stop =>
             {
-                string receipt = Path.Combine(result, $"epoch-{epoch}.txt");
+                string receipt = Path.Combine(result, phase == 0 ? "bad-key.txt" : $"epoch-{epoch}.txt");
                 try
                 {
                     RequireServiceToken(serviceSid);
+                    if (hardened) VaultWindowsServiceProcessBoundary.RestrictCurrentProcess(serviceSid);
+                    var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
                     var active = epoch == 1 ? config.First : config.Second;
                     byte[] publisher = File.ReadAllBytes(PublisherFile(epoch));
+                    byte[] reader = active.Reader ?? File.ReadAllBytes(ReaderFile(home, epoch));
+                    if (phase == 0)
+                    {
+                        try
+                        {
+                            using var wrong = VaultAuthorityKeyCustody.OpenWindowsKey(active.Keys, config.Workspace, epoch,
+                                active.Approval, config.ApprovalPublic, KeyName(1), reader, publisher);
+                            throw new InvalidOperationException("An obsolete KSP key opened for the selected epoch.");
+                        }
+                        catch (CryptographicException)
+                        {
+                            WriteFixtureReceipt(receipt, "PASS wrong KSP rejected before endpoint creation");
+                            return;
+                        }
+                        finally
+                        {
+                            CryptographicOperations.ZeroMemory(reader);
+                            CryptographicOperations.ZeroMemory(publisher);
+                        }
+                    }
                     using var custody = VaultAuthorityKeyCustody.OpenWindowsKey(active.Keys, config.Workspace, epoch,
-                        active.Approval, config.ApprovalPublic, KeyName(epoch), active.Reader, publisher);
+                        active.Approval, config.ApprovalPublic, KeyName(epoch), reader, publisher);
                     if (epoch == 2)
                         Throws<CryptographicException>(() => VaultAuthorityKeyCustody.OpenWindowsKey(active.Keys,
-                            config.Workspace, epoch, active.Approval, config.ApprovalPublic, KeyName(1), active.Reader, publisher));
+                            config.Workspace, epoch, active.Approval, config.ApprovalPublic, KeyName(1), reader, publisher));
+                    CryptographicOperations.ZeroMemory(reader);
                     CryptographicOperations.ZeroMemory(publisher);
                     using var provider = new VaultTransitionFilePrototype(Path.Combine(home, "authority"), ProviderKey, config.Provider);
                     using var root = LayerKeyVault.Open(File.ReadAllBytes(Path.Combine(home, "root.elkey")),
@@ -120,6 +157,9 @@ internal static partial class Program
                         new VaultGenerationRecovery(provider, Store(home)), publication, root);
                     if (epoch == 1)
                     {
+                        if (hardened)
+                            WriteFixtureReceipt(Path.Combine(result, "epoch-1.pid"),
+                                Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                         await endpoint.ServeOnceAsync(stop);
                         string stopRequest = Path.Combine(shared, "epoch-1.stop");
                         while (!File.Exists(stopRequest)) await Task.Delay(100, stop);
@@ -128,19 +168,21 @@ internal static partial class Program
                     }
                     else
                     {
-                        for (int i = 0; i < 4; i++) await endpoint.ServeOnceAsync(stop);
+                        int requests = hardened ? 5 : 4;
+                        for (int i = 0; i < requests; i++) await endpoint.ServeOnceAsync(stop);
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
-                    File.WriteAllText(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
+                    WriteFixtureReceipt(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
                 }
                 catch (Exception error)
                 {
-                    File.WriteAllText(receipt, error.ToString());
+                    WriteFixtureReceipt(receipt, error.ToString());
                     throw;
                 }
             }, TimeSpan.FromMinutes(3));
         }
 
+        var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
         var firstClient = VaultAuthorityPipeClient.ForWindowsService(name, config.First.ServicePublic);
         if (mode == "cng-publish")
         {
@@ -161,12 +203,20 @@ internal static partial class Program
                 throw new InvalidOperationException("Expected an ordinary reader account.");
         }
         Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(PublisherFile(2)));
+        if (hardened)
+        {
+            Equal<byte[]?>(null, config.First.Reader);
+            Equal<byte[]?>(null, config.Second.Reader);
+            Throws<UnauthorizedAccessException>(() => File.Open(ReaderFile(shared, 1), FileMode.Open, FileAccess.Write).Dispose());
+            Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(ReaderFile(home, 2)));
+        }
+        byte[] firstReader = config.First.Reader ?? File.ReadAllBytes(ReaderFile(shared, 1));
         if (mode == "cng-before")
         {
             Throws<CryptographicException>(() => VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name,
                 config.First.Keys, config.Second.Keys, 1, config.Second.Approval, config.ApprovalPublic,
-                config.Second.ServicePublic, config.Second.Reader));
-            Equal(config.Initial, await firstClient.ObserveAsync(config.Workspace, config.First.Reader));
+                config.Second.ServicePublic, config.Second.Reader ?? firstReader));
+            Equal(config.Initial, await firstClient.ObserveAsync(config.Workspace, firstReader));
             Console.WriteLine("PASS an unselected pin update left the first selected client usable");
         }
         else if (mode == "cng-offline")
@@ -174,29 +224,41 @@ internal static partial class Program
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
             try
             {
-                _ = await firstClient.ObserveAsync(config.Workspace, config.First.Reader, timeout.Token);
+                _ = await firstClient.ObserveAsync(config.Workspace, firstReader, timeout.Token);
                 throw new InvalidOperationException("The stopped service returned an authenticated result.");
             }
             catch (OperationCanceledException) when (timeout.IsCancellationRequested) { }
             Console.WriteLine("PASS service stop was unavailable, with no authenticated fallback");
         }
-        else if (mode == "cng-after")
+        else if (mode == "cng-pin-gap")
         {
-            var nextClient = VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name, config.First.Keys, config.Second.Keys, 2,
-                config.Second.Approval, config.ApprovalPublic, config.Second.ServicePublic, config.Second.Reader);
+            Throws<FileNotFoundException>(() => File.ReadAllBytes(ReaderFile(shared, 2)));
             try
             {
-                _ = await nextClient.ObserveAsync(config.Workspace, config.First.Reader);
+                _ = await firstClient.ObserveAsync(config.Workspace, firstReader);
+                throw new InvalidOperationException("The interrupted distribution accepted the old reader.");
+            }
+            catch (EndOfStreamException) { }
+            Console.WriteLine("PASS missing next credential had no authenticated fallback");
+        }
+        else if (mode == "cng-after")
+        {
+            byte[] nextReader = config.Second.Reader ?? File.ReadAllBytes(ReaderFile(shared, 2));
+            var nextClient = VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name, config.First.Keys, config.Second.Keys, 2,
+                config.Second.Approval, config.ApprovalPublic, config.Second.ServicePublic, nextReader);
+            try
+            {
+                _ = await nextClient.ObserveAsync(config.Workspace, firstReader);
                 throw new InvalidOperationException("Old role key was accepted by the new process.");
             }
             catch (EndOfStreamException) { }
             try
             {
-                _ = await firstClient.ObserveAsync(config.Workspace, config.Second.Reader);
+                _ = await firstClient.ObserveAsync(config.Workspace, nextReader);
                 throw new InvalidOperationException("The stale client pin accepted the new signer.");
             }
             catch (CryptographicException) { }
-            Equal(config.Initial, await nextClient.ObserveAsync(config.Workspace, config.Second.Reader));
+            Equal(config.Initial, await nextClient.ObserveAsync(config.Workspace, nextReader));
             Console.WriteLine("PASS old role and pin rejected, approved next pin observed unchanged selection");
         }
         else return 2;
@@ -214,8 +276,15 @@ internal static partial class Program
 
     private static void RunWithReceipt(string path, Action test)
     {
-        try { test(); File.WriteAllText(path, "PASS"); }
-        catch (Exception error) { File.WriteAllText(path, error.ToString()); throw; }
+        try { test(); WriteFixtureReceipt(path, "PASS"); }
+        catch (Exception error) { WriteFixtureReceipt(path, error.ToString()); throw; }
+    }
+
+    private static void WriteFixtureReceipt(string path, string value)
+    {
+        string staged = path + ".writing";
+        File.WriteAllText(staged, value);
+        File.Move(staged, path, overwrite: true);
     }
 
     [SupportedOSPlatform("windows")]
@@ -231,10 +300,35 @@ internal static partial class Program
         if (error != 0) throw new Win32Exception(error, "Unable to restrict the persisted CNG key.");
     }
 
+    [SupportedOSPlatform("windows")]
+    private static void VerifyPeerProcessRightsDenied(int target)
+    {
+        if (target == Environment.ProcessId) throw new InvalidOperationException("Expected a different process.");
+        // CREATE_THREAD, VM_OPERATION, VM_READ, VM_WRITE, DUP_HANDLE and WRITE_DAC.
+        foreach (uint right in new uint[] { 0x2, 0x8, 0x10, 0x20, 0x40, 0x40000 })
+        {
+            IntPtr handle = OpenProcess(right, false, target);
+            if (handle != IntPtr.Zero)
+            {
+                CloseHandle(handle);
+                throw new InvalidOperationException($"Peer opened the service process with access 0x{right:X}.");
+            }
+            Equal(5, Marshal.GetLastPInvokeError());
+        }
+        Console.WriteLine("PASS same-account peer denied six process handle rights");
+    }
+
+    [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, int processId);
+
+    [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool CloseHandle(IntPtr handle);
+
     [DllImport("ncrypt.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
     private static extern int NCryptSetProperty(SafeNCryptKeyHandle key, string property, byte[] input, int size, uint flags);
 
-    private sealed record CngEpoch(VaultAuthorityKeyEpoch Keys, byte[] ServicePublic, byte[] Reader, byte[] Approval);
+    private sealed record CngEpoch(VaultAuthorityKeyEpoch Keys, byte[] ServicePublic, byte[]? Reader, byte[] Approval);
     private sealed record CngEndpoint(Guid Workspace, Guid Root, Guid Provider, VaultGenerationStamp Initial,
         VaultGenerationStamp Candidate, string ClientSid, string PublisherSid, byte[] ApprovalPublic, CngEpoch First, CngEpoch Second);
 }

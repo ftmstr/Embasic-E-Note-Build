@@ -29,6 +29,13 @@ jobs:
       - name: Run Tur30 Windows software KSP and separate LocalService peer acceptance
         shell: pwsh
         run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -CngRotation
+      - name: Run Tur31 isolated Windows process, role custody and interrupted deployment checks
+        shell: pwsh
+        run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Hardened
+      - name: Run Tur31 crash, catalog and pin selection tests
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur31
+      - name: Run Tur31 Windows live file DACL and sharing acceptance
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur31-windows-live
       - name: Run storage smoke tests
         run: dotnet run --project tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj --configuration Release --no-restore
       - name: Run Windows DPAPI and EMD1 draft tests

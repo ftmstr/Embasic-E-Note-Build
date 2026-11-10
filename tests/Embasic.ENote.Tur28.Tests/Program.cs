@@ -37,6 +37,16 @@ internal static partial class Program
             Console.WriteLine($"{_passed}/{_total} Tur30 live synchronization, inventory and recovery policy checks passed.");
             return _total == _passed ? 0 : 1;
         }
+        if (args is ["tur31"])
+        {
+            Tur31LiveChecks();
+            Tur31PolicyChecks();
+            Console.WriteLine($"{_passed}/{_total} Tur31 crash, catalog and pin selection checks passed.");
+            return _total == _passed ? 0 : 1;
+        }
+        if (args is ["tur31-live-worker", ..]) return RunLiveWorker(args);
+        if (args is ["tur31-windows-live"])
+            return OperatingSystem.IsWindows() ? RunWindowsLiveAcceptance() : 2;
         if (args.Length > 0 && args[0].StartsWith("cng-", StringComparison.Ordinal))
             return OperatingSystem.IsWindows() ? await WindowsCngCommand(args) : 2;
         if (args.Length > 0)
@@ -75,13 +85,14 @@ internal static partial class Program
         Path.Combine(home, "journal"), Store(home), Staging(home), Path.Combine(home, "snapshot"),
         Path.Combine(home, "live"), JournalKey);
 
-    private static Process HoldChild(string home)
+    private static Process HoldChild(string home) => StartHarness("hold", home);
+
+    private static Process StartHarness(params string[] args)
     {
         var info = new ProcessStartInfo(Environment.ProcessPath!) { UseShellExecute = false };
         if (Path.GetFileNameWithoutExtension(info.FileName).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
             info.ArgumentList.Add(Assembly.GetExecutingAssembly().Location);
-        info.ArgumentList.Add("hold");
-        info.ArgumentList.Add(home);
+        foreach (var argument in args) info.ArgumentList.Add(argument);
         return Process.Start(info) ?? throw new InvalidOperationException("Child process not started.");
     }
 
