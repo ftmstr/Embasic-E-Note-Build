@@ -58,6 +58,13 @@ function Wait-Receipt([string]$Name, [string]$Expected) {
     Write-Output "$Name $($receipt.Trim())"
 }
 
+function Publish-RetirementRequest {
+    $request = Join-Path $public 'epoch-1.stop'
+    $pending = "$request.pending"
+    [IO.File]::WriteAllText($pending, 'retire-epoch-1')
+    [IO.File]::Move($pending, $request)
+}
+
 function Add-Permission([string]$Path, [System.Security.AccessControl.FileSystemRights]$Rights, $Identity) {
     $acl = Get-Acl -LiteralPath $Path
     $rule = [System.Security.AccessControl.FileSystemAccessRule]::new(
@@ -172,7 +179,7 @@ try {
         Invoke-StandardClient 'cng-before'
         (Get-Service -Name $service).WaitForStatus('Running', [TimeSpan]::FromSeconds(10))
         # The public fixture directory is writable by the trusted runner, read-only for the service and reader.
-        [IO.File]::WriteAllText((Join-Path $public 'epoch-1.stop'), 'retire-epoch-1')
+        Publish-RetirementRequest
         Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
         (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
         if ($Hardened) {
@@ -192,7 +199,7 @@ try {
             & sc.exe start $service
             if ($LASTEXITCODE -ne 0) { throw 'Approved prior service start failed.' }
             Invoke-StandardClient 'cng-before'
-            [IO.File]::WriteAllText((Join-Path $public 'epoch-1.stop'), 'retire-epoch-1')
+            Publish-RetirementRequest
             Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
             (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
             Write-Output 'PASS approved prior endpoint restarted before new pin selection'
