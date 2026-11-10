@@ -1,4 +1,5 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32, [switch]$Tur33)
+if ($Tur33) { $Tur32 = $true }
 if ($Tur32) { $Hardened = $true }
 if ($Hardened) { $CngRotation = $true }
 if ($CngRotation) { $Dedicated = $true }
@@ -26,6 +27,7 @@ $cngStarted = $false
 $hardeningFlag = @()
 if ($Hardened) { $hardeningFlag = @('--hardened') }
 if ($Tur32) { $hardeningFlag = @('--tur32') }
+if ($Tur33) { $hardeningFlag = @('--tur33') }
 
 function Invoke-Harness([string]$Mode) {
     if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value @hardeningFlag }
@@ -214,6 +216,10 @@ try {
             $pendingReader = Join-Path $public 'reader-2.pending'
             $activeReader = Join-Path $public 'reader-2.bin'
             if ($Tur32) {
+                if ($Tur33) {
+                    [IO.File]::Copy((Join-Path $public 'reader-1.bin'), $activeReader)
+                    Invoke-StandardClient 'cng-reject-envelope'
+                }
                 $wrong = [IO.File]::ReadAllBytes((Join-Path $private 'reader-2.bin'))
                 $wrong[0] = $wrong[0] -bxor 1
                 [IO.File]::WriteAllBytes($activeReader, $wrong)
@@ -225,7 +231,19 @@ try {
         Invoke-StandardClient 'cng-after'
         Invoke-Harness 'cng-publish'
         Wait-Receipt 'epoch-2.txt' 'PASS'
-        if ($Tur32) { Write-Output '6/6 Tur32 wrapped roles, distributor boundary, rejected envelope and approved fallback checks passed.' }
+        if ($Tur33) {
+            (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+            [IO.File]::WriteAllText((Join-Path $public 'selected-epoch'), '2')
+            & sc.exe config $service binPath= ($binary + ' 1')
+            if ($LASTEXITCODE -ne 0) { throw 'Stale service configuration test failed.' }
+            & sc.exe start $service
+            if ($LASTEXITCODE -ne 0) { throw 'Stale process did not reach the activation gate.' }
+            Wait-Receipt 'rollback-blocked.txt' 'PASS stale service rejected after new epoch selection'
+            (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+            Invoke-StandardClient 'cng-offline'
+            Write-Output '5/5 Tur33 recipient key rotation, unauthorized distributor and postselection rollback checks passed.'
+        }
+        elseif ($Tur32) { Write-Output '6/6 Tur32 wrapped roles, distributor boundary, rejected envelope and approved fallback checks passed.' }
         elseif ($Hardened) { Write-Output '6/6 Tur31 process DACL, role custody, wrong KSP and interrupted pin distribution checks passed.' }
         else { Write-Output '7/7 Tur30 persisted KSP, peer LocalService, shutdown, rotation and signed publisher checks passed.' }
     } else {

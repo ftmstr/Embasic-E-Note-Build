@@ -1,4 +1,4 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Isolated)
 
 $ErrorActionPreference = 'Stop'
 $target = 'EmbasicTur32-' + [Guid]::NewGuid().ToString('N')
@@ -33,7 +33,12 @@ function Set-DirectoryAcl([string]$Path, [string]$ServiceRights) {
 
 function Start-Probe([string]$Name, [string]$Mode, [string]$Sid) {
     $binary = '"{0}" "{1}" {2} "{3}" "{4}" "{5}" "{6}"' -f $dotnet,$harness,$Mode,$control,$management,$Name,$Sid
-    & sc.exe create $Name binPath= $binary start= demand obj= 'NT AUTHORITY\LocalService'
+    $account = 'NT AUTHORITY\LocalService'
+    if ($Isolated) {
+        $binary += ' "' + $peerSid + '"'
+        if ($Name -eq $peer) { $account = 'NT AUTHORITY\NetworkService' }
+    }
+    & sc.exe create $Name binPath= $binary start= demand obj= $account
     if ($LASTEXITCODE -ne 0) { throw 'Probe registration failed.' }
     $created.Add($Name)
     & sc.exe sidtype $Name unrestricted
@@ -42,12 +47,12 @@ function Start-Probe([string]$Name, [string]$Mode, [string]$Sid) {
     if ($LASTEXITCODE -ne 0) { throw 'Probe startup failed.' }
 }
 
-function Wait-Result([string]$Name) {
+function Wait-Result([string]$Name, [string]$Expected = 'PASS') {
     $path = Join-Path $control "$Name.result"
     $end = [DateTime]::UtcNow.AddSeconds(40)
     while (!(Test-Path -LiteralPath $path) -and [DateTime]::UtcNow -lt $end) { Start-Sleep -Milliseconds 100 }
     $result = Get-Content -LiteralPath $path -Raw
-    if ($result.Trim() -ne 'PASS') { throw "$Name failed: $result" }
+    if ($result.Trim() -ne $Expected) { throw "$Name failed: $result" }
     Write-Output "$Name PASS"
 }
 
@@ -62,11 +67,22 @@ try {
     Copy-Item -Path (Join-Path $HarnessDirectory '*') -Destination $runtime -Recurse
     & $dotnet $harness 'tur32-win-setup' $control $management
     if ($LASTEXITCODE -ne 0) { throw 'Operator floor setup failed.' }
-    Start-Probe $target 'tur32-win-target' $targetSid
-    Start-Probe $peer 'tur32-win-peer' $peerSid
-    Wait-Result 'tur32-win-peer'
-    Wait-Result 'tur32-win-target'
-    Write-Output '4/4 Tur32 preopened process, thread, token and operator floor ACL checks passed.'
+    if ($Isolated) {
+        Start-Probe $target 'tur33-win-target' $targetSid
+        Start-Probe $peer 'tur33-win-peer' $peerSid
+        Wait-Result 'tur33-win-peer'
+        & sc.exe stop $target
+        if ($LASTEXITCODE -ne 0) { throw 'Native SCM STOP failed.' }
+        (Get-Service -Name $target).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        Wait-Result 'tur33-win-target' 'PASS SCM STOP'
+        Write-Output '4/4 Tur33 separate logon, first handles, child token and native SCM STOP checks passed.'
+    } else {
+        Start-Probe $target 'tur32-win-target' $targetSid
+        Start-Probe $peer 'tur32-win-peer' $peerSid
+        Wait-Result 'tur32-win-peer'
+        Wait-Result 'tur32-win-target'
+        Write-Output '4/4 Tur32 preopened process, thread, token and operator floor ACL checks passed.'
+    }
 }
 catch {
     foreach ($entry in @(Get-ChildItem -LiteralPath $control -Filter '*.result' -ErrorAction SilentlyContinue)) {

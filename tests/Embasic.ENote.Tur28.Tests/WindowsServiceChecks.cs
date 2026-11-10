@@ -161,14 +161,24 @@ internal static partial class Program
     }
 
     [SupportedOSPlatform("windows")]
-    private static int RunService(string name, Func<CancellationToken, Task> run, TimeSpan? lifetime = null)
+    private static int RunService(string name, Func<CancellationToken, Task> run, TimeSpan? lifetime = null,
+        bool reportStopPending = false)
     {
         using var stop = new CancellationTokenSource(lifetime ?? TimeSpan.FromSeconds(60));
-        Handler handler = control => { if (control == 1) stop.Cancel(); };
+        IntPtr statusHandle = IntPtr.Zero;
+        Handler handler = control =>
+        {
+            if (control != 1) return;
+            if (!reportStopPending) { stop.Cancel(); return; }
+            var pending = new ServiceStatus { Type = 0x10, State = 3, Checkpoint = 1, WaitHint = 10000 };
+            SetServiceStatus(statusHandle, ref pending);
+            _ = stop.CancelAsync();
+        };
         int code = 0;
         ServiceMain main = (_, _) =>
         {
             IntPtr handle = RegisterServiceCtrlHandlerW(name, handler);
+            statusHandle = handle;
             if (handle == IntPtr.Zero) { code = 3; return; }
             var status = new ServiceStatus { Type = 0x10, State = 4, Accepted = 1 };
             if (!SetServiceStatus(handle, ref status)) { code = 4; return; }
