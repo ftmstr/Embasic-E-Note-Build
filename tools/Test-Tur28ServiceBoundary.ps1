@@ -1,4 +1,5 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened)
+if ($Hardened) { $CngRotation = $true }
 if ($CngRotation) { $Dedicated = $true }
 
 $ErrorActionPreference = 'Stop'
@@ -21,15 +22,18 @@ $serviceSid = $localService
 $peer = $service + "-peer"
 $peerCreated = $false
 $cngStarted = $false
+$hardeningFlag = @()
+if ($Hardened) { $hardeningFlag = @('--hardened') }
 
 function Invoke-Harness([string]$Mode) {
-    if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value }
+    if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value @hardeningFlag }
     else { & $hostPath $harness $Mode $private $public $service }
     if ($LASTEXITCODE -ne 0) { throw "Harness $Mode failed with exit $LASTEXITCODE." }
 }
 
 function Invoke-StandardClient([string]$Mode) {
     $clientArgs = '"{0}" {1} "{2}" "{3}" "{4}" "{5}" "{6}"' -f $harness,$Mode,$private,$public,$service,$serviceSid.Value,$clientSid.Value
+    if ($Hardened) { $clientArgs += ' --hardened' }
     $stdout = Join-Path $resultDir "$Mode-output.txt"
     $stderr = Join-Path $resultDir "$Mode-error.txt"
     $process = Start-Process -FilePath $hostPath -ArgumentList $clientArgs -Credential $credential -WorkingDirectory $runtime -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
@@ -109,7 +113,8 @@ try {
                 $sid, 'FullControl', $inherit, 'None', 'Allow')
             $acl.AddAccessRule($rule)
         }
-        if ($CngRotation -and $entry.FullName -eq (Join-Path $private 'publisher-2.bin')) {
+        if (($CngRotation -and $entry.FullName -eq (Join-Path $private 'publisher-2.bin')) -or
+            ($Hardened -and $entry.FullName -eq (Join-Path $private 'reader-2.bin'))) {
             $runnerSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
             $acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new($runnerSid, 'Read', 'Allow'))
         }
@@ -119,6 +124,7 @@ try {
     $mode = if ($CngRotation) { 'cng-service' } else { 'service' }
     $binary = '"{0}" "{1}" {2} "{3}" "{4}" "{5}"' -f $hostPath,$harness,$mode,$private,$public,$service
     if ($Dedicated) { $binary += ' "{0}" "{1}"' -f $serviceSid.Value,$clientSid.Value }
+    if ($Hardened) { $binary += ' --hardened' }
     $initialBinary = if ($CngRotation) { $binary + ' 1' } else { $binary }
     & sc.exe create $service binPath= $initialBinary start= demand obj= 'NT AUTHORITY\LocalService'
     if ($LASTEXITCODE -ne 0) { throw 'Disposable service registration failed.' }
@@ -138,6 +144,14 @@ try {
         Add-Permission $runtime 'ReadAndExecute' $peerSid
         Add-Permission $resultDir 'Modify' $peerSid
         $peerBinary = '"{0}" "{1}" cng-peer "{2}" "{3}" "{4}" "{5}" "{6}" "{7}" "{8}"' -f $hostPath,$harness,$private,$public,$service,$serviceSid.Value,$clientSid.Value,$peer,$peerSid.Value
+        if ($Hardened) {
+            $pidFile = Join-Path $resultDir 'epoch-1.pid'
+            $deadline = [DateTime]::UtcNow.AddSeconds(20)
+            while (!(Test-Path -LiteralPath $pidFile) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 100 }
+            $targetPid = [int](Get-Content -LiteralPath $pidFile -Raw)
+            Get-Process -Id $targetPid -ErrorAction Stop | Out-Null
+            $peerBinary += " $targetPid --hardened"
+        }
         & sc.exe create $peer binPath= $peerBinary start= demand obj= 'NT AUTHORITY\LocalService'
         if ($LASTEXITCODE -ne 0) { throw 'Peer service registration failed.' }
         $peerCreated = $true
@@ -153,16 +167,31 @@ try {
         [IO.File]::WriteAllText((Join-Path $public 'epoch-1.stop'), 'retire-epoch-1')
         Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
         (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        if ($Hardened) {
+            & sc.exe config $service binPath= ($binary + ' 0')
+            if ($LASTEXITCODE -ne 0) { throw 'Wrong KSP test configuration failed.' }
+            & sc.exe start $service
+            if ($LASTEXITCODE -ne 0) { throw 'Wrong KSP test did not start the process.' }
+            Wait-Receipt 'bad-key.txt' 'PASS wrong KSP rejected before endpoint creation'
+            (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        }
         Invoke-StandardClient 'cng-offline'
 
         & sc.exe config $service binPath= ($binary + ' 2')
         if ($LASTEXITCODE -ne 0) { throw 'Second key epoch service config failed.' }
         & sc.exe start $service
         if ($LASTEXITCODE -ne 0) { throw 'Second key epoch service start failed.' }
+        if ($Hardened) {
+            Invoke-StandardClient 'cng-pin-gap'
+            $pendingReader = Join-Path $public 'reader-2.pending'
+            [IO.File]::Copy((Join-Path $private 'reader-2.bin'), $pendingReader)
+            [IO.File]::Move($pendingReader, (Join-Path $public 'reader-2.bin'))
+        }
         Invoke-StandardClient 'cng-after'
         Invoke-Harness 'cng-publish'
         Wait-Receipt 'epoch-2.txt' 'PASS'
-        Write-Output '7/7 Tur30 persisted KSP, peer LocalService, shutdown, rotation and signed publisher checks passed.'
+        if ($Hardened) { Write-Output '6/6 Tur31 process DACL, role custody, wrong KSP and interrupted pin distribution checks passed.' }
+        else { Write-Output '7/7 Tur30 persisted KSP, peer LocalService, shutdown, rotation and signed publisher checks passed.' }
     } else {
         if ($Dedicated) { Invoke-StandardClient 'client' } else { Invoke-Harness 'client' }
         $expectedReceipt = if ($Dedicated) { 'PASS dedicated service SID served rotated endpoint' } else { 'PASS LocalService identity served requests' }
@@ -173,7 +202,7 @@ try {
 }
 catch {
     if ($CngRotation) {
-        foreach ($file in @('epoch-1.txt','epoch-2.txt','peer.txt')) {
+        foreach ($file in @('epoch-1.txt','epoch-2.txt','peer.txt','bad-key.txt')) {
             $path = Join-Path $resultDir $file
             if (Test-Path -LiteralPath $path) { Write-Output "$file $((Get-Content -LiteralPath $path -Raw).Trim())" }
         }
