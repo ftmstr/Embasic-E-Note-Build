@@ -118,6 +118,11 @@ public sealed class VaultWorkspaceSnapshot
     {
         if (!Documents.SequenceEqual(ObserveNotes(Path.GetFullPath(liveRoot), _rootPath)))
             throw new CryptographicException("Live workspace differs from the captured catalog.");
+        VerifyLiveVaults(manifest);
+    }
+
+    internal static void VerifyLiveVaults(VaultGenerationManifest manifest)
+    {
         foreach (var grant in manifest.Grants)
         {
             using var input = OpenFile(grant.BoundVaultPath!);

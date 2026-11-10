@@ -121,7 +121,11 @@ internal static partial class Program
                     if (epoch == 1)
                     {
                         await endpoint.ServeOnceAsync(stop);
-                        try { await Task.Delay(Timeout.Infinite, stop); }
+                        try
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(100), stop);
+                            throw new TimeoutException("SCM did not stop the first service process.");
+                        }
                         catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
                         Equal(config.Initial, provider.ReadTransition(config.Workspace).Current);
                     }
@@ -130,14 +134,14 @@ internal static partial class Program
                         for (int i = 0; i < 4; i++) await endpoint.ServeOnceAsync(stop);
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
-                    File.WriteAllText(receipt, "PASS");
+                    File.WriteAllText(receipt, epoch == 1 ? "PASS SCM stop observed" : "PASS");
                 }
                 catch (Exception error)
                 {
                     File.WriteAllText(receipt, error.ToString());
                     throw;
                 }
-            });
+            }, TimeSpan.FromMinutes(3));
         }
 
         var firstClient = VaultAuthorityPipeClient.ForWindowsService(name, config.First.ServicePublic);

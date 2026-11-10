@@ -44,7 +44,7 @@ internal static partial class Program
             Equal(3, reopened.InspectReachability(f.Recovery, f.Workspace).SelectedGenerations);
         });
 
-        Check("unknown live edit or additional encrypted path rejects the complete batch before the first write", () =>
+        Check("missing selected vault, unknown live edit or additional path stops the batch before the first write", () =>
         {
             using var f = new Fixture();
             f.Enroll();
@@ -52,6 +52,16 @@ internal static partial class Program
             var rekey = PrepareRoot(f, f.Root, newRoot, Password, NewPassword);
             Equal(VaultGenerationAdvanceState.Committed, f.Published.Resume(f.Recovery, rekey.Next.Stamp, f.Root));
             f.Published.RegisterSelectedSnapshot(f.Recovery, rekey.Next.Stamp, f.Root, newRoot);
+
+            string selectedVault = rekey.Next.Find(newRoot.Id, newRoot.Kind)!.BoundVaultPath!;
+            string movedVault = selectedVault + ".hold";
+            File.Move(selectedVault, movedVault);
+            try
+            {
+                Throws<FileNotFoundException>(() => f.Published.SynchronizeSelectedLiveTree(f.Recovery, rekey.Next.Stamp, f.Root, newRoot));
+                Equal(Digest(f.Direct), Digest(File.ReadAllBytes(Path.Combine(f.Live, "Direct.emd"))));
+            }
+            finally { File.Move(movedVault, selectedVault); }
 
             string inherited = Path.Combine(f.Live, "Sub", "Inherited.emd");
             using var portable = PortableEmd.Encrypt("third value", Password);

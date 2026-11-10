@@ -161,10 +161,10 @@ internal static partial class Program
     }
 
     [SupportedOSPlatform("windows")]
-    private static int RunService(string name, Func<CancellationToken, Task> run)
+    private static int RunService(string name, Func<CancellationToken, Task> run, TimeSpan? lifetime = null)
     {
-        using var stop = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-        Handler handler = control => { if (control == 1) stop.Cancel(); };
+        using var stop = new CancellationTokenSource(lifetime ?? TimeSpan.FromSeconds(60));
+        Handler handler = control => { if (control == 1) _ = stop.CancelAsync(); };
         int code = 0;
         ServiceMain main = (_, _) =>
         {

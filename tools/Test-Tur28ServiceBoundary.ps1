@@ -148,10 +148,10 @@ try {
         Wait-Receipt 'peer.txt' 'PASS'
 
         Invoke-StandardClient 'cng-before'
+        (Get-Service -Name $service).WaitForStatus('Running', [TimeSpan]::FromSeconds(10))
         & sc.exe stop $service
-        if ($LASTEXITCODE -ne 0) { throw 'First key epoch service stop failed.' }
         (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
-        Wait-Receipt 'epoch-1.txt' 'PASS'
+        Wait-Receipt 'epoch-1.txt' 'PASS SCM stop observed'
         Invoke-StandardClient 'cng-offline'
 
         & sc.exe config $service binPath= ($binary + ' 2')
@@ -169,6 +169,15 @@ try {
         if ($Dedicated) { Write-Output '7/7 Tur29 service SID, standard-user ACL, SCM and rotated pin checks passed.' }
         else { Write-Output '4/4 Tur28 disposable SCM and distinct-account ACL checks passed.' }
     }
+}
+catch {
+    if ($CngRotation) {
+        foreach ($file in @('epoch-1.txt','epoch-2.txt','peer.txt')) {
+            $path = Join-Path $resultDir $file
+            if (Test-Path -LiteralPath $path) { Write-Output "$file $((Get-Content -LiteralPath $path -Raw).Trim())" }
+        }
+    }
+    throw
 }
 finally {
     if ($peerCreated) {

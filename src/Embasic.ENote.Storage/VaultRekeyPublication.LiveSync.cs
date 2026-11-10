@@ -45,6 +45,7 @@ public sealed partial class VaultRekeyPublication
             if (observed.SourceSha256 != next.SourceSha256) remaining.Add((prior, next));
         }
 
+        VaultWorkspaceSnapshot.VerifyLiveVaults(manifest);
         int replacements = Math.Min(maximumReplacements, remaining.Count);
         for (int i = 0; i < replacements; i++)
         {
