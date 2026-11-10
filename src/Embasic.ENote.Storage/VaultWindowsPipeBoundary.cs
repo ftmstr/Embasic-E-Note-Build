@@ -31,6 +31,7 @@ public sealed class VaultWindowsPipeBoundary
         security.SetOwner(_service);
         security.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
         security.AddAccessRule(new PipeAccessRule(_service, PipeAccessRights.FullControl, AccessControlType.Allow));
+        security.AddAccessRule(new PipeAccessRule(_client, PipeAccessRights.CreateNewInstance, AccessControlType.Deny));
         security.AddAccessRule(new PipeAccessRule(_client, ClientRights, AccessControlType.Allow));
         byte[] descriptor = security.GetSecurityDescriptorBinaryForm();
         GCHandle pin = GCHandle.Alloc(descriptor, GCHandleType.Pinned);

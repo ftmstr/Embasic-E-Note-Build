@@ -56,6 +56,7 @@ internal static partial class Program
                         new VaultGenerationRecovery(provider, Store(home)), publication, root);
                     await endpoint.ServeOnceAsync(stop);
                     await endpoint.ServeOnceAsync(stop);
+                    Equal(info.Initial, provider.ReadTransition(info.Workspace).Current);
                     File.WriteAllText(result, "PASS LocalService identity served requests");
                 }
                 catch (Exception error)
@@ -90,14 +91,15 @@ internal static partial class Program
     private static void VerifyPipeInstanceDenied(string name)
     {
         string path = @"\\.\pipe\" + name;
-        if (!SpinWait.SpinUntil(() =>
-        {
-            using var handle = CreateFileW(path, 4, 0, IntPtr.Zero, 3, 0, IntPtr.Zero);
-            if (!handle.IsInvalid) throw new InvalidOperationException("Pipe instance right was unexpectedly granted.");
-            int error = Marshal.GetLastPInvokeError();
-            if (error is not (2 or 5 or 231)) throw new Win32Exception(error);
-            return error == 5;
-        }, TimeSpan.FromSeconds(20))) throw new TimeoutException("Pipe ACL probe never reached the service.");
+        if (!SpinWait.SpinUntil(() => WaitNamedPipeW(path, 100), TimeSpan.FromSeconds(20)))
+            throw new TimeoutException("Pipe ACL probe never reached the service.");
+        const uint duplexOverlapped = 0x40000003;
+        const uint rejectRemoteClients = 8;
+        using var instance = CreateNamedPipeW(path, duplexOverlapped, rejectRemoteClients, 1,
+            4096, 4096, 0, IntPtr.Zero);
+        if (!instance.IsInvalid) throw new InvalidOperationException("Pipe instance creation was unexpectedly granted.");
+        int error = Marshal.GetLastPInvokeError();
+        if (error != 5) throw new Win32Exception(error, "Expected access denied when creating another pipe instance.");
     }
 
     [SupportedOSPlatform("windows")]
@@ -160,6 +162,10 @@ internal static partial class Program
     private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus status);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
-    private static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr security,
-        uint disposition, uint flags, IntPtr template);
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool WaitNamedPipeW(string name, uint timeout);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+    private static extern SafePipeHandle CreateNamedPipeW(string name, uint mode, uint pipeMode, uint instances,
+        uint outBuffer, uint inBuffer, uint timeout, IntPtr security);
 }
