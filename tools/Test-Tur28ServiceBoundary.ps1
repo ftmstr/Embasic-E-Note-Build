@@ -149,9 +149,10 @@ try {
 
         Invoke-StandardClient 'cng-before'
         (Get-Service -Name $service).WaitForStatus('Running', [TimeSpan]::FromSeconds(10))
-        & sc.exe stop $service
+        # The public fixture directory is writable by the trusted runner, read-only for the service and reader.
+        [IO.File]::WriteAllText((Join-Path $public 'epoch-1.stop'), 'retire-epoch-1')
+        Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
         (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
-        Wait-Receipt 'epoch-1.txt' 'PASS SCM stop observed'
         Invoke-StandardClient 'cng-offline'
 
         & sc.exe config $service binPath= ($binary + ' 2')

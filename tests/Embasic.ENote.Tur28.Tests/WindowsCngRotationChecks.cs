@@ -121,12 +121,9 @@ internal static partial class Program
                     if (epoch == 1)
                     {
                         await endpoint.ServeOnceAsync(stop);
-                        try
-                        {
-                            await Task.Delay(TimeSpan.FromSeconds(100), stop);
-                            throw new TimeoutException("SCM did not stop the first service process.");
-                        }
-                        catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+                        string stopRequest = Path.Combine(shared, "epoch-1.stop");
+                        while (!File.Exists(stopRequest)) await Task.Delay(100, stop);
+                        Equal("retire-epoch-1", File.ReadAllText(stopRequest));
                         Equal(config.Initial, provider.ReadTransition(config.Workspace).Current);
                     }
                     else
@@ -134,7 +131,7 @@ internal static partial class Program
                         for (int i = 0; i < 4; i++) await endpoint.ServeOnceAsync(stop);
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
-                    File.WriteAllText(receipt, epoch == 1 ? "PASS SCM stop observed" : "PASS");
+                    File.WriteAllText(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
                 }
                 catch (Exception error)
                 {
