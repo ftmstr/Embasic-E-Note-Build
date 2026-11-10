@@ -21,6 +21,7 @@ public sealed partial class VaultRekeyPublication
             throw new CryptographicException("Losing publication has a different parent.");
         loser.RequireMatch(source, ReadExact(candidate));
 
+        _ = ReadWorkspacePublicationNames(candidate.WorkspaceId);
         var retained = ReadRetainedPlans(candidate.WorkspaceId, candidate);
         if (!retained.TryGetValue(winner.Candidate, out var winningPlan) || winningPlan.Expected != winner.Expected)
             throw new CryptographicException("The independently selected receipt is missing its exact plan.");

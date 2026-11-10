@@ -79,22 +79,30 @@ public sealed class VaultProviderWitnessChain : IVaultProviderRecoveryWitness
 }
 
 /// <summary>Reference provider fence using an external, live witness reader.</summary>
+public interface IVaultWitnessedAuthority : IExternalVaultTransitionAnchor, IVaultRootRecoveryLifecycle
+{
+}
+
 public sealed partial class VaultTransitionFilePrototype
 {
     public IExternalVaultTransitionAnchor RequireActiveWitness(IVaultProviderRecoveryWitness witness)
     {
-        ArgumentNullException.ThrowIfNull(witness);
-        return new WitnessedAnchor(this, witness);
+        return RequireActiveAuthority(witness);
     }
 
     public IVaultRootRecoveryLifecycle RequireActiveRootWitness(IVaultProviderRecoveryWitness witness)
+    {
+        return RequireActiveAuthority(witness);
+    }
+
+    public IVaultWitnessedAuthority RequireActiveAuthority(IVaultProviderRecoveryWitness witness)
     {
         ArgumentNullException.ThrowIfNull(witness);
         return new WitnessedAnchor(this, witness);
     }
 
     private sealed class WitnessedAnchor(VaultTransitionFilePrototype provider, IVaultProviderRecoveryWitness witness)
-        : IExternalVaultTransitionAnchor, IVaultRootRecoveryLifecycle
+        : IVaultWitnessedAuthority
     {
         public VaultTransitionState? ReadTransition(Guid workspaceId) =>
             Run(workspaceId, state => state);

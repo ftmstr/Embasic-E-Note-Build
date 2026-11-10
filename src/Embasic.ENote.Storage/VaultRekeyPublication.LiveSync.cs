@@ -72,6 +72,7 @@ public sealed partial class VaultRekeyPublication
                 if (!OperatingSystem.IsWindows()) File.SetUnixFileMode(temporary, File.GetUnixFileMode(path));
                 File.Replace(temporary, path, destinationBackupFileName: null);
                 created = false;
+                RequireCurrent();
             }
             finally
             {

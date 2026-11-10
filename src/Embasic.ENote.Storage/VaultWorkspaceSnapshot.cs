@@ -164,6 +164,44 @@ public sealed class VaultWorkspaceSnapshot
         return path;
     }
 
+    internal VaultSelectedCatalogInventory InspectEntries(VaultGenerationManifest manifest)
+    {
+        var expected = new HashSet<string>(StringComparer.Ordinal) { "index.elh", "notes", "vaults" };
+        int vaultCount = 0;
+        foreach (var grant in manifest.Grants)
+        {
+            expected.Add(Path.Combine("vaults", VaultName(grant.LockId)));
+            vaultCount++;
+        }
+        foreach (var document in Documents)
+        {
+            string path = Path.Combine("notes", document.RelativePath[(_rootPath.Length + 1)..]
+                .Replace('/', Path.DirectorySeparatorChar));
+            while (!string.IsNullOrEmpty(path) && expected.Add(path))
+                path = Path.GetDirectoryName(path)!;
+        }
+
+        var unknown = new List<string>();
+        var pending = new Stack<string>();
+        pending.Push(_directory);
+        while (pending.TryPop(out var directory))
+        {
+            foreach (string path in Directory.EnumerateFileSystemEntries(directory))
+            {
+                var attributes = File.GetAttributes(path);
+                if ((attributes & FileAttributes.ReparsePoint) != 0)
+                    throw new IOException("Linked selected catalog entry is refused.");
+                string relative = Path.GetRelativePath(_directory, path);
+                if (!expected.Remove(relative))
+                    unknown.Add(relative.Replace(Path.DirectorySeparatorChar, '/'));
+                if ((attributes & FileAttributes.Directory) != 0) pending.Push(path);
+            }
+        }
+        if (expected.Count != 0) throw new IOException("A verified selected catalog entry disappeared.");
+        unknown.Sort(StringComparer.Ordinal);
+        return new VaultSelectedCatalogInventory(Documents.Count, vaultCount, unknown.AsReadOnly());
+    }
+
     internal bool HasIndex(ReadOnlySpan<byte> index) => index.SequenceEqual(_index);
 
     internal void Materialize(string directory, VaultGenerationManifest source,
