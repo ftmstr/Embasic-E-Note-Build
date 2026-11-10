@@ -109,16 +109,13 @@ try {
                 $sid, 'FullControl', $inherit, 'None', 'Allow')
             $acl.AddAccessRule($rule)
         }
+        if ($CngRotation -and $entry.FullName -eq (Join-Path $private 'publisher-2.bin')) {
+            $runnerSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+            $acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new($runnerSid, 'Read', 'Allow'))
+        }
         Set-Acl -LiteralPath $entry.FullName -AclObject $acl
     }
 
-    if ($CngRotation) {
-        $runnerSid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
-        $publicationKey = Join-Path $private 'publisher-2.bin'
-        $acl = Get-Acl -LiteralPath $publicationKey
-        $acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new($runnerSid, 'Read', 'Allow'))
-        Set-Acl -LiteralPath $publicationKey -AclObject $acl
-    }
     $mode = if ($CngRotation) { 'cng-service' } else { 'service' }
     $binary = '"{0}" "{1}" {2} "{3}" "{4}" "{5}"' -f $hostPath,$harness,$mode,$private,$public,$service
     if ($Dedicated) { $binary += ' "{0}" "{1}"' -f $serviceSid.Value,$clientSid.Value }
