@@ -2,10 +2,11 @@ using System.Security.Cryptography;
 
 namespace Embasic.ENote.Storage;
 
-/// <summary>Exact floor attestation signed by an operator key separate from the selector and provider.</summary>
+/// <summary>Operator key rotation signed by the outgoing and incoming keys.</summary>
 public sealed record VaultRecoveryOperatorKeyTransition(long FirstRevision, byte[] NewPublicKey,
     byte[] OutgoingSignature, byte[] IncomingSignature);
 
+/// <summary>Exact floor attestation signed by an operator key separate from the selector and provider.</summary>
 public static class VaultRecoveryPinFloor
 {
     private const string Domain = "Embasic.VaultRecoveryPinFloor.v1";

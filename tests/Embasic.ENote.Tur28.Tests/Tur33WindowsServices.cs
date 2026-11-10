@@ -11,6 +11,19 @@ internal static partial class Program
     private static int Tur33WindowsServices(string[] args)
     {
         string mode = args[0], control = args[1], serviceSid = args[4], peerSid = args[5];
+        if (mode == "tur33-win-stop")
+            return RunService(args[3], async stop =>
+            {
+                RequireServiceToken(serviceSid);
+                WriteFixtureReceipt(Path.Combine(control, "native-ready"), "ready");
+                try { await Task.Delay(Timeout.InfiniteTimeSpan, stop); }
+                catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+                WriteFixtureReceipt(Path.Combine(control, "native-received"), "stop");
+                using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                WaitForSignal(control, "native-release", deadline.Token);
+                WriteFixtureReceipt(Path.Combine(control, "tur33-win-stop.result"), "PASS SCM STOP");
+            }, reportStopPending: true);
+
         if (mode == "tur33-win-child")
         {
             RequireServiceToken(serviceSid);
@@ -23,7 +36,7 @@ internal static partial class Program
             return 0;
         }
 
-        return RunService(args[3], async stop =>
+        return RunService(args[3], stop =>
         {
             if (mode == "tur33-win-peer")
             {
@@ -59,7 +72,7 @@ internal static partial class Program
                         Equal(5, error);
                     }
                 });
-                return;
+                return Task.CompletedTask;
             }
 
             RequireServiceToken(serviceSid);
@@ -70,8 +83,7 @@ internal static partial class Program
                 WaitForSignal(control, "default-checked", stop);
                 GrantQueryOnly(peerSid);
                 WriteFixtureReceipt(Path.Combine(control, "target-query-ready"), "ready");
-                try { await Task.Delay(Timeout.InfiniteTimeSpan, stop); }
-                catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+                WaitForSignal(control, "peer-finished", stop);
             }
             finally
             {
@@ -83,8 +95,9 @@ internal static partial class Program
                 }
                 Equal(0, childProcess.ExitCode);
             }
-            WriteFixtureReceipt(Path.Combine(control, "tur33-win-target.result"), "PASS SCM STOP");
-        }, reportStopPending: true);
+            WriteFixtureReceipt(Path.Combine(control, "tur33-win-target.result"), "PASS child shutdown");
+            return Task.CompletedTask;
+        });
     }
 
     private static void PublishDefaultIdentity(string directory, string name) =>

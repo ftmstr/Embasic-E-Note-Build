@@ -6,7 +6,7 @@ The hosted Windows fixture uses the Service Control Manager to start a LocalServ
 
 The Windows software KSP fixture provisions separate reader and publisher recipient keys per epoch. It checks old-recipient rejection, stale-envelope rejection and the standard user's write denial on the fixture's selection marker. Before selection the fixture permits fallback to the approved prior epoch. After selection the previous epoch must fail the custody policy check before pipe startup. The selected epoch is a same-host administrative input.
 
-A separate cancellation fixture accepts SCM STOP, reports STOP_PENDING and checks child shutdown. This is evidence for that test service. The production service lifecycle and the existing production-shaped SCM 1061 case require separate acceptance.
+A separate cancellation fixture exercises SCM STOP and STOP_PENDING with the default process DACL. The cross-logon fixture verifies child shutdown through its test control signal. Native STOP of the process with the test-only DACL returned 1061 during development. The production service lifecycle requires separate acceptance.
 
 ## W012
 

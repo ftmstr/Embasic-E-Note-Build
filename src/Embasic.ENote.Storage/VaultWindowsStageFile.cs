@@ -46,8 +46,8 @@ internal static class VaultWindowsStageFile
 
     internal static void MarkForDeletion(SafeFileHandle handle)
     {
-        int delete = 1;
-        if (!SetFileInformationByHandle(handle, 4, ref delete, sizeof(int)))
+        byte delete = 1;
+        if (!SetFileInformationByHandle(handle, 4, ref delete, sizeof(byte)))
             throw new IOException("Could not unlink the inspected live stage.", new Win32Exception(Marshal.GetLastPInvokeError()));
     }
 
@@ -69,5 +69,5 @@ internal static class VaultWindowsStageFile
 
     [DllImport("kernel32.dll", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool SetFileInformationByHandle(SafeFileHandle handle, int kind, ref int value, int size);
+    private static extern bool SetFileInformationByHandle(SafeFileHandle handle, int kind, ref byte value, int size);
 }

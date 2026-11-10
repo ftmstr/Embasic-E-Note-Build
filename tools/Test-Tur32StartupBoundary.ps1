@@ -3,6 +3,7 @@ param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Isolated)
 $ErrorActionPreference = 'Stop'
 $target = 'EmbasicTur32-' + [Guid]::NewGuid().ToString('N')
 $peer = "$target-peer"
+$stopProbe = "$target-stop"
 $base = Join-Path $env:ProgramData $target
 $control = Join-Path $base 'control'
 $management = Join-Path $base 'management'
@@ -22,8 +23,8 @@ function Set-DirectoryAcl([string]$Path, [string]$ServiceRights) {
     $acl.SetAccessRuleProtection($true, $false)
     foreach ($rule in @($acl.Access)) { $acl.RemoveAccessRuleSpecific($rule) }
     $admin = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-    foreach ($sid in @('S-1-5-18','S-1-5-32-544',$admin,$targetSid,$peerSid)) {
-        $rights = if ($sid -eq $targetSid -or $sid -eq $peerSid) { $ServiceRights } else { 'FullControl' }
+    foreach ($sid in @('S-1-5-18','S-1-5-32-544',$admin,$targetSid,$peerSid,$stopSid)) {
+        $rights = if ($sid -in @($targetSid,$peerSid,$stopSid)) { $ServiceRights } else { 'FullControl' }
         $identity = [System.Security.Principal.SecurityIdentifier]::new($sid)
         $acl.AddAccessRule([System.Security.AccessControl.FileSystemAccessRule]::new(
             $identity, $rights, 'ContainerInherit,ObjectInherit', 'None', 'Allow'))
@@ -56,9 +57,19 @@ function Wait-Result([string]$Name, [string]$Expected = 'PASS') {
     Write-Output "$Name PASS"
 }
 
+function Wait-Signal([string]$Name) {
+    $deadline = [DateTime]::UtcNow.AddSeconds(15)
+    $path = Join-Path $control $Name
+    while (!(Test-Path -LiteralPath $path)) {
+        if ([DateTime]::UtcNow -ge $deadline) { throw "Missing signal $Name." }
+        Start-Sleep -Milliseconds 50
+    }
+}
+
 try {
     $targetSid = Get-ServiceSid $target
     $peerSid = Get-ServiceSid $peer
+    $stopSid = Get-ServiceSid $stopProbe
     New-Item -ItemType Directory -Path $base | Out-Null
     Set-DirectoryAcl $base 'ReadAndExecute'
     New-Item -ItemType Directory -Path $control,$management,$runtime | Out-Null
@@ -71,15 +82,20 @@ try {
         Start-Probe $target 'tur33-win-target' $targetSid
         Start-Probe $peer 'tur33-win-peer' $peerSid
         Wait-Result 'tur33-win-peer'
+        New-Item -ItemType File -Path (Join-Path $control 'peer-finished') | Out-Null
+        Wait-Result 'tur33-win-target' 'PASS child shutdown'
         (Get-Service -Name $peer).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
-        (Get-Service -Name $target).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
-        $targetService = Get-Service -Name $target
-        if (!$targetService.CanStop) { throw 'SCM reports the running target as non-stoppable.' }
-        & sc.exe queryex $target
-        & sc.exe stop $target
-        if ($LASTEXITCODE -ne 0) { throw 'Native SCM STOP failed.' }
         (Get-Service -Name $target).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
-        Wait-Result 'tur33-win-target' 'PASS SCM STOP'
+        Start-Probe $stopProbe 'tur33-win-stop' $stopSid
+        Wait-Signal 'native-ready'
+        (Get-Service -Name $stopProbe).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
+        & sc.exe stop $stopProbe
+        if ($LASTEXITCODE -ne 0) { throw 'Native SCM STOP failed.' }
+        Wait-Signal 'native-received'
+        if ((Get-Service -Name $stopProbe).Status -ne 'StopPending') { throw 'SCM did not report STOP_PENDING.' }
+        New-Item -ItemType File -Path (Join-Path $control 'native-release') | Out-Null
+        (Get-Service -Name $stopProbe).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        Wait-Result 'tur33-win-stop' 'PASS SCM STOP'
         Write-Output '4/4 Tur33 separate logon, first handles, child token and native SCM STOP checks passed.'
     } else {
         Start-Probe $target 'tur32-win-target' $targetSid
@@ -97,6 +113,11 @@ catch {
     throw
 }
 finally {
+    if ($Isolated -and (Test-Path -LiteralPath $control)) {
+        foreach ($name in @('peer-finished','native-release')) {
+            New-Item -ItemType File -Path (Join-Path $control $name) -Force | Out-Null
+        }
+    }
     foreach ($name in $created) {
         $service = Get-Service -Name $name -ErrorAction SilentlyContinue
         if ($service -and $service.Status -ne 'Stopped') {
