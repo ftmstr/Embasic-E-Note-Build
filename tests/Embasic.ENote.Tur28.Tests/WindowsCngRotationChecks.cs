@@ -14,9 +14,10 @@ internal static partial class Program
     [SupportedOSPlatform("windows")]
     private static async Task<int> WindowsCngCommand(string[] args)
     {
-        bool wrapped = args.Contains("--tur32", StringComparer.Ordinal);
+        bool rotated = args.Contains("--tur33", StringComparer.Ordinal);
+        bool wrapped = rotated || args.Contains("--tur32", StringComparer.Ordinal);
         bool hardened = wrapped || args.Contains("--hardened", StringComparer.Ordinal);
-        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32")).ToArray();
+        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32" or "--tur33")).ToArray();
         string mode = args[0], home = args[1], shared = args[2], name = args[3];
         string serviceSid = args[4], clientSid = args[5];
         string result = Path.Combine(Path.GetDirectoryName(shared)!, "result");
@@ -24,13 +25,15 @@ internal static partial class Program
         string PublisherFile(int epoch) => Path.Combine(home, $"publisher-{epoch}.bin");
         string ReaderFile(string directory, int epoch) => Path.Combine(directory, $"reader-{epoch}.bin");
         string KeyName(int epoch) => name + "-key-" + epoch;
-        string RoleKey(bool publisher) => name + (publisher ? "-role-pub" : "-role-read");
-        byte[] ReadRole(bool publisher, string path) => wrapped
-            ? VaultWindowsRoleCustody.Unwrap(RoleKey(publisher), path)
+        string RoleKey(bool publisher, int epoch = 1) => name + (publisher ? "-role-pub" : "-role-read") +
+            (rotated ? "-" + epoch : "");
+        byte[] ReadRole(bool publisher, string path, int epoch = 1) => wrapped
+            ? VaultWindowsRoleCustody.Unwrap(RoleKey(publisher, epoch), path)
             : File.ReadAllBytes(path);
         if (mode == "cng-cleanup")
         {
             var keys = wrapped ? new[] { KeyName(1), KeyName(2), RoleKey(false), RoleKey(true) } : [KeyName(1), KeyName(2)];
+            if (rotated) keys = [.. keys, RoleKey(false, 2), RoleKey(true, 2)];
             foreach (string keyName in keys)
                 if (CngKey.Exists(keyName, CngProvider.MicrosoftSoftwareKeyStorageProvider, CngKeyOpenOptions.MachineKey))
                 {
@@ -51,6 +54,11 @@ internal static partial class Program
             using var replacement = LayerSecret.Regenerate(fixture.Child);
             var candidate = fixture.Prepare(replacement).Manifest.Stamp;
             var first = Provision(1);
+            if (rotated)
+            {
+                readerRecipient = CreateRoleRecipient(RoleKey(false, 2), clientSid);
+                publisherRecipient = CreateRoleRecipient(RoleKey(true, 2), publisherSid);
+            }
             var second = Provision(2);
             VaultAuthorityKeyCustody.VerifySuccessor(first.Keys, second.Keys);
             var info = new CngEndpoint(fixture.Workspace, fixture.Root.Id, fixture.ProviderId,
@@ -141,15 +149,25 @@ internal static partial class Program
             int epoch = phase == 0 ? 2 : phase;
             return RunService(name, async stop =>
             {
-                string receipt = Path.Combine(result, phase == 0 ? "bad-key.txt" : $"epoch-{epoch}.txt");
+                bool rollback = rotated && phase == 1 && File.Exists(Path.Combine(shared, "selected-epoch"));
+                string receipt = Path.Combine(result, rollback ? "rollback-blocked.txt" :
+                    phase == 0 ? "bad-key.txt" : $"epoch-{epoch}.txt");
                 try
                 {
                     RequireServiceToken(serviceSid);
                     if (hardened) VaultWindowsServiceProcessBoundary.RestrictCurrentProcess(serviceSid);
                     var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
+                    if (rollback)
+                    {
+                        Equal("2", File.ReadAllText(Path.Combine(shared, "selected-epoch")));
+                        Throws<CryptographicException>(() => VaultAuthorityKeyCustody.OpenWindowsKey(config.First.Keys,
+                            config.Workspace, 2, config.First.Approval, config.ApprovalPublic, KeyName(1), [], []));
+                        WriteFixtureReceipt(receipt, "PASS stale service rejected after new epoch selection");
+                        return;
+                    }
                     var active = epoch == 1 ? config.First : config.Second;
-                    byte[] publisher = ReadRole(true, PublisherFile(epoch));
-                    byte[] reader = active.Reader ?? ReadRole(false, ReaderFile(home, epoch));
+                    byte[] publisher = ReadRole(true, PublisherFile(epoch), epoch);
+                    byte[] reader = active.Reader ?? ReadRole(false, ReaderFile(home, epoch), epoch);
                     if (phase == 0)
                     {
                         try
@@ -217,7 +235,8 @@ internal static partial class Program
             using var identity = WindowsIdentity.GetCurrent();
             Equal(config.PublisherSid, identity.User!.Value);
             var publish = VaultAuthorityPipeClient.ForWindowsService(name, config.Second.ServicePublic);
-            byte[] key = ReadRole(true, PublisherFile(2));
+            if (rotated) Throws<CryptographicException>(() => ReadRole(true, PublisherFile(2), 1));
+            byte[] key = ReadRole(true, PublisherFile(2), 2);
             try { Equal(VaultGenerationAdvanceState.Committed, await publish.PublishAsync(config.Candidate, key)); }
             finally { CryptographicOperations.ZeroMemory(key); }
             Console.WriteLine("PASS separate publisher obtained a signed receipt for the exact candidate");
@@ -238,7 +257,9 @@ internal static partial class Program
             Throws<UnauthorizedAccessException>(() => File.Open(ReaderFile(shared, 1), FileMode.Open, FileAccess.Write).Dispose());
             Throws<UnauthorizedAccessException>(() => File.ReadAllBytes(ReaderFile(home, 2)));
         }
-        if (wrapped) Throws<CryptographicException>(() => OpenRecipient(RoleKey(true)));
+        if (wrapped) Throws<CryptographicException>(() => OpenRecipient(RoleKey(true, 2)));
+        if (rotated) Throws<UnauthorizedAccessException>(() =>
+            File.Create(Path.Combine(shared, "unauthorized-distributor.pending")).Dispose());
         byte[] firstReader = config.First.Reader ?? ReadRole(false, ReaderFile(shared, 1));
         if (mode == "cng-before")
         {
@@ -272,12 +293,14 @@ internal static partial class Program
         }
         else if (mode == "cng-reject-envelope")
         {
-            Throws<CryptographicException>(() => ReadRole(false, ReaderFile(shared, 2)));
+            Throws<CryptographicException>(() => ReadRole(false, ReaderFile(shared, 2), 2));
             Console.WriteLine("PASS corrupt recipient envelope rejected before IPC");
         }
         else if (mode == "cng-after")
         {
-            byte[] nextReader = config.Second.Reader ?? ReadRole(false, ReaderFile(shared, 2));
+            if (rotated)
+                Throws<CryptographicException>(() => ReadRole(false, ReaderFile(shared, 2), 1));
+            byte[] nextReader = config.Second.Reader ?? ReadRole(false, ReaderFile(shared, 2), 2);
             var nextClient = VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name, config.First.Keys, config.Second.Keys, 2,
                 config.Second.Approval, config.ApprovalPublic, config.Second.ServicePublic, nextReader);
             try

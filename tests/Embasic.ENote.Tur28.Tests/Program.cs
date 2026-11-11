@@ -51,6 +51,18 @@ internal static partial class Program
             Console.WriteLine($"{_passed}/{_total} Tur32 midcopy recovery, catalog backup and selector checks passed.");
             return _total == _passed ? 0 : 1;
         }
+        if (args is ["tur33"])
+        {
+            Tur33LiveChecks();
+            Tur33OperatorChecks();
+            Console.WriteLine($"{_passed}/{_total} Tur33 selection, stage lineage, backup and operator checks passed.");
+            return _total == _passed ? 0 : 1;
+        }
+        if (args is ["tur33-windows-stage"])
+            return OperatingSystem.IsWindows() ? Tur33WindowsStageChecks() : 2;
+        if (args is ["tur33-floor-worker", ..]) return Tur33FloorWorker(args);
+        if (args.Length > 0 && args[0].StartsWith("tur33-win-", StringComparison.Ordinal))
+            return OperatingSystem.IsWindows() ? Tur33WindowsServices(args) : 2;
         if (args is ["tur32-copy-worker", ..]) return RunLiveWorker(args);
         if (args.Length > 0 && args[0].StartsWith("tur32-win-", StringComparison.Ordinal))
             return OperatingSystem.IsWindows() ? WindowsStartupExperiment(args) : 2;
