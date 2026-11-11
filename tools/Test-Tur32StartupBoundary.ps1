@@ -1,6 +1,7 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Isolated)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Isolated, [switch]$NativeStop)
 
 $ErrorActionPreference = 'Stop'
+if ($Isolated -and $NativeStop) { throw 'Select one fixture mode.' }
 $target = 'EmbasicTur32-' + [Guid]::NewGuid().ToString('N')
 $peer = "$target-peer"
 $stopProbe = "$target-stop"
@@ -35,7 +36,7 @@ function Set-DirectoryAcl([string]$Path, [string]$ServiceRights) {
 function Start-Probe([string]$Name, [string]$Mode, [string]$Sid) {
     $binary = '"{0}" "{1}" {2} "{3}" "{4}" "{5}" "{6}"' -f $dotnet,$harness,$Mode,$control,$management,$Name,$Sid
     $account = 'NT AUTHORITY\LocalService'
-    if ($Isolated) {
+    if ($Isolated -or $NativeStop) {
         $binary += ' "' + $peerSid + '"'
         if ($Name -eq $peer) { $account = 'NT AUTHORITY\NetworkService' }
     }
@@ -86,6 +87,8 @@ try {
         Wait-Result 'tur33-win-target' 'PASS child shutdown'
         (Get-Service -Name $peer).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
         (Get-Service -Name $target).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        Write-Output '3/3 Tur33 separate logon, first handles and child token checks passed.'
+    } elseif ($NativeStop) {
         Start-Probe $stopProbe 'tur33-win-stop' $stopSid
         Wait-Signal 'native-ready'
         (Get-Service -Name $stopProbe).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
@@ -96,7 +99,7 @@ try {
         New-Item -ItemType File -Path (Join-Path $control 'native-release') | Out-Null
         (Get-Service -Name $stopProbe).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
         Wait-Result 'tur33-win-stop' 'PASS SCM STOP'
-        Write-Output '4/4 Tur33 separate logon, first handles, child token and native SCM STOP checks passed.'
+        Write-Output '1/1 Tur33 native SCM STOP lifecycle checks passed.'
     } else {
         Start-Probe $target 'tur32-win-target' $targetSid
         Start-Probe $peer 'tur32-win-peer' $peerSid
@@ -113,7 +116,7 @@ catch {
     throw
 }
 finally {
-    if ($Isolated -and (Test-Path -LiteralPath $control)) {
+    if (($Isolated -or $NativeStop) -and (Test-Path -LiteralPath $control)) {
         foreach ($name in @('peer-finished','native-release')) {
             New-Item -ItemType File -Path (Join-Path $control $name) -Force | Out-Null
         }

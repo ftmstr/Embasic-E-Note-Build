@@ -47,6 +47,9 @@ internal static partial class Program
                     Equal(true, new WindowsPrincipal(token).IsInRole(new SecurityIdentifier(serviceSid)));
                     var target = ReadDefaultIdentity(control, "target", stop);
                     var child = ReadDefaultIdentity(control, "child", stop);
+                    Equal(target.LogonId, child.LogonId);
+                    if (target.LogonId == ReadLogonId(token))
+                        throw new InvalidOperationException("The peer shares the target logon session.");
                     if (target.Process == child.Process || target.Process == Environment.ProcessId ||
                         child.Process == Environment.ProcessId)
                         throw new InvalidOperationException("Expected three distinct process identities.");
@@ -100,16 +103,43 @@ internal static partial class Program
         });
     }
 
-    private static void PublishDefaultIdentity(string directory, string name) =>
+    [SupportedOSPlatform("windows")]
+    private static void PublishDefaultIdentity(string directory, string name)
+    {
+        using var identity = WindowsIdentity.GetCurrent();
         WriteFixtureReceipt(Path.Combine(directory, name + "-default"), FormattableString.Invariant(
-            $"{Environment.ProcessId}|{StartupCurrentThreadId()}"));
+            $"{Environment.ProcessId}|{StartupCurrentThreadId()}|{ReadLogonId(identity)}"));
+    }
 
-    private static (int Process, uint Thread) ReadDefaultIdentity(string directory, string name, CancellationToken stop)
+    private static (int Process, uint Thread, long LogonId) ReadDefaultIdentity(string directory, string name, CancellationToken stop)
     {
         WaitForSignal(directory, name + "-default", stop);
         string[] values = File.ReadAllText(Path.Combine(directory, name + "-default")).Split('|');
-        return (int.Parse(values[0], CultureInfo.InvariantCulture), uint.Parse(values[1], CultureInfo.InvariantCulture));
+        return (int.Parse(values[0], CultureInfo.InvariantCulture), uint.Parse(values[1], CultureInfo.InvariantCulture),
+            long.Parse(values[2], CultureInfo.InvariantCulture));
     }
+
+    [SupportedOSPlatform("windows")]
+    private static long ReadLogonId(WindowsIdentity identity)
+    {
+        const int tokenStatistics = 10;
+        if (!ReadTokenStatistics(identity.AccessToken, tokenStatistics, out var stats, Marshal.SizeOf<TokenStatistics>(), out _))
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastPInvokeError());
+        return stats.AuthenticationId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct TokenStatistics
+    {
+        public long TokenId, AuthenticationId, ExpirationTime;
+        public uint TokenType, ImpersonationLevel, DynamicCharged, DynamicAvailable, GroupCount, PrivilegeCount;
+        public long ModifiedId;
+    }
+
+    [DllImport("advapi32.dll", EntryPoint = "GetTokenInformation", ExactSpelling = true, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ReadTokenStatistics(SafeAccessTokenHandle token, int kind, out TokenStatistics value,
+        int capacity, out int length);
 
     [SupportedOSPlatform("windows")]
     private static void GrantQueryOnly(string peerSid)

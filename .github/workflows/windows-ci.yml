@@ -25,20 +25,16 @@ jobs:
       - name: Restore
         run: dotnet restore Embasic.ENote.slnx
       - name: Build Windows WPF solution
-        id: windows_build
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
-      - name: Run Tur33 separate Windows logon and SCM STOP
+      - name: Run Tur33 separate Windows logon and first handles
         shell: pwsh
         run: ./tools/Test-Tur32StartupBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Isolated
       - name: Run Tur33 Windows recipient rotation and rollback gate
-        if: ${{ !cancelled() && steps.windows_build.outcome == 'success' }}
         shell: pwsh
         run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Tur33
       - name: Run Tur33 Windows identity and reparse probes
-        if: ${{ !cancelled() && steps.windows_build.outcome == 'success' }}
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur33-windows-stage
       - name: Run Tur33 selection, backup and operator checks
-        if: ${{ !cancelled() && steps.windows_build.outcome == 'success' }}
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur33
       - name: Run Tur32 Windows preopened process thread and token boundary
         shell: pwsh
@@ -157,3 +153,17 @@ jobs:
 
       - name: Run Tur30 live synchronization, reachability and recovery policy tests
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur30
+
+  tur33-native-scm-stop:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build the test service
+        run: dotnet build tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release
+      - name: Run strict native SCM STOP and STOP_PENDING acceptance
+        shell: pwsh
+        run: ./tools/Test-Tur32StartupBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -NativeStop

@@ -168,16 +168,24 @@ internal static partial class Program
         IntPtr statusHandle = IntPtr.Zero;
         Handler handler = control =>
         {
-            if (control != 1) return;
-            if (!reportStopPending) { stop.Cancel(); return; }
+            if (control == 1) stop.Cancel();
+        };
+        HandlerEx extendedHandler = (control, _, _, _) =>
+        {
+            if (control == 4) return 0;
+            if (control != 1) return 120;
             var pending = new ServiceStatus { Type = 0x10, State = 3, Checkpoint = 1, WaitHint = 10000 };
-            SetServiceStatus(statusHandle, ref pending);
+            if (!SetServiceStatus(statusHandle, ref pending))
+                return (uint)Marshal.GetLastPInvokeError();
             _ = stop.CancelAsync();
+            return 0;
         };
         int code = 0;
         ServiceMain main = (_, _) =>
         {
-            IntPtr handle = RegisterServiceCtrlHandlerW(name, handler);
+            IntPtr handle = reportStopPending
+                ? RegisterServiceCtrlHandlerExW(name, extendedHandler, IntPtr.Zero)
+                : RegisterServiceCtrlHandlerW(name, handler);
             statusHandle = handle;
             if (handle == IntPtr.Zero) { code = 3; return; }
             var status = new ServiceStatus { Type = 0x10, State = 4, Accepted = 1 };
@@ -190,6 +198,7 @@ internal static partial class Program
         if (!StartServiceCtrlDispatcherW(entries)) code = 6;
         GC.KeepAlive(main);
         GC.KeepAlive(handler);
+        GC.KeepAlive(extendedHandler);
         return code;
     }
 
@@ -205,6 +214,9 @@ internal static partial class Program
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     private delegate void Handler(int control);
+
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)]
+    private delegate uint HandlerEx(uint control, uint eventType, IntPtr eventData, IntPtr context);
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct ServiceEntry
@@ -234,6 +246,9 @@ internal static partial class Program
 
     [DllImport("advapi32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
     private static extern IntPtr RegisterServiceCtrlHandlerW(string name, Handler handler);
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
+    private static extern IntPtr RegisterServiceCtrlHandlerExW(string name, HandlerEx handler, IntPtr context);
 
     [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
