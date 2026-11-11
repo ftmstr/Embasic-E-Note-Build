@@ -14,10 +14,11 @@ internal static partial class Program
     [SupportedOSPlatform("windows")]
     private static async Task<int> WindowsCngCommand(string[] args)
     {
-        bool rotated = args.Contains("--tur33", StringComparer.Ordinal);
+        bool lifecycle = args.Contains("--tur34", StringComparer.Ordinal);
+        bool rotated = lifecycle || args.Contains("--tur33", StringComparer.Ordinal);
         bool wrapped = rotated || args.Contains("--tur32", StringComparer.Ordinal);
         bool hardened = wrapped || args.Contains("--hardened", StringComparer.Ordinal);
-        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32" or "--tur33")).ToArray();
+        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32" or "--tur33" or "--tur34")).ToArray();
         string mode = args[0], home = args[1], shared = args[2], name = args[3];
         string serviceSid = args[4], clientSid = args[5];
         string result = Path.Combine(Path.GetDirectoryName(shared)!, "result");
@@ -146,12 +147,12 @@ internal static partial class Program
         if (mode == "cng-service")
         {
             int phase = int.Parse(args[6], System.Globalization.CultureInfo.InvariantCulture);
-            int epoch = phase == 0 ? 2 : phase;
+            int epoch = phase == 0 || phase == 3 ? 2 : phase;
             return RunService(name, async stop =>
             {
                 bool rollback = rotated && phase == 1 && File.Exists(Path.Combine(shared, "selected-epoch"));
                 string receipt = Path.Combine(result, rollback ? "rollback-blocked.txt" :
-                    phase == 0 ? "bad-key.txt" : $"epoch-{epoch}.txt");
+                    phase == 0 ? "bad-key.txt" : phase == 3 ? "restart.txt" : $"epoch-{epoch}.txt");
                 try
                 {
                     RequireServiceToken(serviceSid);
@@ -207,6 +208,19 @@ internal static partial class Program
                             WriteFixtureReceipt(Path.Combine(result, "epoch-1.pid"),
                                 Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
                         await endpoint.ServeOnceAsync(stop);
+                        if (lifecycle)
+                        {
+                            try { await endpoint.ServeOnceAsync(stop); }
+                            catch (OperationCanceledException) when (stop.IsCancellationRequested) { }
+                            if (!stop.IsCancellationRequested)
+                                throw new InvalidOperationException("The endpoint completed without a stop request.");
+                            WriteFixtureReceipt(Path.Combine(result, "stop-pending.txt"), "PASS cancellation reached endpoint");
+                            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                            WaitForSignal(shared, "epoch-1.release", deadline.Token);
+                            Equal(config.Initial, provider.ReadTransition(config.Workspace).Current);
+                            WriteFixtureReceipt(receipt, "PASS native SCM stop drained the endpoint");
+                            return;
+                        }
                         string stopRequest = Path.Combine(shared, "epoch-1.stop");
                         while (!File.Exists(stopRequest)) await Task.Delay(100, stop);
                         Equal("retire-epoch-1", File.ReadAllText(stopRequest));
@@ -214,7 +228,7 @@ internal static partial class Program
                     }
                     else
                     {
-                        int requests = hardened ? 5 : 4;
+                        int requests = phase == 3 ? 1 : hardened ? 5 : 4;
                         for (int i = 0; i < requests; i++) await endpoint.ServeOnceAsync(stop);
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
@@ -225,7 +239,21 @@ internal static partial class Program
                     WriteFixtureReceipt(receipt, error.ToString());
                     throw;
                 }
-            }, TimeSpan.FromMinutes(3));
+            }, TimeSpan.FromMinutes(3), reportStopPending: lifecycle);
+        }
+
+        if (mode == "cng-stage-interrupted" && lifecycle)
+        {
+            byte[] envelope = File.ReadAllBytes(ReaderFile(home, 2));
+            using (var stage = new FileStream(Path.Combine(shared, "reader-2.pending"), FileMode.CreateNew, FileAccess.Write,
+                FileShare.None, 4096, FileOptions.WriteThrough))
+            {
+                stage.Write(envelope.AsSpan(0, 17));
+                stage.Flush(flushToDisk: true);
+            }
+            WriteFixtureReceipt(Path.Combine(result, "distribution-interrupted.txt"), "PASS partial envelope staged");
+            await Task.Delay(TimeSpan.FromMinutes(1));
+            return 2;
         }
 
         var config = JsonSerializer.Deserialize<CngEndpoint>(File.ReadAllText(configuration))!;
@@ -317,6 +345,18 @@ internal static partial class Program
             catch (CryptographicException) { }
             Equal(config.Initial, await nextClient.ObserveAsync(config.Workspace, nextReader));
             Console.WriteLine("PASS old role and pin rejected, approved next pin observed unchanged selection");
+        }
+        else if (mode == "cng-confirm" && lifecycle)
+        {
+            byte[] nextReader = ReadRole(false, ReaderFile(shared, 2), 2);
+            try
+            {
+                var next = VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name, config.First.Keys, config.Second.Keys, 2,
+                    config.Second.Approval, config.ApprovalPublic, config.Second.ServicePublic, nextReader);
+                Equal(config.Candidate, await next.ObserveAsync(config.Workspace, nextReader));
+                Console.WriteLine("PASS restarted selected service returned the persisted generation");
+            }
+            finally { CryptographicOperations.ZeroMemory(nextReader); }
         }
         else return 2;
         return 0;

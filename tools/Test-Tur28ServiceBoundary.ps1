@@ -1,4 +1,5 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32, [switch]$Tur33)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32, [switch]$Tur33, [switch]$Tur34)
+if ($Tur34) { $Tur33 = $true }
 if ($Tur33) { $Tur32 = $true }
 if ($Tur32) { $Hardened = $true }
 if ($Hardened) { $CngRotation = $true }
@@ -28,6 +29,7 @@ $hardeningFlag = @()
 if ($Hardened) { $hardeningFlag = @('--hardened') }
 if ($Tur32) { $hardeningFlag = @('--tur32') }
 if ($Tur33) { $hardeningFlag = @('--tur33') }
+if ($Tur34) { $hardeningFlag = @('--tur34') }
 
 function Invoke-Harness([string]$Mode) {
     if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value @hardeningFlag }
@@ -65,6 +67,26 @@ function Publish-RetirementRequest {
     $pending = "$request.pending"
     [IO.File]::WriteAllText($pending, 'retire-epoch-1')
     [IO.File]::Move($pending, $request)
+}
+
+function Stop-FirstEpoch {
+    if ($Tur34) {
+        & sc.exe stop $service
+        if ($LASTEXITCODE -ne 0) { throw 'Native STOP failed for the active vault endpoint.' }
+        Wait-Receipt 'stop-pending.txt' 'PASS cancellation reached endpoint'
+        if ((Get-Service -Name $service).Status -ne 'StopPending') { throw 'Expected SCM STOP_PENDING.' }
+        $repeatedStop = (& sc.exe stop $service | Out-String)
+        if ($LASTEXITCODE -eq 0 -or $repeatedStop -notmatch '\b1061\b') {
+            throw "Expected SCM 1061 during STOP_PENDING. $repeatedStop"
+        }
+        Write-Output 'PASS duplicate native STOP returned 1061 during STOP_PENDING'
+        New-Item -ItemType File -Path (Join-Path $public 'epoch-1.release') | Out-Null
+        Wait-Receipt 'epoch-1.txt' 'PASS native SCM stop drained the endpoint'
+    } else {
+        Publish-RetirementRequest
+        Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
+    }
+    (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
 }
 
 function Add-Permission([string]$Path, [System.Security.AccessControl.FileSystemRights]$Rights, $Identity) {
@@ -181,9 +203,7 @@ try {
         Invoke-StandardClient 'cng-before'
         (Get-Service -Name $service).WaitForStatus('Running', [TimeSpan]::FromSeconds(10))
         # The public fixture directory is writable by the trusted runner, read-only for the service and reader.
-        Publish-RetirementRequest
-        Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
-        (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+        Stop-FirstEpoch
         if ($Hardened) {
             & sc.exe config $service binPath= ($binary + ' 0')
             if ($LASTEXITCODE -ne 0) { throw 'Wrong KSP test configuration failed.' }
@@ -195,15 +215,17 @@ try {
         Invoke-StandardClient 'cng-offline'
 
         if ($Tur32) {
-            Remove-Item -LiteralPath (Join-Path $public 'epoch-1.stop'),(Join-Path $resultDir 'epoch-1.txt')
+            if ($Tur34) {
+                Remove-Item -LiteralPath (Join-Path $public 'epoch-1.release'),(Join-Path $resultDir 'stop-pending.txt'),(Join-Path $resultDir 'epoch-1.txt')
+            } else {
+                Remove-Item -LiteralPath (Join-Path $public 'epoch-1.stop'),(Join-Path $resultDir 'epoch-1.txt')
+            }
             & sc.exe config $service binPath= ($binary + ' 1')
             if ($LASTEXITCODE -ne 0) { throw 'Approved prior service configuration failed.' }
             & sc.exe start $service
             if ($LASTEXITCODE -ne 0) { throw 'Approved prior service start failed.' }
             Invoke-StandardClient 'cng-before'
-            Publish-RetirementRequest
-            Wait-Receipt 'epoch-1.txt' 'PASS protected retirement observed'
-            (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+            Stop-FirstEpoch
             Write-Output 'PASS approved prior endpoint restarted before new pin selection'
         }
 
@@ -212,9 +234,22 @@ try {
         & sc.exe start $service
         if ($LASTEXITCODE -ne 0) { throw 'Second key epoch service start failed.' }
         if ($Hardened) {
-            Invoke-StandardClient 'cng-pin-gap'
             $pendingReader = Join-Path $public 'reader-2.pending'
             $activeReader = Join-Path $public 'reader-2.bin'
+            if ($Tur34) {
+                $stageArgs = '"{0}" cng-stage-interrupted "{1}" "{2}" "{3}" "{4}" "{5}" --tur34' -f $harness,$private,$public,$service,$serviceSid.Value,$clientSid.Value
+                $distributor = Start-Process -FilePath $hostPath -ArgumentList $stageArgs -PassThru -NoNewWindow
+                try { Wait-Receipt 'distribution-interrupted.txt' 'PASS partial envelope staged' }
+                finally {
+                    if (!$distributor.HasExited) { Stop-Process -InputObject $distributor -Force }
+                    if (!$distributor.WaitForExit(10000)) { throw 'Distributor did not terminate.' }
+                }
+                if ((Get-Item -LiteralPath $pendingReader).Length -ne 17 -or (Test-Path -LiteralPath $activeReader)) {
+                    throw 'Interrupted distributor left an unexpected active envelope.'
+                }
+            }
+            Invoke-StandardClient 'cng-pin-gap'
+            if ($Tur34) { Remove-Item -LiteralPath $pendingReader }
             if ($Tur32) {
                 if ($Tur33) {
                     [IO.File]::Copy((Join-Path $public 'reader-1.bin'), $activeReader)
@@ -241,7 +276,16 @@ try {
             Wait-Receipt 'rollback-blocked.txt' 'PASS stale service rejected after new epoch selection'
             (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
             Invoke-StandardClient 'cng-offline'
-            Write-Output '5/5 Tur33 recipient key rotation, unauthorized distributor and postselection rollback checks passed.'
+            if ($Tur34) {
+                & sc.exe config $service binPath= ($binary + ' 3')
+                if ($LASTEXITCODE -ne 0) { throw 'Selected service restart configuration failed.' }
+                & sc.exe start $service
+                if ($LASTEXITCODE -ne 0) { throw 'Selected service restart failed.' }
+                Invoke-StandardClient 'cng-confirm'
+                Wait-Receipt 'restart.txt' 'PASS'
+                (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+                Write-Output '4/4 Tur34 native endpoint stop, repeated STOP, interrupted deployment and selected restart checks passed.'
+            } else { Write-Output '5/5 Tur33 recipient key rotation, unauthorized distributor and postselection rollback checks passed.' }
         }
         elseif ($Tur32) { Write-Output '6/6 Tur32 wrapped roles, distributor boundary, rejected envelope and approved fallback checks passed.' }
         elseif ($Hardened) { Write-Output '6/6 Tur31 process DACL, role custody, wrong KSP and interrupted pin distribution checks passed.' }
