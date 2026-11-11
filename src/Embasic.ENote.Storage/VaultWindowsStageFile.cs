@@ -38,10 +38,55 @@ internal static class VaultWindowsStageFile
 
     internal static void VerifyOrdinary(SafeFileHandle handle)
     {
-        if (!GetFileInformationByHandle(handle, out var info))
-            throw new IOException("Could not inspect the live stage handle.", new Win32Exception(Marshal.GetLastPInvokeError()));
+        var info = ReadInformation(handle);
         if ((info.Attributes & ((uint)FileAttributes.Directory | (uint)FileAttributes.ReparsePoint)) != 0 || info.Links != 1)
             throw new IOException("A live stage must be an ordinary file with one link.");
+    }
+
+    // Retain every directory handle without delete sharing until the path-based replacement has been checked.
+    internal sealed class DirectoryPins : IDisposable
+    {
+        private readonly List<SafeFileHandle> _handles = [];
+
+        internal DirectoryPins(string path)
+        {
+            var ancestors = new Stack<string>();
+            for (string? current = path; current is not null; current = Path.GetDirectoryName(current))
+                ancestors.Push(current);
+            try
+            {
+                foreach (string directory in ancestors)
+                {
+                    const uint listDirectoryAndReadAttributes = 0x81, shareReadWrite = 3, openExisting = 3;
+                    const uint openDirectoryWithoutFollowing = 0x02200000;
+                    var handle = CreateFileW(VaultAtomicFileDirectory.WindowsPath(directory), listDirectoryAndReadAttributes,
+                        shareReadWrite, IntPtr.Zero, openExisting, openDirectoryWithoutFollowing, IntPtr.Zero);
+                    _handles.Add(handle);
+                    if (handle.IsInvalid)
+                        throw new IOException("Could not pin a live directory.", new Win32Exception(Marshal.GetLastPInvokeError()));
+                    const uint relevant = (uint)(FileAttributes.Directory | FileAttributes.ReparsePoint);
+                    if ((ReadInformation(handle).Attributes & relevant) != (uint)FileAttributes.Directory)
+                        throw new IOException("A pinned live directory must not be a reparse point.");
+                }
+            }
+            catch
+            {
+                Dispose();
+                throw;
+            }
+        }
+
+        public void Dispose()
+        {
+            for (int i = _handles.Count - 1; i >= 0; i--) _handles[i].Dispose();
+        }
+    }
+
+    private static FileInfo ReadInformation(SafeFileHandle handle)
+    {
+        if (!GetFileInformationByHandle(handle, out var info))
+            throw new IOException("Could not inspect the live file handle.", new Win32Exception(Marshal.GetLastPInvokeError()));
+        return info;
     }
 
     internal static void MarkForDeletion(SafeFileHandle handle)
