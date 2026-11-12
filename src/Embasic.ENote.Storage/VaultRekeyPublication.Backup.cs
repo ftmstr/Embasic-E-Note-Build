@@ -27,7 +27,11 @@ public sealed partial class VaultRekeyPublication
 
     /// <summary>Restore a missing snapshot only. Live grants and unknown existing catalog data are never replaced.</summary>
     public void RestoreMissingSelectedCatalog(VaultGenerationRecovery recovery, VaultGenerationStamp selected,
-        LayerSecret root, string backupDirectory)
+        LayerSecret root, string backupDirectory) =>
+        RestoreMissingSelectedCatalog(recovery, selected, root, backupDirectory, null);
+
+    internal void RestoreMissingSelectedCatalog(VaultGenerationRecovery recovery, VaultGenerationStamp selected,
+        LayerSecret root, string backupDirectory, Action? afterBackupVerified)
     {
         ArgumentNullException.ThrowIfNull(recovery);
         ArgumentNullException.ThrowIfNull(selected);
@@ -36,6 +40,7 @@ public sealed partial class VaultRekeyPublication
         var manifest = ReadBackupSelection(state, selected);
         var snapshot = VaultWorkspaceSnapshot.Open(CheckCatalogBackupLocation(backupDirectory), selected.WorkspaceId, root);
         snapshot.VerifyAgainst(manifest, root);
+        afterBackupVerified?.Invoke();
         CopySelectedCatalog(snapshot, manifest, root, CatalogPath(selected), RequireCurrent);
 
         void RequireCurrent()
