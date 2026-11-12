@@ -26,6 +26,8 @@ jobs:
         run: dotnet restore Embasic.ENote.slnx
       - name: Build Windows WPF solution
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
+      - name: Run Tur35 final path installed identity and target DACL
+        run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur35-windows-path
       - name: Run Tur34 live destination and directory identity checks
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur34-windows-path
       - name: Run Tur34 selected remote proof and operator key loss
@@ -178,7 +180,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scenario: [lifecycle, backup]
+        scenario: [lifecycle, backup, shutdown, detach]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -194,3 +196,11 @@ jobs:
         if: matrix.scenario == 'backup'
         shell: pwsh
         run: ./tools/Test-Tur34SeparateVolume.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0
+      - name: Run Tur35 native STOP with an incomplete request and interrupted publication reply
+        if: matrix.scenario == 'shutdown'
+        shell: pwsh
+        run: ./tools/Test-Tur28ServiceBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Tur35
+      - name: Run Tur35 detach and reattach of the NTFS recovery volume
+        if: matrix.scenario == 'detach'
+        shell: pwsh
+        run: ./tools/Test-Tur34SeparateVolume.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -Tur35

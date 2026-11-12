@@ -1,4 +1,5 @@
-param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32, [switch]$Tur33, [switch]$Tur34)
+param([Parameter(Mandatory)][string]$HarnessDirectory, [switch]$Dedicated, [switch]$CngRotation, [switch]$Hardened, [switch]$Tur32, [switch]$Tur33, [switch]$Tur34, [switch]$Tur35)
+if ($Tur35) { $Tur34 = $true }
 if ($Tur34) { $Tur33 = $true }
 if ($Tur33) { $Tur32 = $true }
 if ($Tur32) { $Hardened = $true }
@@ -30,6 +31,7 @@ if ($Hardened) { $hardeningFlag = @('--hardened') }
 if ($Tur32) { $hardeningFlag = @('--tur32') }
 if ($Tur33) { $hardeningFlag = @('--tur33') }
 if ($Tur34) { $hardeningFlag = @('--tur34') }
+if ($Tur35) { $hardeningFlag = @('--tur35') }
 
 function Invoke-Harness([string]$Mode) {
     if ($Dedicated) { & $hostPath $harness $Mode $private $public $service $serviceSid.Value $clientSid.Value @hardeningFlag }
@@ -45,6 +47,39 @@ function Invoke-StandardClient([string]$Mode) {
     $process = Start-Process -FilePath $hostPath -ArgumentList $clientArgs -Credential $credential -WorkingDirectory $runtime -RedirectStandardOutput $stdout -RedirectStandardError $stderr -Wait -PassThru
     Get-Content -LiteralPath $stdout
     if ($process.ExitCode -ne 0) { throw "Standard client $Mode failed: $(Get-Content -LiteralPath $stderr -Raw)" }
+}
+
+function Start-ShutdownProbe([string]$Mode, [switch]$Standard) {
+    $arguments = '"{0}" {1} "{2}" "{3}" "{4}" "{5}" "{6}" --tur35' -f $harness,$Mode,$private,$public,$service,$serviceSid.Value,$clientSid.Value
+    $options = @{
+        FilePath = $hostPath
+        ArgumentList = $arguments
+        WorkingDirectory = $runtime
+        RedirectStandardOutput = (Join-Path $resultDir "$Mode-probe.out")
+        RedirectStandardError = (Join-Path $resultDir "$Mode-probe.err")
+        PassThru = $true
+    }
+    if ($Standard) { $options.Credential = $credential }
+    Start-Process @options
+}
+
+function Finish-ShutdownProbe($Process, [string]$Mode) {
+    if (!$Process.WaitForExit(25000)) { throw "$Mode did not exit." }
+    Get-Content -LiteralPath (Join-Path $resultDir "$Mode-probe.out")
+    if ($Process.ExitCode -ne 0) {
+        throw "$Mode failed: $(Get-Content -LiteralPath (Join-Path $resultDir "$Mode-probe.err") -Raw)"
+    }
+}
+
+function Wait-PartialRequest($Process) {
+    $path = Join-Path $resultDir 'cng-wait-request-probe.out'
+    $deadline = [DateTime]::UtcNow.AddSeconds(15)
+    do {
+        if (Select-String -LiteralPath $path -SimpleMatch 'READY partial request' -Quiet -ErrorAction SilentlyContinue) { return }
+        if ($Process.HasExited) { break }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $deadline)
+    throw 'Partial request never reached the endpoint.'
 }
 
 function Wait-Receipt([string]$Name, [string]$Expected) {
@@ -71,9 +106,19 @@ function Publish-RetirementRequest {
 
 function Stop-FirstEpoch {
     if ($Tur34) {
-        & sc.exe stop $service
-        if ($LASTEXITCODE -ne 0) { throw 'Native STOP failed for the active vault endpoint.' }
-        Wait-Receipt 'stop-pending.txt' 'PASS cancellation reached endpoint'
+        $request = $null
+        try {
+            if ($Tur35) {
+                $request = Start-ShutdownProbe 'cng-wait-request' -Standard
+                Wait-PartialRequest $request
+            }
+            & sc.exe stop $service
+            if ($LASTEXITCODE -ne 0) { throw 'Native STOP failed for the active vault endpoint.' }
+            Wait-Receipt 'stop-pending.txt' 'PASS cancellation reached endpoint'
+            if ($request) { Finish-ShutdownProbe $request 'cng-wait-request' }
+        } finally {
+            if ($request -and !$request.HasExited) { Stop-Process -InputObject $request -Force }
+        }
         if ((Get-Service -Name $service).Status -ne 'StopPending') { throw 'Expected SCM STOP_PENDING.' }
         $repeatedStop = (& sc.exe stop $service | Out-String)
         if ($LASTEXITCODE -eq 0 -or $repeatedStop -notmatch '\b1061\b') {
@@ -237,7 +282,7 @@ try {
             $pendingReader = Join-Path $public 'reader-2.pending'
             $activeReader = Join-Path $public 'reader-2.bin'
             if ($Tur34) {
-                $stageArgs = '"{0}" cng-stage-interrupted "{1}" "{2}" "{3}" "{4}" "{5}" --tur34' -f $harness,$private,$public,$service,$serviceSid.Value,$clientSid.Value
+                $stageArgs = '"{0}" cng-stage-interrupted "{1}" "{2}" "{3}" "{4}" "{5}" {6}' -f $harness,$private,$public,$service,$serviceSid.Value,$clientSid.Value,$hardeningFlag[0]
                 $distributor = Start-Process -FilePath $hostPath -ArgumentList $stageArgs -PassThru -NoNewWindow
                 try { Wait-Receipt 'distribution-interrupted.txt' 'PASS partial envelope staged' }
                 finally {
@@ -249,6 +294,16 @@ try {
                 }
             }
             Invoke-StandardClient 'cng-pin-gap'
+            if ($Tur35) {
+                & sc.exe stop $service
+                if ($LASTEXITCODE -ne 0) { throw 'Native STOP during the interrupted distribution failed.' }
+                Wait-Receipt 'distribution-paused.txt' 'PASS partial envelope remained inactive'
+                (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
+                & sc.exe start $service
+                if ($LASTEXITCODE -ne 0) { throw 'Second epoch restart failed.' }
+                if ((Get-Item -LiteralPath $pendingReader).Length -ne 17) { throw 'Partial envelope unexpectedly changed.' }
+                Invoke-StandardClient 'cng-pin-gap'
+            }
             if ($Tur34) { Remove-Item -LiteralPath $pendingReader }
             if ($Tur32) {
                 if ($Tur33) {
@@ -264,8 +319,21 @@ try {
             [IO.File]::Move($pendingReader, $activeReader, $Tur32.IsPresent)
         }
         Invoke-StandardClient 'cng-after'
-        Invoke-Harness 'cng-publish'
-        Wait-Receipt 'epoch-2.txt' 'PASS'
+        if ($Tur35) {
+            $publisher = Start-ShutdownProbe 'cng-publish'
+            try {
+                Wait-Receipt 'publication-committed.txt' 'PASS exact selection committed before reply'
+                & sc.exe stop $service
+                if ($LASTEXITCODE -ne 0) { throw 'Native STOP after publication commit failed.' }
+                Finish-ShutdownProbe $publisher 'cng-publish'
+                Wait-Receipt 'epoch-2.txt' 'PASS selection persisted despite missing reply'
+            } finally {
+                if (!$publisher.HasExited) { Stop-Process -InputObject $publisher -Force }
+            }
+        } else {
+            Invoke-Harness 'cng-publish'
+            Wait-Receipt 'epoch-2.txt' 'PASS'
+        }
         if ($Tur33) {
             (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
             [IO.File]::WriteAllText((Join-Path $public 'selected-epoch'), '2')
@@ -284,7 +352,8 @@ try {
                 Invoke-StandardClient 'cng-confirm'
                 Wait-Receipt 'restart.txt' 'PASS'
                 (Get-Service -Name $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(20))
-                Write-Output '4/4 Tur34 native endpoint stop, repeated STOP, interrupted deployment and selected restart checks passed.'
+                if ($Tur35) { Write-Output '3/3 Tur35 incomplete request STOP, committed publication without reply and interrupted deployment restart checks passed.' }
+                else { Write-Output '4/4 Tur34 native endpoint stop, repeated STOP, interrupted deployment and selected restart checks passed.' }
             } else { Write-Output '5/5 Tur33 recipient key rotation, unauthorized distributor and postselection rollback checks passed.' }
         }
         elseif ($Tur32) { Write-Output '6/6 Tur32 wrapped roles, distributor boundary, rejected envelope and approved fallback checks passed.' }

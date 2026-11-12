@@ -14,11 +14,12 @@ internal static partial class Program
     [SupportedOSPlatform("windows")]
     private static async Task<int> WindowsCngCommand(string[] args)
     {
-        bool lifecycle = args.Contains("--tur34", StringComparer.Ordinal);
+        bool shutdown = args.Contains("--tur35", StringComparer.Ordinal);
+        bool lifecycle = shutdown || args.Contains("--tur34", StringComparer.Ordinal);
         bool rotated = lifecycle || args.Contains("--tur33", StringComparer.Ordinal);
         bool wrapped = rotated || args.Contains("--tur32", StringComparer.Ordinal);
         bool hardened = wrapped || args.Contains("--hardened", StringComparer.Ordinal);
-        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32" or "--tur33" or "--tur34")).ToArray();
+        if (hardened) args = args.Where(x => x is not ("--hardened" or "--tur32" or "--tur33" or "--tur34" or "--tur35")).ToArray();
         string mode = args[0], home = args[1], shared = args[2], name = args[3];
         string serviceSid = args[4], clientSid = args[5];
         string result = Path.Combine(Path.GetDirectoryName(shared)!, "result");
@@ -199,9 +200,12 @@ internal static partial class Program
                     using var root = LayerKeyVault.Open(File.ReadAllBytes(Path.Combine(home, "root.elkey")),
                         config.Root, LayerKind.Folder, Password);
                     using var publication = Publication(home);
+                    IExternalVaultTransitionAnchor anchor = shutdown && phase == 2
+                        ? new StopAfterCommitAnchor(provider, result, stop)
+                        : provider;
                     using var endpoint = custody.CreateWindowsService(name,
                         new VaultWindowsPipeBoundary(serviceSid, config.ClientSid, LocalServiceSid, config.PublisherSid),
-                        new VaultGenerationRecovery(provider, Store(home)), publication, root);
+                        new VaultGenerationRecovery(anchor, Store(home)), publication, root);
                     if (epoch == 1)
                     {
                         if (hardened)
@@ -229,7 +233,25 @@ internal static partial class Program
                     else
                     {
                         int requests = phase == 3 ? 1 : hardened ? 5 : 4;
-                        for (int i = 0; i < requests; i++) await endpoint.ServeOnceAsync(stop);
+                        try
+                        {
+                            for (int i = 0; i < requests; i++) await endpoint.ServeOnceAsync(stop);
+                        }
+                        catch (OperationCanceledException) when (shutdown && phase == 2 && stop.IsCancellationRequested)
+                        {
+                            var observed = provider.ReadTransition(config.Workspace).Current;
+                            if (observed == config.Initial && File.Exists(Path.Combine(shared, "reader-2.pending")) &&
+                                !File.Exists(ReaderFile(shared, 2)))
+                            {
+                                WriteFixtureReceipt(Path.Combine(result, "distribution-paused.txt"), "PASS partial envelope remained inactive");
+                                return;
+                            }
+                            Equal(config.Candidate, observed);
+                            WriteFixtureReceipt(receipt, "PASS selection persisted despite missing reply");
+                            return;
+                        }
+                        if (shutdown && phase == 2)
+                            throw new InvalidOperationException("Expected STOP before the publication reply.");
                         Equal(config.Candidate, provider.ReadTransition(config.Workspace).Current);
                     }
                     WriteFixtureReceipt(receipt, epoch == 1 ? "PASS protected retirement observed" : "PASS");
@@ -265,9 +287,27 @@ internal static partial class Program
             var publish = VaultAuthorityPipeClient.ForWindowsService(name, config.Second.ServicePublic);
             if (rotated) Throws<CryptographicException>(() => ReadRole(true, PublisherFile(2), 1));
             byte[] key = ReadRole(true, PublisherFile(2), 2);
-            try { Equal(VaultGenerationAdvanceState.Committed, await publish.PublishAsync(config.Candidate, key)); }
+            try
+            {
+                if (shutdown)
+                {
+                    try
+                    {
+                        _ = await publish.PublishAsync(config.Candidate, key);
+                        throw new InvalidOperationException("The stopped endpoint returned a publication receipt.");
+                    }
+                    catch (VaultGenerationOutcomeUnknownException)
+                    {
+                        Console.WriteLine("PASS client received no verified publication receipt after STOP");
+                    }
+                }
+                else
+                {
+                    Equal(VaultGenerationAdvanceState.Committed, await publish.PublishAsync(config.Candidate, key));
+                    Console.WriteLine("PASS separate publisher obtained a signed receipt for the exact candidate");
+                }
+            }
             finally { CryptographicOperations.ZeroMemory(key); }
-            Console.WriteLine("PASS separate publisher obtained a signed receipt for the exact candidate");
             return 0;
         }
 
@@ -289,7 +329,19 @@ internal static partial class Program
         if (rotated) Throws<UnauthorizedAccessException>(() =>
             File.Create(Path.Combine(shared, "unauthorized-distributor.pending")).Dispose());
         byte[] firstReader = config.First.Reader ?? ReadRole(false, ReaderFile(shared, 1));
-        if (mode == "cng-before")
+        if (mode == "cng-wait-request" && shutdown)
+        {
+            using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(25));
+            using var pipe = VaultWindowsPipeBoundary.CreateClient(name);
+            await pipe.ConnectAsync(deadline.Token);
+            await pipe.ReadExactlyAsync(new byte[VaultAuthorityPipeProtocol.ChallengeSize], deadline.Token);
+            await pipe.WriteAsync(new byte[] { 1 }, deadline.Token);
+            Console.WriteLine("READY partial request");
+            Console.Out.Flush();
+            Equal(0, await pipe.ReadAsync(new byte[1], deadline.Token));
+            Console.WriteLine("PASS STOP closed the incomplete request without a response");
+        }
+        else if (mode == "cng-before")
         {
             Throws<CryptographicException>(() => VaultAuthorityKeyCustody.AdvanceWindowsClientPin(name,
                 config.First.Keys, config.Second.Keys, 1, config.Second.Approval, config.ApprovalPublic,
@@ -360,6 +412,21 @@ internal static partial class Program
         }
         else return 2;
         return 0;
+    }
+
+    private sealed class StopAfterCommitAnchor(VaultTransitionFilePrototype inner, string result, CancellationToken stop)
+        : IExternalVaultTransitionAnchor
+    {
+        public VaultTransitionState? ReadTransition(Guid workspaceId) => inner.ReadTransition(workspaceId);
+        public void ReserveTransition(VaultRetryIntent intent) => inner.ReserveTransition(intent);
+
+        public void CommitTransition(VaultRetryIntent intent)
+        {
+            inner.CommitTransition(intent);
+            WriteFixtureReceipt(Path.Combine(result, "publication-committed.txt"), "PASS exact selection committed before reply");
+            if (!stop.WaitHandle.WaitOne(TimeSpan.FromSeconds(20)))
+                throw new TimeoutException("Native STOP did not arrive at the publication checkpoint.");
+        }
     }
 
     [SupportedOSPlatform("windows")]
