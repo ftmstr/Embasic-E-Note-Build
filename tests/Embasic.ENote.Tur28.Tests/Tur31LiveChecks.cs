@@ -147,7 +147,10 @@ internal static partial class Program
     {
         public VaultTransitionState? ReadTransition(Guid workspaceId)
         {
-            if (Digest(File.ReadAllBytes(Path.Combine(home, "live", "Direct.emd"))) != oldDigest)
+            string live = Path.Combine(home, "live");
+            // The pre-install selection check can hold the old file exclusively on Windows.
+            if (!Directory.EnumerateFiles(live, "*.enote-sync").Any() &&
+                Digest(File.ReadAllBytes(Path.Combine(live, "Direct.emd"))) != oldDigest)
             {
                 File.WriteAllText(Path.Combine(home, "first-write-confirmed"), "paused inside writer fence");
                 Thread.Sleep(TimeSpan.FromSeconds(35));

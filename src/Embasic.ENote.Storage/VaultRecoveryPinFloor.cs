@@ -55,10 +55,8 @@ public static class VaultRecoveryPinFloor
         Validate(floor);
         if (floor.Workspace != workspace || floor.Revision < minimumRevision || file.ReadByte() != -1)
             throw new CryptographicException("Operator floor workspace or tail differs.");
-        var keys = new VaultRecoverySelectorKeySchedule(workspace, initialOperatorPublicKey,
-            transitions.Select(x => new VaultRecoverySelectorKeyTransition(x.FirstRevision, x.NewPublicKey,
-                x.OutgoingSignature, x.IncomingSignature)), RotationDomain);
-        VaultRecoverySignatures.Verify(keys.KeyAt(floor.Revision), signature, Domain, writer => Write(writer, floor));
+        VaultRecoverySignatures.Verify(OperatorKeys(workspace, initialOperatorPublicKey, transitions).KeyAt(floor.Revision),
+            signature, Domain, writer => Write(writer, floor));
         return floor;
     }
 
@@ -85,6 +83,23 @@ public static class VaultRecoveryPinFloor
             writer.Write(nonce);
         });
     }
+
+    /// <summary>Check liveness against a complete trusted floor and its authorized operator key schedule.</summary>
+    public static void VerifyRequiredAttestation(VaultRecoveryPolicyPin expected, VaultRecoveryPolicyPin offered,
+        ReadOnlySpan<byte> challenge, ReadOnlySpan<byte> signature, ReadOnlySpan<byte> initialOperatorPublicKey,
+        params VaultRecoveryOperatorKeyTransition[] transitions)
+    {
+        Validate(expected);
+        if (offered != expected)
+            throw new CryptographicException("The remote floor differs from the independently selected floor.");
+        var keys = OperatorKeys(expected.Workspace, initialOperatorPublicKey, transitions);
+        VerifyAttestation(expected, challenge, signature, keys.KeyAt(expected.Revision));
+    }
+
+    private static VaultRecoverySelectorKeySchedule OperatorKeys(Guid workspace, ReadOnlySpan<byte> initialPublicKey,
+        VaultRecoveryOperatorKeyTransition[] transitions) => new(workspace, initialPublicKey,
+        transitions.Select(x => new VaultRecoverySelectorKeyTransition(x.FirstRevision, x.NewPublicKey,
+            x.OutgoingSignature, x.IncomingSignature)), RotationDomain);
 
     private static byte[] RequireChallenge(ReadOnlySpan<byte> challenge)
     {

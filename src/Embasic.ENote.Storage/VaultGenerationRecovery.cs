@@ -28,7 +28,12 @@ public interface IVaultGenerationStore
     void Stage(VaultGenerationManifest manifest);
 }
 
-public sealed class VaultGenerationOutcomeUnknownException(string message) : IOException(message);
+public sealed class VaultGenerationOutcomeUnknownException : IOException
+{
+    public VaultGenerationOutcomeUnknownException(string message) : base(message) { }
+
+    internal VaultGenerationOutcomeUnknownException(string message, Exception cause) : base(message, cause) { }
+}
 
 public enum VaultGenerationAdvanceState
 {

@@ -60,6 +60,9 @@ internal static partial class Program
         }
         if (args is ["tur33-windows-stage"])
             return OperatingSystem.IsWindows() ? Tur33WindowsStageChecks() : 2;
+        if (args is ["tur34-operator"]) return Tur34OperatorChecks();
+        if (args is ["tur34-windows-path"]) return OperatingSystem.IsWindows() ? Tur34WindowsPathChecks() : 2;
+        if (args is ["tur34-backup", var workspace, var backupRoot]) return Tur34BackupChecks(workspace, backupRoot);
         if (args is ["tur33-floor-worker", ..]) return Tur33FloorWorker(args);
         if (args.Length > 0 && args[0].StartsWith("tur33-win-", StringComparison.Ordinal))
             return OperatingSystem.IsWindows() ? Tur33WindowsServices(args) : 2;

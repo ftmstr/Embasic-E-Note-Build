@@ -161,7 +161,9 @@ public sealed class VaultWorkspaceSnapshot
 
     internal string LiveDocumentPath(string liveRoot, VaultRekeyDocument document)
     {
-        string path = Path.Combine(liveRoot, document.RelativePath[(_rootPath.Length + 1)..]);
+        // Catalog paths use '/' even when a Windows native handle needs a platform path.
+        string relative = document.RelativePath[(_rootPath.Length + 1)..].Replace('/', Path.DirectorySeparatorChar);
+        string path = Path.Combine(liveRoot, relative);
         CheckPath(path, directory: false);
         return path;
     }
