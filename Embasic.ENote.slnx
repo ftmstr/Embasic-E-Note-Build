@@ -2,6 +2,7 @@
   <Project Path="src/Embasic.ENote.App/Embasic.ENote.App.csproj" />
   <Project Path="src/Embasic.ENote.Core/Embasic.ENote.Core.csproj" />
   <Project Path="src/Embasic.ENote.Emd/Embasic.ENote.Emd.csproj" />
+  <Project Path="src/Embasic.ENote.Export.UdfWriter/Embasic.ENote.Export.UdfWriter.csproj" />
   <Project Path="src/Embasic.ENote.Storage/Embasic.ENote.Storage.csproj" />
   <Project Path="tests/Embasic.ENote.Emd.Tests/Embasic.ENote.Emd.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.Portable.Tests/Embasic.ENote.Portable.Tests.csproj" />
@@ -30,4 +31,5 @@
   <Project Path="tests/Embasic.ENote.Tur27.Tests/Embasic.ENote.Tur27.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj" />
+  <Project Path="tests/Embasic.ENote.UdfWriter.Tests/Embasic.ENote.UdfWriter.Tests.csproj" />
 </Solution>
