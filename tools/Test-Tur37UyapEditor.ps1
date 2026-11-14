@@ -75,3 +75,35 @@ foreach ($attribute in $before.SelectSingleNode('/template/properties/pageFormat
 }
 if ((Get-FileHash $sample).Hash -cne $originalHash) { throw 'Original sample changed.' }
 Write-Host '1/1 Tur37 official Windows UYAP 5.4.20 edit save reopen and compare checks passed.'
+
+$markdown = Join-Path $root 'markdown-original.udf'
+$markdownCopy = Join-Path $root 'markdown-roundtrip.udf'
+dotnet run --project tests/Embasic.ENote.UdfWriter.Tests --configuration Release --no-build -- --markdown-sample $markdown
+if ($LASTEXITCODE -ne 0) { throw 'Synthetic Markdown copy generation failed.' }
+Copy-Item $markdown $markdownCopy
+$originalHash = (Get-FileHash $markdown).Hash
+Push-Location $app
+try {
+    & $java "-Duser.home=$profile" '-Dfile.encoding=UTF-8' '-cp' "$root;$app\*" Tur37UyapEditor edit $markdownCopy
+    if ($LASTEXITCODE -ne 0) { throw 'Windows Markdown UDF open/edit/save failed.' }
+    & $java "-Duser.home=$profile" '-Dfile.encoding=UTF-8' '-cp' "$root;$app\*" Tur37UyapEditor reopen $markdownCopy
+    if ($LASTEXITCODE -ne 0) { throw 'Windows Markdown UDF reopen failed.' }
+} finally { Pop-Location }
+
+$before = Read-ContentXml $markdown
+$after = Read-ContentXml $markdownCopy
+$oldPool = $before.SelectSingleNode('/template/content').InnerText
+$newPool = $after.SelectSingleNode('/template/content').InnerText
+$expectedPool = $oldPool.Replace('EMBASIC E-NOTE TUR37', 'EMBASIC E-NOTE TUR37 TUR37-EDIT')
+if ($newPool -cne $expectedPool -and $newPool -cne ($expectedPool + "`n")) {
+    throw 'Literal Markdown text changed beyond the edit and optional final newline.'
+}
+if (@($after.SelectNodes('/template/elements/paragraph')).Count -ne 4 -or
+    $after.SelectSingleNode('/template/elements/table')) { throw 'The Markdown copy structure changed.' }
+foreach ($attribute in $before.SelectSingleNode('/template/properties/pageFormat').Attributes) {
+    if ($after.SelectSingleNode('/template/properties/pageFormat').GetAttribute($attribute.Name) -cne $attribute.Value) {
+        throw "Markdown copy page property changed: $($attribute.Name)."
+    }
+}
+if ((Get-FileHash $markdown).Hash -cne $originalHash) { throw 'The original Markdown UDF changed.' }
+Write-Host '1/1 Tur38 official Windows UYAP literal Markdown copy checks passed.'

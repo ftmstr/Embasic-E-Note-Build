@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using Embasic.ENote.Core.Printing;
+using Embasic.ENote.Export.UdfWriter;
 using Microsoft.Win32;
 using Embasic.ENote.App.ViewModels;
 using Embasic.ENote.Storage.Workspaces;
@@ -188,6 +189,35 @@ public partial class MainWindow : Window
         if (SelectedTab is { } tab) SaveTab(tab);
     }
 
+    private void ExportMarkdownUdf_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedTab is not { } tab) return;
+        var result = MessageBox.Show(this,
+            "Düzenleyicideki metin, kaydedilmemiş değişiklikler dahil, imzasız ve şifresiz yeni bir UDF kopyası olarak yazılır. " +
+            "Markdown işaretleri metin olarak kalır. Bu aktarım A4 dikey sayfayı destekler.",
+            "UDF Kopyası", MessageBoxButton.OKCancel, MessageBoxImage.Information);
+        if (result != MessageBoxResult.OK) return;
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Yeni imzasız UDF kopyası oluştur", Filter = "UYAP Dokümanı (.udf)|*.udf",
+            FileName = Path.GetFileNameWithoutExtension(tab.FilePath) + "-kopya.udf",
+            AddExtension = true, DefaultExt = ".udf", OverwritePrompt = false, CheckPathExists = true
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            MarkdownUdfCopy.WriteNew(tab.FilePath, tab.Text, dialog.FileName, tab.Layout);
+            MarkdownStatusText.Text = "İmzasız UDF kopyası oluşturuldu: " + Path.GetFileName(dialog.FileName);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or
+                                      ArgumentException or NotSupportedException)
+        {
+            MessageBox.Show(this, "UDF kopyası oluşturulamadı: " + error.Message, "Embasic E-Note",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     private bool ConfirmCloseTab(PlainMarkdownEditorTab tab)
     {
         if (!tab.IsDirty && !tab.IsLayoutDirty) return true;
@@ -234,6 +264,7 @@ public partial class MainWindow : Window
     private void MarkdownTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
+        ExportMarkdownUdfButton.IsEnabled = SelectedTab is not null;
         if (SelectedTab is not { } tab) return;
         _previewDebounce.Stop();
         tab.RefreshPreview();

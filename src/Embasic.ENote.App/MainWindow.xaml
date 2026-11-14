@@ -126,6 +126,8 @@
                                     <Button Content="RTF Düzenle (Ctrl+Alt+R)" Click="OpenRtf_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="DOCX / ODT (Ctrl+Alt+D)" Click="OpenOfflineWord_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button x:Name="ExportMarkdownUdfButton" Content="UDF Kopyası" Click="ExportMarkdownUdf_Click"
+                                            IsEnabled="False" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Sekmeyi Kapat" Click="CloseMarkdown_Click" Padding="8,5"/>
                                     <TextBlock Text="Görünüm:" VerticalAlignment="Center" Margin="16,0,5,0"/>
                                     <ComboBox x:Name="MarkdownModeSelector" Width="130" Height="30"
