@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Automation;
 using System.Xml.Linq;
 using Embasic.ENote.Core.Printing;
@@ -161,10 +163,36 @@ internal static class Program
                 .Cast<AutomationElement>().Any(e => e.Current.Name.StartsWith(prefix, StringComparison.Ordinal)) ? dialog : null;
         }, $"warning {prefix}");
 
-    private static AutomationElement? LocateDialog(int pid, string title) => AutomationElement.RootElement.FindFirst(
-        TreeScope.Children, new AndCondition(new PropertyCondition(AutomationElement.ProcessIdProperty, pid),
-            new PropertyCondition(AutomationElement.NameProperty, title),
-            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window)));
+    private static AutomationElement? LocateDialog(int pid, string title)
+    {
+        // Owned shell dialogs can sit outside the UI Automation root's direct children.
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((window, _) =>
+        {
+            GetWindowThreadProcessId(window, out uint owner);
+            if (owner != pid || !IsWindowVisible(window)) return true;
+            var name = new StringBuilder(300);
+            GetWindowText(window, name, name.Capacity);
+            if (!string.Equals(name.ToString(), title, StringComparison.Ordinal)) return true;
+            found = window;
+            return false;
+        }, IntPtr.Zero);
+        return found == IntPtr.Zero ? null : AutomationElement.FromHandle(found);
+    }
+
+    private delegate bool WindowCallback(IntPtr window, IntPtr state);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumWindows(WindowCallback callback, IntPtr state);
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
+
+    [DllImport("user32.dll")]
+    private static extern bool IsWindowVisible(IntPtr window);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr window, StringBuilder text, int length);
 
     private static void WaitClosed(int pid, string title) =>
         Wait(() => LocateDialog(pid, title) is null ? title : null, $"closure of {title}");
