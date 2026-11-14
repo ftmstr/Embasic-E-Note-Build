@@ -1,10 +1,14 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Automation;
+using System.Windows.Documents;
 using System.Xml.Linq;
+using Embasic.ENote.App.Preview;
+using Embasic.ENote.Core.Markdown;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
 
@@ -12,6 +16,7 @@ internal static class Program
 {
     private const string SourceText = "Kaydedilmiş metin";
     private const string EditedText = "# EMBASIC E-NOTE TUR37\n\nKaydedilmemiş **Çığ ve İğdır**\nSON PARAGRAF TUR37";
+    private const string PrintPreviewTitle = "A4 Baskı Önizlemesi";
     private const string ConfirmTitle = "UDF Kopyası";
     private const string SaveTitle = "Yeni imzasız UDF kopyası oluştur";
 
@@ -60,6 +65,7 @@ internal static class Program
             }, "E-Note main window");
             Select(ById(window, "MarkdownNotesTab"));
             Require(!ById(window, "ExportMarkdownUdfButton").Current.IsEnabled, "Copy enabled without an open note.");
+            Require(!ById(window, "PrintPreviewButton").Current.IsEnabled, "Print preview enabled without an open note.");
             Require(!ById(window, "NewSecureNote").Current.IsEnabled, "Secure note must stay disabled.");
             OpenSource(window, process.Id, source);
             var buffer = ById(window, "MarkdownSourceText");
@@ -124,6 +130,20 @@ internal static class Program
             Console.WriteLine("PASS landscape is rejected without a UDF file or sidecar write");
             if (evidence is not null) File.Copy(created, evidence, overwrite: false);
             Console.WriteLine("5/5 Tur39 native WPF UDF copy interaction checks passed.");
+
+            OpenSource(window, process.Id, source);
+            string longNote = MultiPageMarkdown();
+            value.SetValue(longNote);
+            var beforePreview = Directory.GetFiles(directory.FullName).ToDictionary(path => path, File.ReadAllBytes);
+            CheckPrintPreview(window, process.Id);
+            Require(value.Current.Value == longNote, "Preview changed or discarded the unsaved buffer.");
+            var afterPreview = Directory.GetFiles(directory.FullName);
+            Require(afterPreview.Length == beforePreview.Count && afterPreview.All(path =>
+                beforePreview.TryGetValue(path, out var before) && File.ReadAllBytes(path).SequenceEqual(before)),
+                "Preview changed files in the note directory.");
+            Console.WriteLine("PASS WPF preview opens and navigates the unsaved draft without creating or modifying files");
+            CheckPagination();
+            Console.WriteLine("4/4 Tur41 offline A4 print preview checks passed.");
         }
         catch (Exception error)
         {
@@ -144,6 +164,88 @@ internal static class Program
             Require(Directory.GetFiles(directory.FullName, "*.udf").Order().SequenceEqual(expected.Order()),
                 $"Unexpected UDF output during {stage}.");
             Require(!Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any(), "Staging leaked.");
+        }
+    }
+
+    private static string MultiPageMarkdown() =>
+        "# İlk Sayfa: Çığ\n\n" + string.Join("\n\n", Enumerable.Range(1, 180).Select(i =>
+            $"Paragraf {i} — A4 sayfalama örneği. **İğdır** ve Türkçe karakterler.")) +
+        "\n\n# SON SAYFA İŞARETİ";
+
+    private static void CheckPrintPreview(AutomationElement window, int pid)
+    {
+        Click(ById(window, "PrintPreviewButton"));
+        var preview = Dialog(pid, PrintPreviewTitle);
+        var previous = ById(preview, "PreviousPageButton");
+        var next = ById(preview, "NextPageButton");
+        var counter = ById(preview, "PageCounter");
+        Require(counter.Current.Name.StartsWith("Sayfa 1 / ", StringComparison.Ordinal) &&
+            !previous.Current.IsEnabled && next.Current.IsEnabled, "The initial multipage view is incorrect.");
+        Require(ById(preview, "PrintGeometry").Current.Name ==
+            "A4 · Dikey · 210 × 297 mm · Kenar boşlukları (sol, sağ, üst, alt) 17, 23, 19, 27 mm",
+            "Preview did not use the selected note's geometry.");
+        Click(next);
+        Wait(() => counter.Current.Name.StartsWith("Sayfa 2 / ", StringComparison.Ordinal) ? counter : null, "preview page 2");
+        Click(previous);
+        Wait(() => counter.Current.Name.StartsWith("Sayfa 1 / ", StringComparison.Ordinal) ? counter : null, "preview page 1");
+        Click(ById(preview, "ClosePrintPreview"));
+        WaitClosed(pid, PrintPreviewTitle);
+    }
+
+    private static void CheckPagination()
+    {
+        ExceptionDispatchInfo? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var layout = PageLayoutSettings.Default.WithMargins(17, 23, 19, 27);
+                var portrait = A4MarkdownPagination.Create(MultiPageMarkdown(), layout);
+                using var first = portrait.GetPage(0);
+                Near(first.Size.Width, 210 * 96d / 25.4);
+                Near(first.Size.Height, 297 * 96d / 25.4);
+                Near(first.ContentBox.Left, 17 * 96d / 25.4);
+                Near(first.ContentBox.Top, 19 * 96d / 25.4);
+                Near(first.Size.Width - first.ContentBox.Right, 23 * 96d / 25.4);
+                Near(first.Size.Height - first.ContentBox.Bottom, 27 * 96d / 25.4);
+                var zoomed = A4MarkdownPagination.Create(MultiPageMarkdown(), layout with { ZoomPercent = 150 });
+                Require(zoomed.PageCount == portrait.PageCount, "Editor zoom changed physical pagination.");
+                var landscape = A4MarkdownPagination.Create("Türkçe", layout with { Landscape = true });
+                using var widePage = landscape.GetPage(0);
+                Near(widePage.Size.Width, 297 * 96d / 25.4);
+                Near(widePage.Size.Height, 210 * 96d / 25.4);
+                Console.WriteLine("PASS portrait and landscape use A4 geometry, and editor zoom leaves pagination unchanged");
+
+                var source = (FlowDocument)portrait.Source;
+                var finalParagraph = (Paragraph)source.Blocks.LastBlock;
+                Require(new TextRange(finalParagraph.ContentStart, finalParagraph.ContentEnd).Text == "SON SAYFA İŞARETİ",
+                    "Last heading was lost before pagination.");
+                Require(portrait.IsPageCountValid && portrait.PageCount > 1 &&
+                    portrait.GetPageNumber(finalParagraph.ContentStart) == portrait.PageCount - 1,
+                    "The last heading did not reach the last page.");
+                Require(A4MarkdownPagination.Create("", layout).PageCount == 1, "Empty notes need one blank page.");
+                Console.WriteLine("PASS flowing content reaches the last page and empty notes get one blank page");
+
+                RequireUnsupported(() => A4MarkdownPagination.Create("Türkçe", layout with { Paper = PageLayoutCatalog.Get("A5") }));
+                RequireUnsupported(() => A4MarkdownPagination.Create(new string('a', MarkdownPreviewParser.MaximumPreviewCharacters + 1), layout));
+                RequireUnsupported(() => A4MarkdownPagination.Create(new string('\n', MarkdownPreviewParser.MaximumPreviewLines), layout));
+                Console.WriteLine("PASS paper and text limits refuse unsupported or incomplete previews");
+            }
+            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        failure?.Throw();
+
+        static void Near(double actual, double expected) =>
+            Require(Math.Abs(actual - expected) < 0.5, $"Unexpected A4 dimensions: {actual} ≠ {expected} DIP.");
+
+        static void RequireUnsupported(Action create)
+        {
+            try { create(); }
+            catch (NotSupportedException) { return; }
+            throw new InvalidOperationException("The preview accepted an unsupported input.");
         }
     }
 

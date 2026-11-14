@@ -130,6 +130,8 @@
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button x:Name="ExportMarkdownUdfButton" Content="UDF Kopyası" Click="ExportMarkdownUdf_Click"
                                             IsEnabled="False" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button x:Name="PrintPreviewButton" Content="Baskı Önizlemesi (Ctrl+P)"
+                                            Click="PrintPreview_Click" IsEnabled="False" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Sekmeyi Kapat" Click="CloseMarkdown_Click" Padding="8,5"/>
                                     <TextBlock Text="Görünüm:" VerticalAlignment="Center" Margin="16,0,5,0"/>
                                     <ComboBox x:Name="MarkdownModeSelector" Width="130" Height="30"
@@ -143,7 +145,7 @@
                                 <TextBlock Text="Markdown kaynak + güvenli salt okunur görsel önizleme · Uzak içerik yüklenmez · Şifreli .emd kapalı"
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                                 <TextBlock x:Name="MarkdownStatusText"
-                                           Text="Yaz / Önizle / Bölünmüş · Önizleme düzenlenemez; WYSIWYG ve PDF henüz uygulanmadı."
+                                           Text="WYSIWYG düzenleme ve PDF henüz uygulanmadı."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             </StackPanel>
                             <TabControl x:Name="MarkdownTabs" SelectionChanged="MarkdownTabs_SelectionChanged"
@@ -223,7 +225,7 @@
                                 </ComboBox>
                                 <TextBlock Text="Kenar boşlukları: 20 mm (örnek)"
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"/>
-                                <TextBlock Text="Özel ölçüler, yazdırma ve PDF için nihai belge modeli henüz uygulanmadı."
+                                <TextBlock Text="Notlar sekmesinden A4 baskı önizlemesini açabilirsiniz. Yazıcı ve PDF çıktısı henüz kullanılamaz."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"
                                            Margin="0,12,4,0"/>
                                 <TextBlock Text="Bu ekran yalnız geometri önizlemesidir; notu kaydetmez veya yazdırmaz."
