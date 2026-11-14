@@ -78,6 +78,18 @@ public sealed record PageLayoutSettings
     public decimal PrintableWidthMm => WidthMm - LeftMarginMm - RightMarginMm;
     public decimal PrintableHeightMm => HeightMm - TopMarginMm - BottomMarginMm;
 
+    public PageLayoutSettings WithMargins(decimal left, decimal right, decimal top, decimal bottom)
+    {
+        // Apply the full geometry together so validation uses the final orientation and margins.
+        var settings = this with { };
+        settings._left = left;
+        settings._right = right;
+        settings._top = top;
+        settings._bottom = bottom;
+        settings.Validate();
+        return settings;
+    }
+
     public void Validate()
     {
         CheckMargin(LeftMarginMm, RightMarginMm, WidthMm);

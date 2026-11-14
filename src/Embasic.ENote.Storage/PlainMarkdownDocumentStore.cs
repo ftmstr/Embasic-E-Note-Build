@@ -131,13 +131,16 @@ public sealed class DocumentPageSettingsStore
             var paper = payload.PaperId == "Custom"
                 ? PageLayoutCatalog.Custom(payload.WidthMm, payload.HeightMm)
                 : PageLayoutCatalog.Get(payload.PaperId);
-            var settings = PageLayoutSettings.Default with
+            var defaults = PageLayoutSettings.Default;
+            var settings = defaults with
             {
                 Paper = paper,
                 Landscape = payload.Landscape,
                 ZoomPercent = payload.ZoomPercent
             };
-            settings.Validate();
+            settings = settings.WithMargins(
+                payload.LeftMarginMm ?? defaults.LeftMarginMm, payload.RightMarginMm ?? defaults.RightMarginMm,
+                payload.TopMarginMm ?? defaults.TopMarginMm, payload.BottomMarginMm ?? defaults.BottomMarginMm);
             return new DocumentPageSnapshot(settings, Convert.ToHexString(SHA256.HashData(raw)));
         }
         catch (JsonException ex) { throw new InvalidDataException("Malformed page metadata.", ex); }
@@ -149,7 +152,8 @@ public sealed class DocumentPageSettingsStore
         string sidecar = Sidecar(markdownPath);
         settings.Validate();
         var p = new PagePayload(1, settings.Paper.Id, settings.Paper.WidthMm,
-            settings.Paper.HeightMm, settings.Landscape, settings.ZoomPercent);
+            settings.Paper.HeightMm, settings.Landscape, settings.ZoomPercent,
+            settings.LeftMarginMm, settings.RightMarginMm, settings.TopMarginMm, settings.BottomMarginMm);
         byte[] data = JsonSerializer.SerializeToUtf8Bytes(p);
         try
         {
@@ -167,6 +171,7 @@ public sealed class DocumentPageSettingsStore
         PlainMarkdownDocumentStore.ValidatePath(markdownPath) + Suffix;
 
     private sealed record PagePayload(int Version, string PaperId, decimal WidthMm,
-        decimal HeightMm, bool Landscape, int ZoomPercent);
+        decimal HeightMm, bool Landscape, int ZoomPercent,
+        decimal? LeftMarginMm, decimal? RightMarginMm, decimal? TopMarginMm, decimal? BottomMarginMm);
 }
 public sealed record DocumentPageSnapshot(PageLayoutSettings Settings, string? Sha256);

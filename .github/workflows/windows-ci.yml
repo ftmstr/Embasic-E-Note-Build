@@ -203,7 +203,17 @@ jobs:
       - name: Build the actual WPF application
         run: dotnet build src/Embasic.ENote.App --configuration Release
       - name: Exercise the UDF copy button and file dialogs on the hosted desktop
-        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release -- src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+        shell: pwsh
+        run: |
+          $udf = Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf'
+          dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release -- src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe $udf
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Open, edit, save and reopen the actual WPF copy in official UYAP
+        shell: pwsh
+        run: ./tools/Test-Tur37UyapEditor.ps1 -WpfUdfPath (Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf')
 
   tur34-vault-acceptance:
     runs-on: windows-latest
