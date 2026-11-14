@@ -176,6 +176,22 @@ jobs:
         shell: pwsh
         run: ./tools/Test-Tur32StartupBoundary.ps1 -HarnessDirectory ./tests/Embasic.ENote.Tur28.Tests/bin/Release/net10.0 -NativeStop
 
+  tur37-uyap-editor:
+    runs-on: windows-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Open, edit, save and reopen synthetic E-Note UDF in the official Windows editor
+        shell: pwsh
+        run: ./tools/Test-Tur37UyapEditor.ps1
+
   tur34-vault-acceptance:
     runs-on: windows-latest
     timeout-minutes: 15

@@ -16,7 +16,22 @@ if (args is ["--sample", var path])
     UnsignedUdfWriter.WriteNew(path, sample, PageLayoutSettings.Default);
     return;
 }
-if (args.Length != 0) throw new ArgumentException("Expected --sample <new .udf path> or no arguments.");
+UdfParagraph[] rich =
+[
+    new("EMBASIC E-NOTE TUR37", Bold: true) { FontFamily = "Liberation Serif", FontSizePoints = 18 },
+    new("Çığ ve İğdır — ğüşöçı") { FontFamily = "Liberation Mono", FontSizePoints = 14 },
+    new("SON PARAGRAF TUR37")
+];
+var table = new UdfTable([
+    [new("Öğe"), new("Değer")],
+    [new("Türkçe"), new("Çığ")]
+]);
+if (args is ["--rich-sample", var richPath])
+{
+    UnsignedUdfWriter.WriteNew(richPath, rich, PageLayoutSettings.Default, table);
+    return;
+}
+if (args.Length != 0) throw new ArgumentException("Expected --sample or --rich-sample with a new .udf path, or no arguments.");
 
 var directory = Directory.CreateTempSubdirectory("enote-udf-tests-");
 int passed = 0;
@@ -77,7 +92,7 @@ try
         Throws<ArgumentOutOfRangeException>(() => UnsignedUdfWriter.WriteNew(path, [], PageLayoutSettings.Default));
         Throws<ArgumentOutOfRangeException>(() => UnsignedUdfWriter.WriteNew(path,
             [new(new string('a', UnsignedUdfWriter.MaximumTextCharacters))], PageLayoutSettings.Default));
-        foreach (string text in new[] { "😀", "\t", "\0", "x\ny", "\uFFFC" })
+        foreach (string text in new[] { "\ud800", "\udc00", "\t", "\0", "x\ny", "\uFFFC" })
             Throws<ArgumentException>(() => UnsignedUdfWriter.WriteNew(path, [new(text)], PageLayoutSettings.Default));
         Require(!File.Exists(path) && !Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any());
     });
@@ -107,6 +122,56 @@ try
         Require(!Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any());
     });
     Console.WriteLine($"{passed}/6 Tur36 unsigned UDF writer checks passed.");
+    passed = 0;
+    Check("original Turkish text offsets cover paragraphs and every cell", () =>
+    {
+        string path = Target("unicode.udf");
+        UnsignedUdfWriter.WriteNew(path, rich, PageLayoutSettings.Default, table);
+        var xml = ReadPackage(path);
+        string pool = xml.Element("content")!.Value;
+        var runs = xml.Element("elements")!.Descendants("content").ToArray();
+        var expected = rich.Concat(table.Rows.SelectMany(row => row)).Append(new UdfParagraph("")).ToArray();
+        Require(runs.Length == expected.Length);
+        int next = 0;
+        foreach (var (run, paragraph) in runs.Zip(expected))
+        {
+            int start = (int)run.Attribute("startOffset")!, length = (int)run.Attribute("length")!;
+            Require(start == next && pool.Substring(start, length) == paragraph.Text + "\n");
+            next += length;
+        }
+        Require(next == pool.Length);
+    });
+
+    Check("explicit run fonts and two-by-two cell structure are emitted", () =>
+    {
+        var xml = ReadPackage(Target("unicode.udf"));
+        var elements = xml.Element("elements")!;
+        var heading = elements.Element("paragraph")!.Element("content")!;
+        Require((string?)heading.Attribute("family") == "Liberation Serif");
+        Require((int?)heading.Attribute("size") == 18);
+        var grid = elements.Element("table")!;
+        Require((int?)grid.Attribute("columnCount") == 2 && (string?)grid.Attribute("columnSpans") == "100,100");
+        Require(grid.Elements("row").Count() == 2 && grid.Elements("row").All(row => row.Elements("cell").Count() == 2));
+    });
+
+    Check("ragged and oversized tables and invalid font attributes leave no output", () =>
+    {
+        string path = Target("rejected-rich.udf");
+        Throws<ArgumentException>(() => UnsignedUdfWriter.WriteNew(path, rich, new(), new([[new("1"), new("2")], [new("3")]])));
+        var oversized = Enumerable.Repeat<IReadOnlyList<UdfParagraph>>([new("x")], UnsignedUdfWriter.MaximumTableRows + 1).ToArray();
+        Throws<ArgumentOutOfRangeException>(() => UnsignedUdfWriter.WriteNew(path, rich, new(), new(oversized)));
+        Throws<ArgumentException>(() => UnsignedUdfWriter.WriteNew(path, [new("x") { FontFamily = "<style>" }], new()));
+        Throws<ArgumentOutOfRangeException>(() => UnsignedUdfWriter.WriteNew(path, [new("x") { FontSizePoints = 5 }], new()));
+        Require(!File.Exists(path) && !Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any());
+    });
+    Check("supplementary Unicode is refused in both body and table before creating an output", () =>
+    {
+        string path = Target("unsupported-unicode.udf");
+        Throws<ArgumentException>(() => UnsignedUdfWriter.WriteNew(path, [new("Çığ 😀")], new()));
+        Throws<ArgumentException>(() => UnsignedUdfWriter.WriteNew(path, rich, new(), new([[new("𐐷")]])));
+        Require(!File.Exists(path));
+    });
+    Console.WriteLine($"{passed}/4 Tur37 rich UDF writer checks passed.");
 }
 finally { directory.Delete(recursive: true); }
 
