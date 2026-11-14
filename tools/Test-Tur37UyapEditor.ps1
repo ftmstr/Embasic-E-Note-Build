@@ -46,10 +46,18 @@ function Read-ContentXml([string]$path) {
     } finally { $archive.Dispose() }
 }
 function Assert-PageFormat($before, $after) {
+    $savedPage = $after.SelectSingleNode('/template/properties/pageFormat')
     foreach ($attribute in $before.SelectSingleNode('/template/properties/pageFormat').Attributes) {
-        if ($after.SelectSingleNode('/template/properties/pageFormat').GetAttribute($attribute.Name) -cne $attribute.Value) {
-            throw "Page property changed: $($attribute.Name)."
+        $name = $attribute.Name
+        $saved = $savedPage.GetAttribute($name)
+        if ($saved -ceq $attribute.Value) { continue }
+        if ($name -cin @('leftMargin', 'rightMargin', 'topMargin', 'bottomMargin') -and $saved) {
+            # The desktop editor serializes its floating-point page values.
+            $delta = [Math]::Abs([Xml.XmlConvert]::ToDecimal($saved) -
+                [Xml.XmlConvert]::ToDecimal($attribute.Value))
+            if ($delta -le [decimal]0.000001) { continue }
         }
+        throw "Page property changed: $name, expected $($attribute.Value), got $saved."
     }
 }
 

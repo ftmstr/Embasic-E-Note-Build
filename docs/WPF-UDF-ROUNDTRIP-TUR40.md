@@ -8,7 +8,8 @@ unsaved edit, A4 portrait and asymmetric 17/23/19/27 mm margins. The test
 copies the resulting archive only after the WPF scenarios pass. UYAP edits
 a separate file and reopens it in a fresh JVM. The check compares the
 expected text, four paragraphs, page size, orientation, all four margins and
-the hash of the unedited WPF output. The existing direct-writer Markdown
+the hash of the unedited WPF output. Margin comparison allows up to
+0.000001 point of floating-point serialization drift from UYAP. The existing direct-writer Markdown
 and table/font fixtures continue to run independently.
 
 The layout sidecar now stores the four margin values already supported by
