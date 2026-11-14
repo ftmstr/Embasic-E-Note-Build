@@ -1,11 +1,16 @@
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dialog;
 import java.awt.Frame;
-import java.awt.Robot;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import javax.swing.JDialog;
+import java.util.Locale;
+import javax.swing.AbstractButton;
+import javax.swing.Action;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
@@ -48,8 +53,8 @@ public final class Tur37UyapEditor {
         while (document[0] == null && System.nanoTime() < deadline) {
             SwingUtilities.invokeAndWait(() -> {
                 for (Window window : Window.getWindows()) {
-                    if (window instanceof JDialog && window.isShowing() &&
-                        ((JDialog) window).getTitle().contains("Son Sürümlerde Yapılan Güncellemeler")) {
+                    if (window instanceof Dialog && window.isShowing() &&
+                        ((Dialog) window).getTitle().startsWith("Son S")) {
                         window.dispose();
                     }
                 }
@@ -79,20 +84,15 @@ public final class Tur37UyapEditor {
                 pane.requestFocusInWindow();
             }
         });
+        System.out.println("UYAP_VISIBLE_DOCUMENT_OK");
 
         if (edit) {
-            Robot keyboard = new Robot();
-            keyboard.waitForIdle();
-            keyboard.keyPress(KeyEvent.VK_CONTROL);
-            keyboard.keyPress(KeyEvent.VK_S);
-            keyboard.keyRelease(KeyEvent.VK_S);
-            keyboard.keyRelease(KeyEvent.VK_CONTROL);
+            SwingUtilities.invokeAndWait(() -> save(frame[0], document[0]));
             deadline = System.nanoTime() + 20_000_000_000L;
             while (input.length() == previousSize && input.lastModified() == previousTime &&
                    System.nanoTime() < deadline) Thread.sleep(200);
             if (input.length() == previousSize && input.lastModified() == previousTime)
                 throw new IllegalStateException("The editor did not save the clone.");
-            keyboard.waitForIdle();
         }
         System.out.println(edit ? "UYAP_EDIT_AND_SAVE_OK" : "UYAP_REOPEN_OK");
     }
@@ -114,5 +114,51 @@ public final class Tur37UyapEditor {
     private static String documentText(JTextComponent text) {
         try { return text.getDocument().getText(0, text.getDocument().getLength()); }
         catch (javax.swing.text.BadLocationException error) { throw new IllegalStateException(error); }
+    }
+
+    private static void save(Frame frame, JTextComponent pane) {
+        AbstractButton saveButton = findSaveButton(frame);
+        if (saveButton != null) {
+            System.out.println("UYAP_SAVE_TOOLBAR_BUTTON");
+            saveButton.doClick();
+            return;
+        }
+        KeyStroke shortcut = KeyStroke.getKeyStroke(KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_DOWN_MASK);
+        for (Component component = pane; component != null; component = component.getParent()) {
+            if (!(component instanceof JComponent)) continue;
+            JComponent swing = (JComponent) component;
+            for (int condition : new int[] {JComponent.WHEN_FOCUSED,
+                JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT, JComponent.WHEN_IN_FOCUSED_WINDOW}) {
+                Object key = swing.getInputMap(condition).get(shortcut);
+                Action action = key == null ? null : swing.getActionMap().get(key);
+                if (action != null && action.isEnabled()) {
+                    System.out.println("UYAP_SAVE_SWING_SHORTCUT");
+                    action.actionPerformed(new ActionEvent(swing, ActionEvent.ACTION_PERFORMED, key.toString()));
+                    return;
+                }
+            }
+        }
+        throw new IllegalStateException("The official editor Save command was not found.");
+    }
+
+    private static AbstractButton findSaveButton(Component component) {
+        if (component instanceof AbstractButton && component.isShowing() && component.isEnabled()) {
+            AbstractButton button = (AbstractButton) component;
+            String tip = button.getToolTipText();
+            String name = button.getAccessibleContext() == null ? null : button.getAccessibleContext().getAccessibleName();
+            for (String label : new String[] {button.getText(), tip, name, button.getActionCommand()}) {
+                if (label == null) continue;
+                String lower = label.toLowerCase(Locale.ROOT).trim();
+                if (lower.equals("kaydet") || lower.equals("save") ||
+                    (lower.contains("ctrl+s") && !lower.contains("farkl") && !lower.contains("save as"))) return button;
+            }
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                AbstractButton match = findSaveButton(child);
+                if (match != null) return match;
+            }
+        }
+        return null;
     }
 }

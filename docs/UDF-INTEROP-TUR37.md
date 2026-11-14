@@ -14,8 +14,8 @@ to cells. The synthetic positive fixture uses only BMP characters.
 
 The Windows Actions job retrieves the official, pinned MSI, extracts it to
 runner temp and opens a synthetic UDF with the official editor classes on
-the Windows runner. The harness edits the visible Swing document, sends the
-regular save shortcut, opens the file in another JVM and compares the ZIP
+the Windows runner. The harness edits the visible Swing document, invokes the
+normal editor Save action, opens the file in another JVM and compares the ZIP
 payload. No proprietary installer, fonts, source or user document is bundled.
 Windows CI evidence is separate from physical Windows acceptance.
 
