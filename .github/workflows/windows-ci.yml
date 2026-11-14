@@ -192,6 +192,19 @@ jobs:
         shell: pwsh
         run: ./tools/Test-Tur37UyapEditor.ps1
 
+  tur39-wpf-udf:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build the actual WPF application
+        run: dotnet build src/Embasic.ENote.App --configuration Release
+      - name: Exercise the UDF copy button and file dialogs on the hosted desktop
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release -- src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+
   tur34-vault-acceptance:
     runs-on: windows-latest
     timeout-minutes: 15
