@@ -25,12 +25,19 @@ internal static class Program
         var directory = Directory.CreateTempSubdirectory("enote-wpf-udf-");
         string source = Path.Combine(directory.FullName, "source.md");
         string layout = source + ".enote-layout.json";
-        string existing = Path.Combine(directory.FullName, "existing.udf");
-        string created = Path.Combine(directory.FullName, "new-copy.udf");
-        string suggested = Path.Combine(directory.FullName, "source-kopya.udf");
-        string rejected = Path.Combine(directory.FullName, "landscape.udf");
+        string created = Path.Combine(directory.FullName, "source-kopya.udf");
+        string collisionSource = Path.Combine(directory.FullName, "collision.md");
+        string existing = Path.Combine(directory.FullName, "collision-kopya.udf");
+        string landscapeSource = Path.Combine(directory.FullName, "landscape.md");
+        string rejected = Path.Combine(directory.FullName, "landscape-kopya.udf");
         File.WriteAllText(source, SourceText);
-        new DocumentPageSettingsStore().Save(source, PageLayoutSettings.Default, expectedSha256: null);
+        var layouts = new DocumentPageSettingsStore();
+        layouts.Save(source, PageLayoutSettings.Default, expectedSha256: null);
+        File.WriteAllText(collisionSource, SourceText);
+        File.WriteAllText(landscapeSource, SourceText);
+        string landscapeLayout = landscapeSource + ".enote-layout.json";
+        layouts.Save(landscapeSource, PageLayoutSettings.Default with { Landscape = true }, expectedSha256: null);
+        byte[] savedLandscape = File.ReadAllBytes(landscapeLayout);
         byte[] savedNote = File.ReadAllBytes(source), savedPage = File.ReadAllBytes(layout);
         byte[] existingBytes = [0x45, 0x4E, 0x4F, 0x54, 0x45];
         File.WriteAllBytes(existing, existingBytes);
@@ -48,8 +55,7 @@ internal static class Program
             Select(ById(window, "MarkdownNotesTab"));
             Require(!ById(window, "ExportMarkdownUdfButton").Current.IsEnabled, "Copy enabled without an open note.");
             Require(!ById(window, "NewSecureNote").Current.IsEnabled, "Secure note must stay disabled.");
-            Click(ById(window, "OpenMarkdownButton"));
-            SubmitPath(process.Id, "Düz Markdown notu aç (.md)", source, open: true);
+            OpenSource(window, process.Id, source);
             var buffer = ById(window, "MarkdownSourceText");
             var value = (ValuePattern)buffer.GetCurrentPattern(ValuePattern.Pattern);
             Require(value.Current.Value == SourceText, "The editor did not load the synthetic source.");
@@ -64,20 +70,23 @@ internal static class Program
             BeginCopy(window, process.Id, accept: true);
             Click(DialogButton(Dialog(process.Id, SaveTitle), ["2"], ["Cancel", "İptal"]));
             WaitClosed(process.Id, SaveTitle);
-            Require(!File.Exists(suggested), "Cancelling the save dialog created the default file.");
+            Require(!File.Exists(created), "Cancelling the save dialog created the default file.");
             AssertFiles("save dialog cancellation", existing);
             Console.WriteLine("PASS native save dialog cancellation leaves no new file");
 
+            OpenSource(window, process.Id, collisionSource);
             BeginCopy(window, process.Id, accept: true);
-            SubmitPath(process.Id, SaveTitle, existing, open: false);
+            AcceptSuggestedPath(process.Id, existing);
             WaitClosed(process.Id, SaveTitle);
             var warning = FindDialog(process.Id, "Embasic E-Note", "UDF kopyası oluşturulamadı");
             Click(DialogButton(warning, ["2", "1"], ["OK", "Tamam"]));
             AssertFiles("existing destination refusal", existing);
             Console.WriteLine("PASS an existing target remains byte-identical after refusal");
 
+            OpenSource(window, process.Id, source);
+            Require(value.Current.Value == EditedText, "Switching tabs discarded the unsaved edit.");
             BeginCopy(window, process.Id, accept: true);
-            SubmitPath(process.Id, SaveTitle, created, open: false);
+            AcceptSuggestedPath(process.Id, created);
             Wait(() => File.Exists(created) ? created : null, "new UDF file");
             using (var archive = ZipFile.OpenRead(created))
             {
@@ -92,18 +101,14 @@ internal static class Program
             AssertFiles("successful output", created, existing);
             Console.WriteLine("PASS successful copy contains unsaved text and A4 portrait without saving the note");
 
-            Select(ByName(window, "Sayfa Düzeni (önizleme)", ControlType.TabItem));
-            var orientation = ById(window, "PageOrientationComboBox");
-            var expand = (ExpandCollapsePattern)orientation.GetCurrentPattern(ExpandCollapsePattern.Pattern);
-            expand.Expand();
-            Select(ByName(orientation, "Yatay", ControlType.ListItem));
-            if (expand.Current.ExpandCollapseState == ExpandCollapseState.Expanded) expand.Collapse();
-            Select(ById(window, "MarkdownNotesTab"));
+            OpenSource(window, process.Id, landscapeSource);
             BeginCopy(window, process.Id, accept: true);
-            SubmitPath(process.Id, SaveTitle, rejected, open: false);
+            AcceptSuggestedPath(process.Id, rejected);
             warning = FindDialog(process.Id, "Embasic E-Note", "UDF kopyası oluşturulamadı");
             Click(DialogButton(warning, ["2", "1"], ["OK", "Tamam"]));
             AssertFiles("landscape refusal", created, existing);
+            Require(File.ReadAllText(landscapeSource) == SourceText &&
+                File.ReadAllBytes(landscapeLayout).SequenceEqual(savedLandscape), "Landscape source or sidecar changed.");
             Require(ById(window, "MarkdownSourceText").Current.IsEnabled, "The source editor became unavailable.");
             Console.WriteLine("PASS landscape is rejected without a UDF file or sidecar write");
             Console.WriteLine("5/5 Tur39 native WPF UDF copy interaction checks passed.");
@@ -140,17 +145,30 @@ internal static class Program
             : DialogButton(dialog, ["2"], ["Cancel", "İptal"]));
     }
 
-    private static void SubmitPath(int pid, string title, string path, bool open)
+    private static void OpenSource(AutomationElement window, int pid, string path)
     {
-        var dialog = Dialog(pid, title);
-        var fileName = Wait(() => Find(dialog, AutomationElement.AutomationIdProperty, "1148", ControlType.Edit)
+        Click(ById(window, "OpenMarkdownButton"));
+        var dialog = Dialog(pid, "Düz Markdown notu aç (.md)");
+        FileName(dialog).SetValue(path);
+        Click(DialogButton(dialog, ["1"], ["Open", "Aç"]));
+    }
+
+    private static void AcceptSuggestedPath(int pid, string path)
+    {
+        var dialog = Dialog(pid, SaveTitle);
+        string suggestion = FileName(dialog).Current.Value;
+        Require(suggestion == Path.GetFileName(path) || suggestion == Path.GetFileNameWithoutExtension(path),
+            $"Unexpected destination suggested by native dialog: {suggestion}.");
+        Click(DialogButton(dialog, ["1"], ["Save", "Kaydet"]));
+    }
+
+    private static ValuePattern FileName(AutomationElement dialog) =>
+        (ValuePattern)Wait(() => Find(dialog, AutomationElement.AutomationIdProperty, "1148", ControlType.Edit)
             ?? Find(dialog, AutomationElement.AutomationIdProperty, "1001", ControlType.Edit)
             ?? Find(dialog, AutomationElement.AutomationIdProperty, "FileNameControlHost")?.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit))
-            ?? Find(dialog, AutomationElement.NameProperty, "File name:", ControlType.Edit), "native file name field");
-        ((ValuePattern)fileName.GetCurrentPattern(ValuePattern.Pattern)).SetValue(path);
-        Click(DialogButton(dialog, ["1"], open ? ["Open", "Aç"] : ["Save", "Kaydet"]));
-    }
+            ?? Find(dialog, AutomationElement.NameProperty, "File name:", ControlType.Edit), "native file name field")
+            .GetCurrentPattern(ValuePattern.Pattern);
 
     private static AutomationElement DialogButton(AutomationElement dialog, string[] ids, string[] names) =>
         Wait(() => names.Select(n => Find(dialog, AutomationElement.NameProperty, n, ControlType.Button))
