@@ -189,6 +189,20 @@ public partial class MainWindow : Window
         if (SelectedTab is { } tab) SaveTab(tab);
     }
 
+    private void PrintPreview_Click(object sender, RoutedEventArgs e)
+    {
+        if (SelectedTab is not { } tab) return;
+        try
+        {
+            new A4PrintPreviewWindow(tab.Text, tab.Layout) { Owner = this }.ShowDialog();
+        }
+        catch (NotSupportedException error)
+        {
+            MessageBox.Show(this, "Baskı önizlemesi açılamadı: " + error.Message, "Embasic E-Note",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
     private void ExportMarkdownUdf_Click(object sender, RoutedEventArgs e)
     {
         if (SelectedTab is not { } tab) return;
@@ -256,6 +270,7 @@ public partial class MainWindow : Window
         {
             case Key.S: if (SelectedTab is { } tab) SaveTab(tab); e.Handled = true; break;
             case Key.O: OpenMarkdown_Click(sender, e); e.Handled = true; break;
+            case Key.P: PrintPreview_Click(sender, e); e.Handled = true; break;
             case Key.N:
                 MarkdownStatusText.Text = "Ctrl+N şifreli .emd notuna ayrıldı; güvenlik kabulüne kadar kapalı. Düz .md: Ctrl+Alt+N.";
                 e.Handled = true; break;
@@ -266,6 +281,7 @@ public partial class MainWindow : Window
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
         ExportMarkdownUdfButton.IsEnabled = SelectedTab is not null;
+        PrintPreviewButton.IsEnabled = SelectedTab is not null;
         if (SelectedTab is not { } tab) return;
         _previewDebounce.Stop();
         tab.RefreshPreview();

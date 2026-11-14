@@ -9,9 +9,10 @@ namespace Embasic.ENote.App.Preview;
 /// clickable links, WebBrowser, external image loads, or on-disk changes.</summary>
 internal static class MarkdownPreviewDocumentFactory
 {
-    public static FlowDocument Create(string markdown)
+    public static FlowDocument Create(string markdown) => Create(MarkdownPreviewParser.Parse(markdown));
+
+    internal static FlowDocument Create(MarkdownPreviewResult parsed)
     {
-        var parsed = MarkdownPreviewParser.Parse(markdown);
         var document = new FlowDocument
         {
             PagePadding = new Thickness(24),
