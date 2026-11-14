@@ -26,6 +26,8 @@ jobs:
         run: dotnet restore Embasic.ENote.slnx
       - name: Build Windows WPF solution
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
+      - name: Run Tur36 unsigned UDF writer checks
+        run: dotnet run --project tests/Embasic.ENote.UdfWriter.Tests/Embasic.ENote.UdfWriter.Tests.csproj --configuration Release --no-build
       - name: Run Tur35 final path installed identity and target DACL
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur35-windows-path
       - name: Run Tur34 live destination and directory identity checks
