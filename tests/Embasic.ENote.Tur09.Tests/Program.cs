@@ -93,6 +93,35 @@ try
         pages.Save(one,custom,p.Sha256);
         Yes(pages.Read(one).Settings.Paper.WidthMm==231m && pages.Read(one).Settings.Paper.HeightMm==330m);
     });
+    Check("asymmetric page margins survive reopening", () =>
+    {
+        var previous = pages.Read(one);
+        var settings = previous.Settings with
+        {
+            LeftMarginMm = 17, RightMarginMm = 23, TopMarginMm = 19, BottomMarginMm = 27
+        };
+        var hash = pages.Save(one, settings, previous.Sha256);
+        var reopened = new DocumentPageSettingsStore().Read(one);
+        Yes(reopened.Settings == settings && reopened.Sha256 == hash);
+    });
+    Check("custom landscape margins validate together against oriented dimensions", () =>
+    {
+        string narrow = Path.Combine(dir, "narrow.md");
+        var settings = (PageLayoutSettings.Default with
+        {
+            Paper = PageLayoutCatalog.Custom(40m, 80m), Landscape = true
+        }).WithMargins(25, 30, 25, 10);
+        pages.Save(narrow, settings, expectedSha256: null);
+        Yes(pages.Read(narrow).Settings == settings);
+        Throws<ArgumentOutOfRangeException>(() => settings.WithMargins(25, 30, 30, 10));
+    });
+    Check("legacy layout without margins retains the original defaults", () =>
+    {
+        string legacy = Path.Combine(dir, "legacy.md");
+        File.WriteAllText(legacy + ".enote-layout.json",
+            """{"Version":1,"PaperId":"A4","WidthMm":210,"HeightMm":297,"Landscape":false,"ZoomPercent":100}""");
+        Yes(pages.Read(legacy).Settings == PageLayoutSettings.Default);
+    });
     Check("layout stale hash refused",()=>{
         string old=pages.Read(one).Sha256!;
         var current=pages.Read(one);

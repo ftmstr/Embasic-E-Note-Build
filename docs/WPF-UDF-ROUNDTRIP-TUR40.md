@@ -11,6 +11,10 @@ expected text, four paragraphs, page size, orientation, all four margins and
 the hash of the unedited WPF output. The existing direct-writer Markdown
 and table/font fixtures continue to run independently.
 
+The layout sidecar now stores the four margin values already supported by
+the page model. Existing version 1 sidecars without these fields retain
+the original 20 mm defaults.
+
 ## Physical Windows acceptance
 
 Use a Release build at the stated HEAD in an interactive Windows 10 or 11
