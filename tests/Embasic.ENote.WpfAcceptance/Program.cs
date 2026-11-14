@@ -11,17 +11,19 @@ using Embasic.ENote.Storage;
 internal static class Program
 {
     private const string SourceText = "Kaydedilmiş metin";
-    private const string EditedText = "# Kaydedilmemiş Çığ ve İğdır";
+    private const string EditedText = "# EMBASIC E-NOTE TUR37\n\nKaydedilmemiş **Çığ ve İğdır**\nSON PARAGRAF TUR37";
     private const string ConfirmTitle = "UDF Kopyası";
     private const string SaveTitle = "Yeni imzasız UDF kopyası oluştur";
 
     [MTAThread]
     private static void Main(string[] args)
     {
-        if (args.Length != 1) throw new ArgumentException("Expected the WPF executable path.");
+        if (args.Length is < 1 or > 2)
+            throw new ArgumentException("Expected the WPF executable path and optionally a new UDF evidence path.");
         if (!OperatingSystem.IsWindows() || !Environment.UserInteractive)
             throw new InvalidOperationException("An interactive Windows session is required.");
         string executable = Path.GetFullPath(args[0]);
+        string? evidence = args.Length == 2 ? Path.GetFullPath(args[1]) : null;
         var directory = Directory.CreateTempSubdirectory("enote-wpf-udf-");
         string source = Path.Combine(directory.FullName, "source.md");
         string layout = source + ".enote-layout.json";
@@ -32,7 +34,11 @@ internal static class Program
         string rejected = Path.Combine(directory.FullName, "landscape-kopya.udf");
         File.WriteAllText(source, SourceText);
         var layouts = new DocumentPageSettingsStore();
-        layouts.Save(source, PageLayoutSettings.Default, expectedSha256: null);
+        var portrait = PageLayoutSettings.Default with
+        {
+            LeftMarginMm = 17, RightMarginMm = 23, TopMarginMm = 19, BottomMarginMm = 27
+        };
+        layouts.Save(source, portrait, expectedSha256: null);
         File.WriteAllText(collisionSource, SourceText);
         File.WriteAllText(landscapeSource, SourceText);
         string landscapeLayout = landscapeSource + ".enote-layout.json";
@@ -97,6 +103,11 @@ internal static class Program
                 Require(root.Element("content")?.Value == EditedText + "\n", "UDF does not contain the current unsaved text.");
                 Require((string?)page?.Attribute("mediaSizeName") == "1" &&
                     (string?)page?.Attribute("paperOrientation") == "1", "UDF is not A4 portrait.");
+                Require((string?)page?.Attribute("leftMargin") == "48.19" &&
+                    (string?)page?.Attribute("rightMargin") == "65.20" &&
+                    (string?)page?.Attribute("topMargin") == "53.86" &&
+                    (string?)page?.Attribute("bottomMargin") == "76.54",
+                    "The UDF did not retain the selected note's four asymmetric margins.");
             }
             AssertFiles("successful output", created, existing);
             Console.WriteLine("PASS successful copy contains unsaved text and A4 portrait without saving the note");
@@ -111,6 +122,7 @@ internal static class Program
                 File.ReadAllBytes(landscapeLayout).SequenceEqual(savedLandscape), "Landscape source or sidecar changed.");
             Require(ById(window, "MarkdownSourceText").Current.IsEnabled, "The source editor became unavailable.");
             Console.WriteLine("PASS landscape is rejected without a UDF file or sidecar write");
+            if (evidence is not null) File.Copy(created, evidence, overwrite: false);
             Console.WriteLine("5/5 Tur39 native WPF UDF copy interaction checks passed.");
         }
         catch (Exception error)
