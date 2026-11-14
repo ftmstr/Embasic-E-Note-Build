@@ -201,6 +201,7 @@ public partial class MainWindow : Window
         var dialog = new SaveFileDialog
         {
             Title = "Yeni imzasız UDF kopyası oluştur", Filter = "UYAP Dokümanı (.udf)|*.udf",
+            InitialDirectory = Path.GetDirectoryName(tab.FilePath),
             FileName = Path.GetFileNameWithoutExtension(tab.FilePath) + "-kopya.udf",
             AddExtension = true, DefaultExt = ".udf", OverwritePrompt = false, CheckPathExists = true
         };

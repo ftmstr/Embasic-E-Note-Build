@@ -73,6 +73,7 @@
                     </WrapPanel>
                     <Button Content="Yeni Güvenli Not (.emd) — Yakında"
                             IsEnabled="False" Margin="0,10,0,0" Height="28"
+                            AutomationProperties.AutomationId="NewSecureNote"
                             AutomationProperties.HelpText="Şifreleme ve anahtar güvenliği tamamlanmadı."/>
                 </StackPanel>
                 <TreeView x:Name="WorkspaceTree" Grid.Row="1" Margin="10,0,10,4"
@@ -117,12 +118,13 @@
                                        Text="Güvenlik: .emd şifreleme ve anahtar yönetimi uygulanana kadar .emd oluşturma, açma ve kaydetme devre dışı."/>
                         </StackPanel>
                     </TabItem>
-                    <TabItem Header="Notlar (.md)">
+                    <TabItem Header="Notlar (.md)" AutomationProperties.AutomationId="MarkdownNotesTab">
                         <DockPanel Margin="10">
                             <StackPanel DockPanel.Dock="Top">
                                 <WrapPanel Margin="0,0,0,8">
                                     <Button Content="Yeni .md (Ctrl+Alt+N)" Click="NewMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
-                                    <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
+                                    <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"
+                                            AutomationProperties.AutomationId="OpenMarkdownButton"/>
                                     <Button Content="RTF Düzenle (Ctrl+Alt+R)" Click="OpenRtf_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="DOCX / ODT (Ctrl+Alt+D)" Click="OpenOfflineWord_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
@@ -167,7 +169,8 @@
                                                          FontFamily="Consolas" FontSize="14" BorderThickness="0"
                                                          Background="White" Foreground="#1E293B"
                                                          SpellCheck.IsEnabled="False" IsUndoEnabled="True" UndoLimit="200"
-                                                         AutomationProperties.Name="Düzenlenebilir Markdown kaynak metni"/>
+                                                         AutomationProperties.Name="Düzenlenebilir Markdown kaynak metni"
+                                                         AutomationProperties.AutomationId="MarkdownSourceText"/>
                                             </Border>
                                             <Border Grid.Column="1" Visibility="{Binding PreviewVisibility}"
                                                     Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
