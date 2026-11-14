@@ -166,7 +166,7 @@ internal static class Program
             var dialog = LocateDialog(pid, title);
             if (dialog is null) return null;
             bool match = false;
-            EnumChildWindows(new IntPtr(dialog.Current.NativeWindowHandle), (window, _) =>
+            EnumChildWindows(new IntPtr(dialog.Current.NativeWindowHandle), (window, state) =>
             {
                 var text = new StringBuilder(1024);
                 const uint getText = 0x000D, abortIfHung = 0x0002;
