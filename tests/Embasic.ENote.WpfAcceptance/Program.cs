@@ -70,6 +70,7 @@ internal static class Program
 
             BeginCopy(window, process.Id, accept: true);
             SubmitPath(process.Id, SaveTitle, existing, open: false);
+            WaitClosed(process.Id, SaveTitle);
             var warning = FindDialog(process.Id, "Embasic E-Note", "UDF kopyası oluşturulamadı");
             Click(DialogButton(warning, ["2", "1"], ["OK", "Tamam"]));
             AssertFiles("existing destination refusal", existing);
@@ -106,6 +107,11 @@ internal static class Program
             Require(ById(window, "MarkdownSourceText").Current.IsEnabled, "The source editor became unavailable.");
             Console.WriteLine("PASS landscape is rejected without a UDF file or sidecar write");
             Console.WriteLine("5/5 Tur39 native WPF UDF copy interaction checks passed.");
+        }
+        catch (Exception error)
+        {
+            DumpWindows(process.Id);
+            throw new InvalidOperationException("Hosted WPF acceptance failed.", error);
         }
         finally
         {
@@ -158,9 +164,17 @@ internal static class Program
         Wait(() =>
         {
             var dialog = LocateDialog(pid, title);
-            return dialog is not null && dialog.FindAll(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
-                .Cast<AutomationElement>().Any(e => e.Current.Name.StartsWith(prefix, StringComparison.Ordinal)) ? dialog : null;
+            if (dialog is null) return null;
+            bool match = false;
+            EnumChildWindows(new IntPtr(dialog.Current.NativeWindowHandle), (window, _) =>
+            {
+                var text = new StringBuilder(1024);
+                const uint getText = 0x000D, abortIfHung = 0x0002;
+                SendMessageTimeout(window, getText, (nuint)text.Capacity, text, abortIfHung, 200, out _);
+                match = text.ToString().StartsWith(prefix, StringComparison.Ordinal);
+                return !match;
+            }, IntPtr.Zero);
+            return match ? dialog : null;
         }, $"warning {prefix}");
 
     private static AutomationElement? LocateDialog(int pid, string title)
@@ -171,9 +185,7 @@ internal static class Program
         {
             GetWindowThreadProcessId(window, out uint owner);
             if (owner != pid || !IsWindowVisible(window)) return true;
-            var name = new StringBuilder(300);
-            GetWindowText(window, name, name.Capacity);
-            if (!string.Equals(name.ToString(), title, StringComparison.Ordinal)) return true;
+            if (!string.Equals(WindowText(window), title, StringComparison.Ordinal)) return true;
             found = window;
             return false;
         }, IntPtr.Zero);
@@ -182,8 +194,34 @@ internal static class Program
 
     private delegate bool WindowCallback(IntPtr window, IntPtr state);
 
+    private static string WindowText(IntPtr window)
+    {
+        var text = new StringBuilder(1024);
+        GetWindowText(window, text, text.Capacity);
+        return text.ToString();
+    }
+
+    private static void DumpWindows(int pid)
+    {
+        EnumWindows((window, _) =>
+        {
+            GetWindowThreadProcessId(window, out uint owner);
+            if (owner != pid || !IsWindowVisible(window)) return true;
+            Console.Error.WriteLine($"Visible test window: {WindowText(window)}");
+            var element = AutomationElement.FromHandle(window);
+            foreach (AutomationElement child in element.FindAll(TreeScope.Descendants, Condition.TrueCondition)
+                .Cast<AutomationElement>().Where(x => x.Current.ControlType == ControlType.Text ||
+                    x.Current.ControlType == ControlType.Button).Take(25))
+                Console.Error.WriteLine($"  {child.Current.AutomationId}: {child.Current.Name}");
+            return true;
+        }, IntPtr.Zero);
+    }
+
     [DllImport("user32.dll")]
     private static extern bool EnumWindows(WindowCallback callback, IntPtr state);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumChildWindows(IntPtr window, WindowCallback callback, IntPtr state);
 
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
@@ -193,6 +231,10 @@ internal static class Program
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr window, StringBuilder text, int length);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr SendMessageTimeout(IntPtr window, uint message, nuint size,
+        StringBuilder text, uint flags, uint timeout, out nuint result);
 
     private static void WaitClosed(int pid, string title) =>
         Wait(() => LocateDialog(pid, title) is null ? title : null, $"closure of {title}");
