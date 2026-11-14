@@ -31,7 +31,13 @@ if (args is ["--rich-sample", var richPath])
     UnsignedUdfWriter.WriteNew(richPath, rich, PageLayoutSettings.Default, table);
     return;
 }
-if (args.Length != 0) throw new ArgumentException("Expected --sample or --rich-sample with a new .udf path, or no arguments.");
+const string MarkdownSample = "# EMBASIC E-NOTE TUR37\r\n\r\nÇığ ve İğdır — **Türkçe**\r\nSON PARAGRAF TUR37\r\n";
+if (args is ["--markdown-sample", var markdownPath])
+{
+    MarkdownUdfCopy.WriteNew("synthetic.md", MarkdownSample, markdownPath, PageLayoutSettings.Default);
+    return;
+}
+if (args.Length != 0) throw new ArgumentException("Expected a sample option with a new .udf path, or no arguments.");
 
 var directory = Directory.CreateTempSubdirectory("enote-udf-tests-");
 int passed = 0;
@@ -172,6 +178,47 @@ try
         Require(!File.Exists(path));
     });
     Console.WriteLine($"{passed}/4 Tur37 rich UDF writer checks passed.");
+
+    passed = 0;
+    Check("Markdown copy preserves literal markup, empty lines, Turkish and line endings", () =>
+    {
+        string path = Target("literal-copy.udf");
+        MarkdownUdfCopy.WriteNew("synthetic.MD", MarkdownSample, path, new() { LeftMarginMm = 25m });
+        var xml = ReadPackage(path);
+        Require(xml.Element("content")!.Value == MarkdownSample.Replace("\r\n", "\n"));
+        Require(xml.Element("elements")!.Elements("paragraph").Count() == 4);
+        Require(!xml.Descendants("table").Any());
+        Require((string?)xml.Element("properties")!.Element("pageFormat")!.Attribute("leftMargin") == "70.87");
+    });
+
+    Check("copy uses current editor text without changing Markdown or its sidecar", () =>
+    {
+        string source = Target("edit.md"), path = Target("edit.udf");
+        string sidecar = source + ".enote-layout.json";
+        byte[] sourceBytes = [0xEF, 0xBB, 0xBF, 65];
+        File.WriteAllBytes(source, sourceBytes);
+        File.WriteAllText(sidecar, "saved layout");
+        MarkdownUdfCopy.WriteNew(source, "  yenİ\rikinci\r\r", path, new());
+        Require(ReadPackage(path).Element("content")!.Value == "  yenİ\nikinci\n\n");
+        Require(File.ReadAllBytes(source).SequenceEqual(sourceBytes) && File.ReadAllText(sidecar) == "saved layout");
+        byte[] existing = File.ReadAllBytes(path);
+        Throws<IOException>(() => MarkdownUdfCopy.WriteNew(source, "replacement", path, new()));
+        Require(File.ReadAllBytes(path).SequenceEqual(existing));
+    });
+
+    Check("invalid source, page, Unicode and size produce no partial UDF", () =>
+    {
+        string path = Target("guarded-copy.udf");
+        Throws<NotSupportedException>(() => MarkdownUdfCopy.WriteNew("secret.emd", "Çığ", path, new()));
+        Throws<NotSupportedException>(() => MarkdownUdfCopy.WriteNew("plain.md", "Çığ", path, new() { Landscape = true }));
+        Throws<ArgumentException>(() => MarkdownUdfCopy.WriteNew("plain.md", "Çığ 😀", path, new()));
+        Throws<ArgumentOutOfRangeException>(() => MarkdownUdfCopy.WriteNew("plain.md",
+            new string('a', UnsignedUdfWriter.MaximumTextCharacters), path, new()));
+        Throws<ArgumentOutOfRangeException>(() => MarkdownUdfCopy.WriteNew("plain.md",
+            new string('\n', UnsignedUdfWriter.MaximumParagraphs + 1), path, new()));
+        Require(!File.Exists(path) && !Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any());
+    });
+    Console.WriteLine($"{passed}/3 Tur38 Markdown UDF copy checks passed.");
 }
 finally { directory.Delete(recursive: true); }
 
