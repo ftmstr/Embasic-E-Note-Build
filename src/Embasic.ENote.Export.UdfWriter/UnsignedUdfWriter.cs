@@ -1,4 +1,6 @@
+using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.IO.Compression;
 using System.Text;
 using System.Xml;
@@ -63,7 +65,7 @@ public static class UnsignedUdfWriter
 
                 output.Flush(flushToDisk: true);
             }
-            File.Move(temporary, target, overwrite: false);
+            MoveNew(temporary, target);
             ownsTemporary = false;
         }
         finally
@@ -71,6 +73,34 @@ public static class UnsignedUdfWriter
             if (ownsTemporary) File.Delete(temporary);
         }
     }
+
+    private static void MoveNew(string temporary, string target)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            File.Move(temporary, target, overwrite: false);
+            return;
+        }
+
+        // Linux File.Move can check destination existence and rename in separate syscalls.
+        // Use a single no-replace rename for the staged file on this platform.
+        const int currentDirectory = -100;
+        const uint noReplace = 1;
+        try
+        {
+            if (RenameAt2(currentDirectory, temporary, currentDirectory, target, noReplace) != 0)
+                throw new IOException("Could not publish the new UDF.", new Win32Exception(Marshal.GetLastPInvokeError()));
+        }
+        catch (EntryPointNotFoundException error)
+        {
+            throw new IOException("The Linux runtime cannot publish a UDF without replacing its destination.", error);
+        }
+    }
+
+    [DllImport("libc", EntryPoint = "renameat2", SetLastError = true)]
+    private static extern int RenameAt2(
+        int sourceDirectory, [MarshalAs(UnmanagedType.LPUTF8Str)] string source,
+        int targetDirectory, [MarshalAs(UnmanagedType.LPUTF8Str)] string target, uint flags);
 
     private static UdfParagraph AddToPool(StringBuilder pool, UdfParagraph paragraph)
     {
