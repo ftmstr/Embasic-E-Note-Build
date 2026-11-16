@@ -1,29 +1,36 @@
+param([string]$PdfVerifierPython)
+
 $ErrorActionPreference = 'Stop'
 $project = Join-Path $PSScriptRoot '../tests/Embasic.ENote.WpfAcceptance'
-function Get-XpsDriver {
-    Get-PrinterDriver | Where-Object Name -Like 'Microsoft XPS Document Writer*' |
+$pdf = -not [string]::IsNullOrWhiteSpace($PdfVerifierPython)
+$driverName = if ($pdf) { 'Microsoft Print to PDF' } else { 'Microsoft XPS Document Writer v4' }
+$driverPattern = if ($pdf) { $driverName } else { 'Microsoft XPS Document Writer*' }
+$extension = if ($pdf) { 'pdf' } else { 'oxps' }
+$round = if ($pdf) { '44' } else { '43' }
+function Get-TestDriver {
+    Get-PrinterDriver | Where-Object Name -Like $driverPattern |
         Sort-Object Name -Descending | Select-Object -First 1
 }
-$driver = Get-XpsDriver
+$driver = Get-TestDriver
 $hosted = $env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_ENVIRONMENT -eq 'github-hosted'
 if (-not $driver -and $hosted) {
     # Enable the OS inbox driver on this disposable worker only.
-    $featureName = 'Printing-XPSServices-Features'
+    $featureName = if ($pdf) { 'Printing-PrintToPDFServices-Features' } else { 'Printing-XPSServices-Features' }
     $feature = Get-WindowsOptionalFeature -Online -FeatureName $featureName -ErrorAction Continue
     if ($feature -and $feature.State -ne 'Enabled') {
         Write-Host "Enabling Windows optional feature $featureName ($($feature.State))."
         Enable-WindowsOptionalFeature -Online -FeatureName $featureName -All -NoRestart -ErrorAction Continue |
             Format-List FeatureName, State, RestartNeeded
     }
-    $driver = Get-XpsDriver
+    $driver = Get-TestDriver
     if (-not $driver) {
-        Add-PrinterDriver -Name 'Microsoft XPS Document Writer v4' -ErrorAction Continue
-        $driver = Get-XpsDriver
+        Add-PrinterDriver -Name $driverName -ErrorAction Continue
+        $driver = Get-TestDriver
     }
 }
 if (-not $driver) {
     Get-PrinterDriver | Format-Table Name, PrinterEnvironment
-    throw 'BLOCKED: Microsoft XPS Document Writer driver is absent on this Windows runner.'
+    throw "BLOCKED: $driverName is absent on this Windows runner."
 }
 # A local file port is named by a full Windows path. Use the port monitor
 # directly to remove it without passing that path to printer-name validation.
@@ -100,16 +107,24 @@ function Remove-TestFilePort([string]$name) {
 }
 
 Write-Host "Using installed Windows print driver: $($driver.Name)."
-$root = New-Item -ItemType Directory (Join-Path ([IO.Path]::GetTempPath()) "enote-tur43-$([guid]::NewGuid().ToString('N'))")
+$root = New-Item -ItemType Directory (Join-Path ([IO.Path]::GetTempPath()) "enote-tur$round-$([guid]::NewGuid().ToString('N'))")
 try {
     foreach ($scenario in @('portrait-range', 'landscape-current')) {
-        $queue = "Embasic ENote TUR43 $($root.Name) $scenario"
-        $output = Join-Path $root.FullName "$scenario.oxps"
+        $queue = "Embasic ENote TUR$round $($root.Name) $scenario"
+        $output = Join-Path $root.FullName "$scenario.$extension"
         try {
             Add-PrinterPort -Name $output
             Add-Printer -Name $queue -DriverName $driver.Name -PortName $output
+            if ($pdf -and $scenario -eq 'portrait-range') {
+                dotnet run --project $project --configuration Release --no-build -- --pdf-cancel $queue $output
+                if ($LASTEXITCODE -ne 0) { throw 'PDF cancellation acceptance failed.' }
+            }
             dotnet run --project $project --configuration Release --no-build -- --spooler $queue $output $scenario
             if ($LASTEXITCODE -ne 0) { throw "Spooler acceptance failed for $scenario." }
+            if ($pdf) {
+                & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') $output $scenario
+                if ($LASTEXITCODE -ne 0) { throw "PDF verification failed for $scenario." }
+            }
         } finally {
             if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {
                 Get-PrintJob -PrinterName $queue | Remove-PrintJob

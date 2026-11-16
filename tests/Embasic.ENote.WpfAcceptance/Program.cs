@@ -27,6 +27,11 @@ internal static class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--pdf-cancel", var pdfQueue, var pdfOutput])
+        {
+            CheckPdfCancellation(pdfQueue, pdfOutput);
+            return;
+        }
         if (args is ["--spooler", var queueName, var output, var scenario])
         {
             RunSta(() => WindowsSpoolerAcceptance.Run(queueName, output, scenario));
@@ -226,11 +231,58 @@ internal static class Program
         }
 
         Click(ById(preview, "PrintButton"));
-        var print = Wait(() => LocateDialog(pid, "Print") ?? LocateDialog(pid, "Yazdır"), "native Windows print dialog");
-        Click(DialogButton(print, ["2"], ["Cancel", "İptal"]));
+        CancelPrintDialog(pid);
         var status = ById(preview, "PrintStatus");
         Wait(() => status.Current.Name == "Yazdırma iptal edildi." ? status : null, "cancellation status");
         return true;
+    }
+
+    private static void CancelPrintDialog(int pid)
+    {
+        var print = Wait(() => LocateDialog(pid, "Print") ?? LocateDialog(pid, "Yazdır"), "native Windows print dialog");
+        Click(DialogButton(print, ["2"], ["Cancel", "İptal"]));
+    }
+
+    private static void CheckPdfCancellation(string queueName, string output)
+    {
+        output = Path.GetFullPath(output);
+        bool submitted = true;
+        ExceptionDispatchInfo? failure = null;
+        var dialogThread = new Thread(() =>
+        {
+            try
+            {
+                using var server = new LocalPrintServer();
+                using var observer = server.GetPrintQueue(queueName);
+                WindowsSpoolerAcceptance.RequireDisposableQueue(observer, queueName, output, pdf: true);
+                var application = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+                var owner = new System.Windows.Window { Title = "Embasic E-Note PDF acceptance", Width = 420, Height = 180 };
+                application.MainWindow = owner;
+                owner.Show();
+                try
+                {
+                    var dialog = LocalA4Print.CreateDialog(4, 3);
+                    dialog.PrintQueue = observer;
+                    submitted = LocalA4Print.ShowAndSubmit(dialog, 3, landscape: false,
+                        () => throw new InvalidOperationException("Cancelled dialog attempted to create print pages."));
+                    Require(!submitted && !observer.GetPrintJobInfoCollection().Any() && !File.Exists(output),
+                        "PDF cancellation created a job or output.");
+                }
+                finally
+                {
+                    owner.Close();
+                    application.Shutdown();
+                }
+            }
+            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+        }) { IsBackground = true };
+        dialogThread.SetApartmentState(ApartmentState.STA);
+        dialogThread.Start();
+        CancelPrintDialog(Environment.ProcessId);
+        Require(dialogThread.Join(TimeSpan.FromSeconds(20)), "PDF dialog cancellation did not return.");
+        failure?.Throw();
+        Require(!submitted, "PDF print dialog was not cancelled.");
+        Console.WriteLine("1/1 Tur44 native PDF cancellation without job or file checks passed.");
     }
 
     private static void CheckPagination()
@@ -331,9 +383,10 @@ internal static class Program
         });
     }
 
-    internal static DocumentPaginator CreatePrintFixture(PageLayoutSettings layout)
+    internal static DocumentPaginator CreatePrintFixture(PageLayoutSettings layout, string[]? headings = null)
     {
-        var pages = A4MarkdownPagination.Create("# A4-N1\n\n# A4-N2\n\n# A4-N3\n\n# A4-N4", layout);
+        headings ??= ["A4-N1", "A4-N2", "A4-N3", "A4-N4"];
+        var pages = A4MarkdownPagination.Create(string.Join("\n\n", headings.Select(text => "# " + text)), layout);
         var flow = (FlowDocument)pages.Source;
         foreach (var block in flow.Blocks.Skip(1)) block.BreakPageBefore = true;
         pages.ComputePageCount();

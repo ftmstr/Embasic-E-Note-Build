@@ -173,3 +173,10 @@ Windows service acceptance uses existing .NET APIs and Win32 interop.
 Selection and recovery use existing cryptography and filesystem APIs.
 No NuGet package, binary asset or encrypted note format was changed.
 Complete release SBOM/NOTICE and logo rights remain open.
+
+## Tur 44 test dependency
+
+The hosted Windows print driver verification uses pypdf 6.21.3
+(BSD-3-Clause, pypdf contributors, https://pypi.org/project/pypdf/6.21.3/).
+The CI wheel is SHA-256 pinned and installed in a temporary Python
+environment. The desktop application and installers do not include it.
