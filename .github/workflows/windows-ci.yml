@@ -215,6 +215,21 @@ jobs:
         shell: pwsh
         run: ./tools/Test-Tur37UyapEditor.ps1 -WpfUdfPath (Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf')
 
+  tur43-windows-spooler:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build the Windows printing harness
+        run: dotnet build tests/Embasic.ENote.WpfAcceptance --configuration Release
+      - name: Submit synthetic A4 pages to disposable local Windows spooler queues
+        shell: pwsh
+        timeout-minutes: 4
+        run: ./tools/Test-Tur43WindowsSpooler.ps1
+
   tur34-vault-acceptance:
     runs-on: windows-latest
     timeout-minutes: 15

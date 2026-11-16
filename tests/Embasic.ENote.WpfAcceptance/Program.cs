@@ -27,6 +27,11 @@ internal static class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--spooler", var queueName, var output, var scenario])
+        {
+            RunSta(() => WindowsSpoolerAcceptance.Run(queueName, output, scenario));
+            return;
+        }
         if (args.Length is < 1 or > 2)
             throw new ArgumentException("Expected the WPF executable path and optionally a new UDF evidence path.");
         if (!OperatingSystem.IsWindows() || !Environment.UserInteractive)
@@ -281,10 +286,7 @@ internal static class Program
         RunSta(() =>
         {
             var layout = PageLayoutSettings.Default.WithMargins(17, 23, 19, 27);
-            var pages = A4MarkdownPagination.Create("# A4-N1\n\n# A4-N2\n\n# A4-N3\n\n# A4-N4", layout);
-            var flow = (FlowDocument)pages.Source;
-            foreach (var block in flow.Blocks.Skip(1)) block.BreakPageBefore = true;
-            pages.ComputePageCount();
+            var pages = CreatePrintFixture(layout);
             Require(pages.PageCount == 4, "Expected four named test pages.");
             var dialog = LocalA4Print.CreateDialog(pages.PageCount, currentPage: 3);
             Require(dialog.MinPage == 1 && dialog.MaxPage == 4 && dialog.UserPageRangeEnabled &&
@@ -329,23 +331,55 @@ internal static class Program
         });
     }
 
+    internal static DocumentPaginator CreatePrintFixture(PageLayoutSettings layout)
+    {
+        var pages = A4MarkdownPagination.Create("# A4-N1\n\n# A4-N2\n\n# A4-N3\n\n# A4-N4", layout);
+        var flow = (FlowDocument)pages.Source;
+        foreach (var block in flow.Blocks.Skip(1)) block.BreakPageBefore = true;
+        pages.ComputePageCount();
+        return pages;
+    }
+
     private static void AssertXpsPages(DocumentPaginator pages, string path, string[] expected)
     {
         using (var file = new XpsDocument(path, FileAccess.Write))
             XpsDocument.CreateXpsDocumentWriter(file).Write(pages);
+        AssertPrintedPages(path, pages.PageSize.Width, pages.PageSize.Height, expected);
+    }
+
+    internal static void AssertPrintedPages(string path, double width, double height, string[] expected)
+    {
         using var archive = ZipFile.OpenRead(path);
-        var entries = archive.Entries.Where(e => e.Name.EndsWith(".fpage", StringComparison.OrdinalIgnoreCase))
-            .OrderBy(e => e.FullName).ToArray();
-        Require(entries.Length == expected.Length, "XPS contains an unexpected number of pages.");
-        var ns = XNamespace.Get("http://schemas.microsoft.com/xps/2005/06");
-        for (int i = 0; i < entries.Length; i++)
+        var documents = archive.Entries.Where(e => e.Name.EndsWith(".fdoc", StringComparison.OrdinalIgnoreCase)).ToArray();
+        Require(documents.Length == 1, "Expected exactly one fixed document.");
+        var document = documents[0];
+        var root = ReadXml(document);
+        Require(root.Name.LocalName == "FixedDocument", "Unexpected print document root.");
+        var pageReferences = root.Elements(root.Name.Namespace + "PageContent").ToArray();
+        Require(pageReferences.Length == expected.Length &&
+            archive.Entries.Count(e => e.Name.EndsWith(".fpage", StringComparison.OrdinalIgnoreCase)) == expected.Length,
+            "The package contains the wrong number of pages.");
+        var documentUri = new Uri("https://print-package.invalid/" + document.FullName);
+        for (int i = 0; i < pageReferences.Length; i++)
         {
-            using var content = entries[i].Open();
-            var page = XElement.Load(content);
-            var text = string.Concat(page.Descendants(ns + "Glyphs").Select(e => (string?)e.Attribute("UnicodeString")));
-            Require(text == expected[i], $"XPS printed the wrong source page at index {i}: {text}");
-            Require(Math.Abs((double)page.Attribute("Width")! - pages.PageSize.Width) < 0.5 &&
-                Math.Abs((double)page.Attribute("Height")! - pages.PageSize.Height) < 0.5, "XPS output geometry changed.");
+            string reference = (string?)pageReferences[i].Attribute("Source")
+                ?? throw new InvalidDataException("Fixed page reference is missing.");
+            var pageUri = new Uri(documentUri, reference);
+            Require(pageUri.Host == documentUri.Host, "Unexpected external print page reference.");
+            var entry = archive.GetEntry(Uri.UnescapeDataString(pageUri.AbsolutePath.TrimStart('/')))
+                ?? throw new InvalidDataException("Referenced fixed page is missing.");
+            var page = ReadXml(entry);
+            Require(page.Name.LocalName == "FixedPage", "Unexpected print page root.");
+            var text = string.Concat(page.Descendants(page.Name.Namespace + "Glyphs").Select(e => (string?)e.Attribute("UnicodeString")));
+            Require(text == expected[i], $"Printed wrong source page at index {i}: {text}");
+            Require(Math.Abs((double)page.Attribute("Width")! - width) < 0.5 &&
+                Math.Abs((double)page.Attribute("Height")! - height) < 0.5, "Output geometry changed.");
+        }
+
+        static XElement ReadXml(ZipArchiveEntry entry)
+        {
+            using var stream = entry.Open();
+            return XElement.Load(stream);
         }
     }
 
