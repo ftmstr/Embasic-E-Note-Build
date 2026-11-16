@@ -24,6 +24,72 @@ if (-not $driver) {
     Get-PrinterDriver | Format-Table Name, PrinterEnvironment
     throw 'BLOCKED: Microsoft XPS Document Writer driver is absent on this Windows runner.'
 }
+# A local file port is named by a full Windows path. Use the port monitor
+# directly to remove it without passing that path to printer-name validation.
+Add-Type @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class EnoteTestLocalPort
+{
+    [StructLayout(LayoutKind.Sequential)]
+    private struct PrinterDefaults
+    {
+        public IntPtr DataType;
+        public IntPtr DevMode;
+        public uint DesiredAccess;
+    }
+
+    [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool OpenPrinter(string name, out IntPtr handle, ref PrinterDefaults defaults);
+
+    [DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool XcvData(IntPtr handle, string command, byte[] input, uint inputLength,
+        [Out] byte[] output, uint outputLength, out uint needed, out uint status);
+
+    [DllImport("winspool.drv", SetLastError = true)]
+    private static extern bool ClosePrinter(IntPtr handle);
+
+    public static void Delete(string name)
+    {
+        const uint ServerAccessAdminister = 1;
+        var defaults = new PrinterDefaults { DesiredAccess = ServerAccessAdminister };
+        if (!OpenPrinter(",XcvMonitor Local Port", out var handle, ref defaults))
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        try
+        {
+            byte[] input = Encoding.Unicode.GetBytes(name + "\0");
+            byte[] output = new byte[4];
+            if (!XcvData(handle, "DeletePort", input, (uint)input.Length, output, (uint)output.Length,
+                         out _, out uint status))
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            if (status != 0) throw new Win32Exception((int)status);
+        }
+        finally
+        {
+            ClosePrinter(handle);
+        }
+    }
+}
+'@
+
+function Remove-TestFilePort([string]$name) {
+    for ($attempt = 0; $attempt -lt 20; $attempt++) {
+        if (-not (Get-PrinterPort | Where-Object Name -EQ $name)) { return }
+        try {
+            [EnoteTestLocalPort]::Delete($name)
+        } catch {
+            if ($attempt -eq 19) { throw }
+        }
+        Start-Sleep -Milliseconds 250
+    }
+    if (Get-PrinterPort | Where-Object Name -EQ $name) {
+        throw 'The disposable local file port still exists after cleanup.'
+    }
+}
+
 Write-Host "Using installed Windows print driver: $($driver.Name)."
 $root = New-Item -ItemType Directory (Join-Path ([IO.Path]::GetTempPath()) "enote-tur43-$([guid]::NewGuid().ToString('N'))")
 try {
@@ -40,9 +106,11 @@ try {
                 Get-PrintJob -PrinterName $queue | Remove-PrintJob
                 Remove-Printer -Name $queue
             }
-            if (Get-PrinterPort -Name $output -ErrorAction SilentlyContinue) {
-                Remove-PrinterPort -Name $output
+            Remove-TestFilePort $output
+            if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {
+                throw 'The disposable print queue still exists after cleanup.'
             }
+            Write-Host "Removed the disposable queue and file port for $scenario."
         }
     }
 } finally {
