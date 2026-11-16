@@ -20,3 +20,9 @@ selected synthetic pages. It also checks native dialog cancellation
 when the runner has a local print queue. XPS here is a temporary
 test artifact. Physical Windows/DPI, actual printer output, Windows
 PDF output and physical security are separate acceptance gates.
+
+The separate UDF writer keeps the no-overwrite contract on Linux by
+publishing its staged file with a native no-replace rename. If the
+runtime or filesystem rejects that operation, the export fails and
+the staging file is cleaned. This does not establish power-loss or
+physical storage acceptance. The Windows publication path is unchanged.

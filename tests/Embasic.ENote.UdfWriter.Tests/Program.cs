@@ -116,15 +116,25 @@ try
 
     Check("two competing exports give one complete file and clean staging", () =>
     {
-        string path = Target("contended.udf");
-        int winners = 0, rejected = 0;
-        Parallel.For(0, 2, _ =>
+        for (int trial = 0; trial < 16; trial++)
         {
-            try { UnsignedUdfWriter.WriteNew(path, sample, PageLayoutSettings.Default); Interlocked.Increment(ref winners); }
-            catch (IOException) { Interlocked.Increment(ref rejected); }
-        });
-        Require(winners == 1 && rejected == 1);
-        Require(ReadPackage(path).Element("elements")!.Elements("paragraph").Count() == sample.Length);
+            string path = Target($"contended-{trial}.udf");
+            string? winner = null;
+            int winners = 0, rejected = 0;
+            Parallel.For(0, 2, index =>
+            {
+                string text = $"Eşzamanlı UDF {index} — İğdır";
+                try
+                {
+                    UnsignedUdfWriter.WriteNew(path, [new(text)], PageLayoutSettings.Default);
+                    Interlocked.Exchange(ref winner, text);
+                    Interlocked.Increment(ref winners);
+                }
+                catch (IOException) { Interlocked.Increment(ref rejected); }
+            });
+            Require(winners == 1 && rejected == 1);
+            Require(ReadPackage(path).Element("content")!.Value == winner + "\n");
+        }
         Require(!Directory.EnumerateFiles(directory.FullName, "*.enote-udf-tmp").Any());
     });
     Console.WriteLine($"{passed}/6 Tur36 unsigned UDF writer checks passed.");
