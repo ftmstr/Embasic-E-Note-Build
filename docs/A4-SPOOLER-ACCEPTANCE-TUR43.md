@@ -1,6 +1,7 @@
 # TUR 43 | Windows spooler acceptance for A4 output
 
-The hosted smoke test provisions a separate local Microsoft XPS Document
+The GitHub-hosted smoke test can enable the inbox XPS feature when missing.
+It provisions a separate local Microsoft XPS Document
 Writer queue for each case. Each uses its own new local file port and
 only a synthetic four-page Markdown fixture. Invalid ranges must leave
 the queue empty. The production submission path sends either pages 2–3
