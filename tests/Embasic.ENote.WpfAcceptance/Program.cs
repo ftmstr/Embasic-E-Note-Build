@@ -1,13 +1,17 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Printing;
+using System.Windows.Controls;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Automation;
 using System.Windows.Documents;
+using System.Windows.Xps.Packaging;
 using System.Xml.Linq;
 using Embasic.ENote.App.Preview;
+using Embasic.ENote.App.Printing;
 using Embasic.ENote.Core.Markdown;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
@@ -135,7 +139,7 @@ internal static class Program
             string longNote = MultiPageMarkdown();
             value.SetValue(longNote);
             var beforePreview = Directory.GetFiles(directory.FullName).ToDictionary(path => path, File.ReadAllBytes);
-            CheckPrintPreview(window, process.Id);
+            bool nativePrintCancelled = CheckPrintPreview(window, process.Id);
             Require(value.Current.Value == longNote, "Preview changed or discarded the unsaved buffer.");
             var afterPreview = Directory.GetFiles(directory.FullName);
             Require(afterPreview.Length == beforePreview.Count && afterPreview.All(path =>
@@ -144,6 +148,10 @@ internal static class Program
             Console.WriteLine("PASS WPF preview opens and navigates the unsaved draft without creating or modifying files");
             CheckPagination();
             Console.WriteLine("4/4 Tur41 offline A4 print preview checks passed.");
+            CheckA4Print(directory.FullName);
+            Console.WriteLine("4/4 Tur42 A4 print selection and XPS checks passed.");
+            if (nativePrintCancelled)
+                Console.WriteLine("1/1 Tur42 native Windows print dialog cancellation checks passed.");
         }
         catch (Exception error)
         {
@@ -172,7 +180,7 @@ internal static class Program
             $"Paragraf {i} — A4 sayfalama örneği. **İğdır** ve Türkçe karakterler.")) +
         "\n\n# SON SAYFA İŞARETİ";
 
-    private static void CheckPrintPreview(AutomationElement window, int pid)
+    private static bool CheckPrintPreview(AutomationElement window, int pid)
     {
         Click(ById(window, "PrintPreviewButton"));
         var preview = Dialog(pid, PrintPreviewTitle);
@@ -188,55 +196,74 @@ internal static class Program
         Wait(() => counter.Current.Name.StartsWith("Sayfa 2 / ", StringComparison.Ordinal) ? counter : null, "preview page 2");
         Click(previous);
         Wait(() => counter.Current.Name.StartsWith("Sayfa 1 / ", StringComparison.Ordinal) ? counter : null, "preview page 1");
+        bool cancelled = TryCancelWindowsPrint(preview, pid);
         Click(ById(preview, "ClosePrintPreview"));
         WaitClosed(pid, PrintPreviewTitle);
+        return cancelled;
+    }
+
+    private static bool TryCancelWindowsPrint(AutomationElement preview, int pid)
+    {
+        try
+        {
+            using var server = new LocalPrintServer();
+            using var queues = server.GetPrintQueues([EnumeratedPrintQueueTypes.Local]);
+            if (!queues.Any())
+            {
+                Console.WriteLine("NOT RUN Tur42 native print dialog: no local queue on this runner.");
+                return false;
+            }
+        }
+        catch (PrintSystemException error)
+        {
+            Console.WriteLine("NOT RUN Tur42 native print dialog: " + error.Message);
+            return false;
+        }
+
+        Click(ById(preview, "PrintButton"));
+        var print = Wait(() => LocateDialog(pid, "Print") ?? LocateDialog(pid, "Yazdır"), "native Windows print dialog");
+        Click(DialogButton(print, ["2"], ["Cancel", "İptal"]));
+        var status = ById(preview, "PrintStatus");
+        Wait(() => status.Current.Name == "Yazdırma iptal edildi." ? status : null, "cancellation status");
+        return true;
     }
 
     private static void CheckPagination()
     {
-        ExceptionDispatchInfo? failure = null;
-        var thread = new Thread(() =>
+        RunSta(() =>
         {
-            try
-            {
-                var layout = PageLayoutSettings.Default.WithMargins(17, 23, 19, 27);
-                var portrait = A4MarkdownPagination.Create(MultiPageMarkdown(), layout);
-                using var first = portrait.GetPage(0);
-                Near(first.Size.Width, 210 * 96d / 25.4);
-                Near(first.Size.Height, 297 * 96d / 25.4);
-                Near(first.ContentBox.Left, 17 * 96d / 25.4);
-                Near(first.ContentBox.Top, 19 * 96d / 25.4);
-                Near(first.Size.Width - first.ContentBox.Right, 23 * 96d / 25.4);
-                Near(first.Size.Height - first.ContentBox.Bottom, 27 * 96d / 25.4);
-                var zoomed = A4MarkdownPagination.Create(MultiPageMarkdown(), layout with { ZoomPercent = 150 });
-                Require(zoomed.PageCount == portrait.PageCount, "Editor zoom changed physical pagination.");
-                var landscape = A4MarkdownPagination.Create("Türkçe", layout with { Landscape = true });
-                using var widePage = landscape.GetPage(0);
-                Near(widePage.Size.Width, 297 * 96d / 25.4);
-                Near(widePage.Size.Height, 210 * 96d / 25.4);
-                Console.WriteLine("PASS portrait and landscape use A4 geometry, and editor zoom leaves pagination unchanged");
+            var layout = PageLayoutSettings.Default.WithMargins(17, 23, 19, 27);
+            var portrait = A4MarkdownPagination.Create(MultiPageMarkdown(), layout);
+            using var first = portrait.GetPage(0);
+            Near(first.Size.Width, 210 * 96d / 25.4);
+            Near(first.Size.Height, 297 * 96d / 25.4);
+            Near(first.ContentBox.Left, 17 * 96d / 25.4);
+            Near(first.ContentBox.Top, 19 * 96d / 25.4);
+            Near(first.Size.Width - first.ContentBox.Right, 23 * 96d / 25.4);
+            Near(first.Size.Height - first.ContentBox.Bottom, 27 * 96d / 25.4);
+            var zoomed = A4MarkdownPagination.Create(MultiPageMarkdown(), layout with { ZoomPercent = 150 });
+            Require(zoomed.PageCount == portrait.PageCount, "Editor zoom changed physical pagination.");
+            var landscape = A4MarkdownPagination.Create("Türkçe", layout with { Landscape = true });
+            using var widePage = landscape.GetPage(0);
+            Near(widePage.Size.Width, 297 * 96d / 25.4);
+            Near(widePage.Size.Height, 210 * 96d / 25.4);
+            Console.WriteLine("PASS portrait and landscape use A4 geometry, and editor zoom leaves pagination unchanged");
 
-                var source = (FlowDocument)portrait.Source;
-                var finalParagraph = (Paragraph)source.Blocks.LastBlock;
-                Require(new TextRange(finalParagraph.ContentStart, finalParagraph.ContentEnd).Text == "SON SAYFA İŞARETİ",
-                    "Last heading was lost before pagination.");
-                Require(portrait.IsPageCountValid && portrait.PageCount > 1 &&
-                    portrait.GetPageNumber(finalParagraph.ContentStart) == portrait.PageCount - 1,
-                    "The last heading did not reach the last page.");
-                Require(A4MarkdownPagination.Create("", layout).PageCount == 1, "Empty notes need one blank page.");
-                Console.WriteLine("PASS flowing content reaches the last page and empty notes get one blank page");
+            var source = (FlowDocument)portrait.Source;
+            var finalParagraph = (Paragraph)source.Blocks.LastBlock;
+            Require(new TextRange(finalParagraph.ContentStart, finalParagraph.ContentEnd).Text == "SON SAYFA İŞARETİ",
+                "Last heading was lost before pagination.");
+            Require(portrait.IsPageCountValid && portrait.PageCount > 1 &&
+                portrait.GetPageNumber(finalParagraph.ContentStart) == portrait.PageCount - 1,
+                "The last heading did not reach the last page.");
+            Require(A4MarkdownPagination.Create("", layout).PageCount == 1, "Empty notes need one blank page.");
+            Console.WriteLine("PASS flowing content reaches the last page and empty notes get one blank page");
 
-                RequireUnsupported(() => A4MarkdownPagination.Create("Türkçe", layout with { Paper = PageLayoutCatalog.Get("A5") }));
-                RequireUnsupported(() => A4MarkdownPagination.Create(new string('a', MarkdownPreviewParser.MaximumPreviewCharacters + 1), layout));
-                RequireUnsupported(() => A4MarkdownPagination.Create(new string('\n', MarkdownPreviewParser.MaximumPreviewLines), layout));
-                Console.WriteLine("PASS paper and text limits refuse unsupported or incomplete previews");
-            }
-            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+            RequireUnsupported(() => A4MarkdownPagination.Create("Türkçe", layout with { Paper = PageLayoutCatalog.Get("A5") }));
+            RequireUnsupported(() => A4MarkdownPagination.Create(new string('a', MarkdownPreviewParser.MaximumPreviewCharacters + 1), layout));
+            RequireUnsupported(() => A4MarkdownPagination.Create(new string('\n', MarkdownPreviewParser.MaximumPreviewLines), layout));
+            Console.WriteLine("PASS paper and text limits refuse unsupported or incomplete previews");
         });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-        failure?.Throw();
 
         static void Near(double actual, double expected) =>
             Require(Math.Abs(actual - expected) < 0.5, $"Unexpected A4 dimensions: {actual} ≠ {expected} DIP.");
@@ -247,6 +274,93 @@ internal static class Program
             catch (NotSupportedException) { return; }
             throw new InvalidOperationException("The preview accepted an unsupported input.");
         }
+    }
+
+    private static void CheckA4Print(string directory)
+    {
+        RunSta(() =>
+        {
+            var layout = PageLayoutSettings.Default.WithMargins(17, 23, 19, 27);
+            var pages = A4MarkdownPagination.Create("# A4-N1\n\n# A4-N2\n\n# A4-N3\n\n# A4-N4", layout);
+            var flow = (FlowDocument)pages.Source;
+            foreach (var block in flow.Blocks.Skip(1)) block.BreakPageBefore = true;
+            pages.ComputePageCount();
+            Require(pages.PageCount == 4, "Expected four named test pages.");
+            var dialog = LocalA4Print.CreateDialog(pages.PageCount, currentPage: 3);
+            Require(dialog.MinPage == 1 && dialog.MaxPage == 4 && dialog.UserPageRangeEnabled &&
+                dialog.CurrentPageEnabled && dialog.PageRange.PageFrom == 3,
+                "The Windows dialog did not receive the preview's page bounds.");
+            Require(ReferenceEquals(pages, LocalA4Print.SelectPages(pages, PageRangeSelection.AllPages, default, 3)),
+                "All-page selection changed the source.");
+            var current = LocalA4Print.SelectPages(pages, PageRangeSelection.CurrentPage, default, 3);
+            Require(current.PageCount == 1 && current.GetPage(1) == DocumentPage.Missing,
+                "Current page did not yield exactly one page.");
+            Console.WriteLine("PASS all pages and current page use the preview bounds");
+
+            var selected = LocalA4Print.SelectPages(pages, PageRangeSelection.UserPages, new PageRange(2, 3), 1);
+            Require(selected.PageCount == 2 && selected.PageSize == pages.PageSize &&
+                selected.GetPage(2) == DocumentPage.Missing, "Restricted pagination exposed an extra page.");
+            try
+            {
+                LocalA4Print.SelectPages(pages, PageRangeSelection.UserPages, new PageRange(3, 6), 1);
+                throw new InvalidOperationException("An out-of-bounds range was accepted.");
+            }
+            catch (ArgumentOutOfRangeException) { }
+            Console.WriteLine("PASS selected ranges are bounded and exclude unselected indices");
+
+            var ticket = new PrintTicket
+            {
+                PageMediaSize = new PageMediaSize(PageMediaSizeName.ISOA4),
+                PageOrientation = PageOrientation.Portrait
+            };
+            var imageable = new System.Windows.Rect(12, 12, pages.PageSize.Width - 24, pages.PageSize.Height - 24);
+            var clipped = new System.Windows.Rect(100, 100, pages.PageSize.Width - 200, pages.PageSize.Height - 200);
+            Require(LocalA4Print.CanPrint(ticket, PageOrientation.Portrait, imageable, pages) &&
+                !LocalA4Print.CanPrint(ticket, PageOrientation.Portrait, clipped, pages) &&
+                !LocalA4Print.CanPrint(ticket, PageOrientation.Landscape, imageable, pages),
+                "Driver orientation or imageable-area protection failed.");
+            ticket.PageMediaSize = new PageMediaSize(PageMediaSizeName.NorthAmericaLetter);
+            Require(!LocalA4Print.CanPrint(ticket, PageOrientation.Portrait, imageable, pages), "Letter substitution was accepted.");
+            Console.WriteLine("PASS A4 driver validation rejects clipping, orientation changes, and Letter substitution");
+
+            AssertXpsPages(selected, Path.Combine(directory, "test-range.xps"), ["A4-N2", "A4-N3"]);
+            AssertXpsPages(current, Path.Combine(directory, "test-current.xps"), ["A4-N3"]);
+            Console.WriteLine("PASS the real WPF XPS writer serializes only the requested A4 pages in order");
+        });
+    }
+
+    private static void AssertXpsPages(DocumentPaginator pages, string path, string[] expected)
+    {
+        using (var file = new XpsDocument(path, FileAccess.Write))
+            XpsDocument.CreateXpsDocumentWriter(file).Write(pages);
+        using var archive = ZipFile.OpenRead(path);
+        var entries = archive.Entries.Where(e => e.Name.EndsWith(".fpage", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(e => e.FullName).ToArray();
+        Require(entries.Length == expected.Length, "XPS contains an unexpected number of pages.");
+        var ns = XNamespace.Get("http://schemas.microsoft.com/xps/2005/06");
+        for (int i = 0; i < entries.Length; i++)
+        {
+            using var content = entries[i].Open();
+            var page = XElement.Load(content);
+            var text = string.Concat(page.Descendants(ns + "Glyphs").Select(e => (string?)e.Attribute("UnicodeString")));
+            Require(text == expected[i], $"XPS printed the wrong source page at index {i}: {text}");
+            Require(Math.Abs((double)page.Attribute("Width")! - pages.PageSize.Width) < 0.5 &&
+                Math.Abs((double)page.Attribute("Height")! - pages.PageSize.Height) < 0.5, "XPS output geometry changed.");
+        }
+    }
+
+    private static void RunSta(Action test)
+    {
+        ExceptionDispatchInfo? failure = null;
+        var thread = new Thread(() =>
+        {
+            try { test(); }
+            catch (Exception error) { failure = ExceptionDispatchInfo.Capture(error); }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+        failure?.Throw();
     }
 
     private static void BeginCopy(AutomationElement window, int pid, bool accept)

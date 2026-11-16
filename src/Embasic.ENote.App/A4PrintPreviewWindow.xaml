@@ -8,13 +8,19 @@
         <DockPanel DockPanel.Dock="Top" Margin="12">
             <Button DockPanel.Dock="Right" Content="Kapat" IsCancel="True" Padding="10,5"
                     AutomationProperties.AutomationId="ClosePrintPreview"/>
+            <Button DockPanel.Dock="Right" x:Name="PrintButton" Content="Yazdır…"
+                    Click="Print_Click" Padding="10,5" Margin="6,0"/>
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="PreviousPageButton" Content="Önceki" Click="PreviousPage_Click" Padding="10,5"/>
                 <Button x:Name="NextPageButton" Content="Sonraki" Click="NextPage_Click" Padding="10,5" Margin="6,0"/>
                 <TextBlock x:Name="PageCounter" VerticalAlignment="Center" Margin="4,0"/>
             </StackPanel>
         </DockPanel>
-        <TextBlock x:Name="PrintGeometry" DockPanel.Dock="Bottom" Margin="12,4,12,12" TextWrapping="Wrap"/>
+        <StackPanel DockPanel.Dock="Bottom" Margin="12,4,12,12">
+            <TextBlock x:Name="PrintGeometry" TextWrapping="Wrap"/>
+            <TextBlock x:Name="PrintStatus" TextWrapping="Wrap" Margin="0,4,0,0"
+                       AutomationProperties.LiveSetting="Polite"/>
+        </StackPanel>
         <Viewbox Margin="12,0,12,4" Stretch="Uniform" StretchDirection="DownOnly">
             <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" ClipToBounds="True">
                 <primitives:DocumentPageView x:Name="PreviewPage" Stretch="None"

@@ -1,4 +1,8 @@
 using Embasic.ENote.App.Preview;
+using Embasic.ENote.App.Printing;
+using System.ComponentModel;
+using System.IO;
+using System.Printing;
 using Embasic.ENote.Core.Printing;
 using System.Windows;
 using System.Windows.Documents;
@@ -8,9 +12,13 @@ namespace Embasic.ENote.App;
 internal sealed partial class A4PrintPreviewWindow : Window
 {
     private readonly DocumentPaginator _paginator;
+    private readonly string _markdown;
+    private readonly PageLayoutSettings _layout;
 
     public A4PrintPreviewWindow(string markdown, PageLayoutSettings layout)
     {
+        _markdown = markdown;
+        _layout = layout;
         _paginator = A4MarkdownPagination.Create(markdown, layout);
         InitializeComponent();
         PreviewPage.Width = _paginator.PageSize.Width;
@@ -31,6 +39,33 @@ internal sealed partial class A4PrintPreviewWindow : Window
 
     private void PreviousPage_Click(object sender, RoutedEventArgs e) => ShowPage(PreviewPage.PageNumber - 1);
     private void NextPage_Click(object sender, RoutedEventArgs e) => ShowPage(PreviewPage.PageNumber + 1);
+
+    private void Print_Click(object sender, RoutedEventArgs e)
+    {
+        int current = PreviewPage.PageNumber + 1;
+        PrintStatus.Text = "";
+        try
+        {
+            var dialog = LocalA4Print.CreateDialog(_paginator.PageCount, current);
+            if (dialog.ShowDialog() != true)
+            {
+                PrintStatus.Text = "Yazdırma iptal edildi.";
+                return;
+            }
+
+            var printPages = A4MarkdownPagination.Create(_markdown, _layout);
+            if (printPages.PageCount != _paginator.PageCount)
+                throw new InvalidOperationException("Baskı sayfaları önizlemeyle eşleşmiyor.");
+            LocalA4Print.Submit(dialog, printPages, current, _layout.Landscape);
+            PrintStatus.Text = "Yazdırma işi Windows kuyruğuna gönderildi.";
+        }
+        catch (Exception error) when (error is PrintSystemException or Win32Exception or IOException or
+                                     UnauthorizedAccessException or ArgumentException or InvalidOperationException or
+                                     NotSupportedException)
+        {
+            PrintStatus.Text = "Yazdırma tamamlanamadı: " + error.Message;
+        }
+    }
 
     private void ShowPage(int index)
     {

@@ -225,7 +225,7 @@
                                 </ComboBox>
                                 <TextBlock Text="Kenar boşlukları: 20 mm (örnek)"
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"/>
-                                <TextBlock Text="Notlar sekmesinden A4 baskı önizlemesini açabilirsiniz. Yazıcı ve PDF çıktısı henüz kullanılamaz."
+                                <TextBlock Text="Notlar sekmesinden A4 baskı önizlemesini ve Windows yazdırma penceresini açabilirsiniz."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap"
                                            Margin="0,12,4,0"/>
                                 <TextBlock Text="Bu ekran yalnız geometri önizlemesidir; notu kaydetmez veya yazdırmaz."
