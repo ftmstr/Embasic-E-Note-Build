@@ -11,7 +11,9 @@ After resuming, the driver must finish the job and produce an XPS package.
 The package is read in fixed-document order, checking exact page markers,
 page count and A4 geometry with half a device-independent pixel tolerance.
 The harness logs a SHA-256 for each job output. Temporary printers,
-ports and files are removed after the run.
+ports and files are removed after the run. On a dedicated GitHub-hosted
+worker, cleanup can restart the spooler if the completed job still
+holds its temporary port.
 
 The XPS driver and the Windows spooler run on the hosted Windows worker.
 Physical printer output, Microsoft Print to PDF, physical Windows/DPI

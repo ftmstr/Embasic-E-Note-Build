@@ -5,7 +5,8 @@ function Get-XpsDriver {
         Sort-Object Name -Descending | Select-Object -First 1
 }
 $driver = Get-XpsDriver
-if (-not $driver -and $env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_ENVIRONMENT -eq 'github-hosted') {
+$hosted = $env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_ENVIRONMENT -eq 'github-hosted'
+if (-not $driver -and $hosted) {
     # Enable the OS inbox driver on this disposable worker only.
     $featureName = 'Printing-XPSServices-Features'
     $feature = Get-WindowsOptionalFeature -Online -FeatureName $featureName -ErrorAction Continue
@@ -76,17 +77,25 @@ public static class EnoteTestLocalPort
 '@
 
 function Remove-TestFilePort([string]$name) {
-    for ($attempt = 0; $attempt -lt 20; $attempt++) {
-        if (-not (Get-PrinterPort | Where-Object Name -EQ $name)) { return }
-        try {
-            [EnoteTestLocalPort]::Delete($name)
-        } catch {
-            if ($attempt -eq 19) { throw }
+    $phases = if ($hosted) { 2 } else { 1 }
+    for ($phase = 0; $phase -lt $phases; $phase++) {
+        for ($attempt = 0; $attempt -lt 12; $attempt++) {
+            if (-not (Get-PrinterPort | Where-Object Name -EQ $name)) { return }
+            try {
+                [EnoteTestLocalPort]::Delete($name)
+            } catch {
+                $lastError = $_
+            }
+            Start-Sleep -Milliseconds 500
         }
-        Start-Sleep -Milliseconds 250
+        if ($phase -eq 0 -and $hosted -and (Get-PrinterPort | Where-Object Name -EQ $name)) {
+            Write-Host 'Windows still holds the disposable port. Restarting the spooler on the dedicated hosted worker.'
+            Restart-Service -Name Spooler -Force
+            (Get-Service -Name Spooler).WaitForStatus('Running', [TimeSpan]::FromSeconds(20))
+        }
     }
     if (Get-PrinterPort | Where-Object Name -EQ $name) {
-        throw 'The disposable local file port still exists after cleanup.'
+        throw "The disposable local file port still exists after cleanup. $lastError"
     }
 }
 
@@ -104,6 +113,9 @@ try {
         } finally {
             if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {
                 Get-PrintJob -PrinterName $queue | Remove-PrintJob
+                if (Get-PrinterPort | Where-Object Name -EQ 'NUL:') {
+                    Set-Printer -Name $queue -PortName 'NUL:'
+                }
                 Remove-Printer -Name $queue
             }
             Remove-TestFilePort $output
