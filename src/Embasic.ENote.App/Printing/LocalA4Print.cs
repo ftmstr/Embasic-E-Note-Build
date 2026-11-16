@@ -17,6 +17,18 @@ internal static class LocalA4Print
         PageRangeSelection = PageRangeSelection.AllPages
     };
 
+    public static bool ShowAndSubmit(PrintDialog dialog, int currentPage, bool landscape,
+        Func<DocumentPaginator> createPages)
+    {
+        if (dialog.ShowDialog() != true) return false;
+
+        var pages = createPages();
+        if (pages.PageCount != dialog.MaxPage)
+            throw new InvalidOperationException("Baskı sayfaları önizlemeyle eşleşmiyor.");
+        Submit(dialog, pages, currentPage, landscape);
+        return true;
+    }
+
     public static void Submit(PrintDialog dialog, DocumentPaginator source, int currentPage, bool landscape)
     {
         using var queue = dialog.PrintQueue

@@ -230,6 +230,28 @@ jobs:
         timeout-minutes: 4
         run: ./tools/Test-Tur43WindowsSpooler.ps1
 
+  tur44-windows-driver-pdf:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build the Windows printing harness
+        run: dotnet build tests/Embasic.ENote.WpfAcceptance --configuration Release
+      - name: Verify Microsoft Print to PDF output and cancellation on disposable queues
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $venv = Join-Path $env:RUNNER_TEMP 'enote-pdf-verifier'
+          python -m venv $venv
+          if ($LASTEXITCODE -ne 0) { throw 'PDF verifier environment failed.' }
+          $python = Join-Path $venv 'Scripts/python.exe'
+          & $python -m pip install --require-hashes --only-binary=:all: -r ./tools/tur44-pdf-requirements.txt
+          if ($LASTEXITCODE -ne 0) { throw 'PDF verifier dependency failed.' }
+          ./tools/Test-Tur43WindowsSpooler.ps1 -PdfVerifierPython $python
+
   tur34-vault-acceptance:
     runs-on: windows-latest
     timeout-minutes: 15
