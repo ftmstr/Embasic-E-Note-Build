@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import math
+import sys
 import unicodedata
 from pathlib import Path
 
@@ -42,6 +43,8 @@ def verify(path, scenario):
 
 
 if __name__ == "__main__":
+    # The Windows runner may redirect stdout through a non-Turkish code page.
+    sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("pdf", type=Path)
     parser.add_argument("scenario", choices=EXPECTED)
