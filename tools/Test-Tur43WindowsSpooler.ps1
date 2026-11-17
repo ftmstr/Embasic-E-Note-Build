@@ -1,4 +1,4 @@
-param([string]$PdfVerifierPython)
+param([string]$PdfVerifierPython, [switch]$NativePdfSave)
 
 $ErrorActionPreference = 'Stop'
 $project = Join-Path $PSScriptRoot '../tests/Embasic.ENote.WpfAcceptance'
@@ -13,6 +13,9 @@ function Get-TestDriver {
 }
 $driver = Get-TestDriver
 $hosted = $env:GITHUB_ACTIONS -eq 'true' -and $env:RUNNER_ENVIRONMENT -eq 'github-hosted'
+if ($NativePdfSave -and (-not $hosted -or -not $pdf)) {
+    throw 'The native PDF dialog acceptance needs a dedicated hosted desktop and the PDF verifier.'
+}
 if (-not $driver -and $hosted) {
     # Enable the OS inbox driver on this disposable worker only.
     $featureName = if ($pdf) { 'Printing-PrintToPDFServices-Features' } else { 'Printing-XPSServices-Features' }
@@ -31,6 +34,37 @@ if (-not $driver -and $hosted) {
 if (-not $driver) {
     Get-PrinterDriver | Format-Table Name, PrinterEnvironment
     throw "BLOCKED: $driverName is absent on this Windows runner."
+}
+if ($NativePdfSave) {
+    if (-not (Get-PrinterPort | Where-Object Name -EQ 'PORTPROMPT:')) {
+        throw 'BLOCKED: Windows did not expose its native PORTPROMPT port.'
+    }
+    $id = [guid]::NewGuid().ToString('N')
+    $queue = "Embasic ENote TUR45 $id"
+    $root = New-Item -ItemType Directory (Join-Path ([IO.Path]::GetTempPath()) "enote-tur45-$id")
+    $app = Join-Path $PSScriptRoot '../src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe'
+    try {
+        Add-Printer -Name $queue -DriverName $driver.Name -PortName 'PORTPROMPT:'
+        Get-Printer -Name $queue | Format-List Name, DriverName, PortName
+        dotnet run --project $project --configuration Release --no-build -- --pdf-save-dialog $app $queue $root.FullName
+        if ($LASTEXITCODE -ne 0) { throw 'Native PDF save and cancel acceptance failed.' }
+        & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') (Join-Path $root.FullName 'TUR 45 çıktı.pdf') 'native-save-draft'
+        if ($LASTEXITCODE -ne 0) { throw 'Native PDF file validation failed.' }
+    } finally {
+        try {
+            if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {
+                Get-PrintJob -PrinterName $queue | Remove-PrintJob
+                Remove-Printer -Name $queue
+            }
+            if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {
+                throw 'The disposable native PDF prompt queue still exists after cleanup.'
+            }
+            Write-Host 'Removed the disposable native PDF prompt queue.'
+        } finally {
+            Remove-Item -LiteralPath $root.FullName -Recurse -Force
+        }
+    }
+    return
 }
 # A local file port is named by a full Windows path. Use the port monitor
 # directly to remove it without passing that path to printer-name validation.

@@ -5,6 +5,13 @@ using System.Windows.Documents;
 
 namespace Embasic.ENote.App.Printing;
 
+internal enum PrintSubmissionResult
+{
+    Cancelled,
+    Queued,
+    DriverFilePrompt
+}
+
 internal static class LocalA4Print
 {
     public static PrintDialog CreateDialog(int pageCount, int currentPage) => new()
@@ -17,19 +24,18 @@ internal static class LocalA4Print
         PageRangeSelection = PageRangeSelection.AllPages
     };
 
-    public static bool ShowAndSubmit(PrintDialog dialog, int currentPage, bool landscape,
+    public static PrintSubmissionResult ShowAndSubmit(PrintDialog dialog, int currentPage, bool landscape,
         Func<DocumentPaginator> createPages)
     {
-        if (dialog.ShowDialog() != true) return false;
+        if (dialog.ShowDialog() != true) return PrintSubmissionResult.Cancelled;
 
         var pages = createPages();
         if (pages.PageCount != dialog.MaxPage)
             throw new InvalidOperationException("Baskı sayfaları önizlemeyle eşleşmiyor.");
-        Submit(dialog, pages, currentPage, landscape);
-        return true;
+        return Submit(dialog, pages, currentPage, landscape);
     }
 
-    public static void Submit(PrintDialog dialog, DocumentPaginator source, int currentPage, bool landscape)
+    public static PrintSubmissionResult Submit(PrintDialog dialog, DocumentPaginator source, int currentPage, bool landscape)
     {
         using var queue = dialog.PrintQueue
             ?? throw new InvalidOperationException("Yerel bir Windows yazıcı kuyruğu seçin.");
@@ -52,8 +58,11 @@ internal static class LocalA4Print
             new Rect(area.OriginWidth, area.OriginHeight, area.ExtentWidth, area.ExtentHeight), source))
             throw new NotSupportedException("Seçilen sürücü A4 yönünü veya belgenin yazdırılabilir alanını desteklemiyor.");
 
+        bool driverPromptsForFile = string.Equals(queue.QueuePort?.Name, "PORTPROMPT:", StringComparison.OrdinalIgnoreCase);
         dialog.PrintTicket = ticket;
         dialog.PrintDocument(pages, "Embasic E-Note — A4 Markdown");
+        // WPF reports neither the destination nor the user's choice in the driver's save dialog.
+        return driverPromptsForFile ? PrintSubmissionResult.DriverFilePrompt : PrintSubmissionResult.Queued;
     }
 
     internal static DocumentPaginator SelectPages(DocumentPaginator source, PageRangeSelection selection,

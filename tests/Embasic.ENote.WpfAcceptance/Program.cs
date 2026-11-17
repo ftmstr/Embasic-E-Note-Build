@@ -16,7 +16,7 @@ using Embasic.ENote.Core.Markdown;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
 
-internal static class Program
+internal static partial class Program
 {
     private const string SourceText = "Kaydedilmiş metin";
     private const string EditedText = "# EMBASIC E-NOTE TUR37\n\nKaydedilmemiş **Çığ ve İğdır**\nSON PARAGRAF TUR37";
@@ -27,6 +27,11 @@ internal static class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--pdf-save-dialog", var application, var promptQueue, var outputDirectory])
+        {
+            CheckPdfSaveDialogs(application, promptQueue, outputDirectory);
+            return;
+        }
         if (args is ["--pdf-cancel", var pdfQueue, var pdfOutput])
         {
             CheckPdfCancellation(pdfQueue, pdfOutput);
@@ -246,7 +251,7 @@ internal static class Program
     private static void CheckPdfCancellation(string queueName, string output)
     {
         output = Path.GetFullPath(output);
-        bool submitted = true;
+        var result = PrintSubmissionResult.Queued;
         ExceptionDispatchInfo? failure = null;
         var dialogThread = new Thread(() =>
         {
@@ -263,9 +268,9 @@ internal static class Program
                 {
                     var dialog = LocalA4Print.CreateDialog(4, 3);
                     dialog.PrintQueue = observer;
-                    submitted = LocalA4Print.ShowAndSubmit(dialog, 3, landscape: false,
+                    result = LocalA4Print.ShowAndSubmit(dialog, 3, landscape: false,
                         () => throw new InvalidOperationException("Cancelled dialog attempted to create print pages."));
-                    Require(!submitted && !observer.GetPrintJobInfoCollection().Any() && !File.Exists(output),
+                    Require(result == PrintSubmissionResult.Cancelled && !observer.GetPrintJobInfoCollection().Any() && !File.Exists(output),
                         "PDF cancellation created a job or output.");
                 }
                 finally
@@ -281,7 +286,7 @@ internal static class Program
         CancelPrintDialog(Environment.ProcessId);
         Require(dialogThread.Join(TimeSpan.FromSeconds(20)), "PDF dialog cancellation did not return.");
         failure?.Throw();
-        Require(!submitted, "PDF print dialog was not cancelled.");
+        Require(result == PrintSubmissionResult.Cancelled, "PDF print dialog was not cancelled.");
         Console.WriteLine("1/1 Tur44 native PDF cancellation without job or file checks passed.");
     }
 

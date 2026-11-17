@@ -47,11 +47,14 @@ internal sealed partial class A4PrintPreviewWindow : Window
         try
         {
             var dialog = LocalA4Print.CreateDialog(_paginator.PageCount, current);
-            bool submitted = LocalA4Print.ShowAndSubmit(dialog, current, _layout.Landscape,
+            var result = LocalA4Print.ShowAndSubmit(dialog, current, _layout.Landscape,
                 () => A4MarkdownPagination.Create(_markdown, _layout));
-            PrintStatus.Text = submitted
-                ? "Yazdırma işi Windows kuyruğuna gönderildi."
-                : "Yazdırma iptal edildi.";
+            PrintStatus.Text = result switch
+            {
+                PrintSubmissionResult.Cancelled => "Yazdırma iptal edildi.",
+                PrintSubmissionResult.DriverFilePrompt => "Dosyayı kaydettiyseniz seçtiğiniz konumu kontrol edin.",
+                _ => "Yazdırma işi Windows kuyruğuna gönderildi."
+            };
         }
         catch (Exception error) when (error is PrintSystemException or Win32Exception or IOException or
                                      UnauthorizedAccessException or ArgumentException or InvalidOperationException or
