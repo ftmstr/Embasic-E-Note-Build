@@ -11,6 +11,7 @@ from pypdf import PdfReader
 EXPECTED = {
     "portrait-range": (210, 297, ["SAYFA 2 Çığ ve İğdır", "SAYFA 3 Ölçü, şüphe, ıslak"]),
     "landscape-current": (297, 210, ["SAYFA 3 Ölçü, şüphe, ıslak"]),
+    "native-save-draft": (210, 297, ["TUR 45 Çığ ve İğdır. Ölçü, şüphe, ıslak."]),
 }
 
 
@@ -39,7 +40,8 @@ def verify(path, scenario):
                 raise ValueError(f"Page {index}: expected {expected_text!r}, got {content!r}.")
             print(f"{scenario} page {index}: {size[0]:.2f} x {size[1]:.2f} pt; {content}")
     print(f"{scenario} Windows driver PDF SHA-256 {digest}")
-    print(f"1/1 Tur44 {scenario} native Windows PDF output checks passed.")
+    round_number = 45 if scenario == "native-save-draft" else 44
+    print(f"1/1 Tur{round_number} {scenario} native Windows PDF output checks passed.")
 
 
 if __name__ == "__main__":

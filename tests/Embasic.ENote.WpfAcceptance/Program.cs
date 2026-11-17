@@ -16,7 +16,7 @@ using Embasic.ENote.Core.Markdown;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
 
-internal static class Program
+internal static partial class Program
 {
     private const string SourceText = "Kaydedilmiş metin";
     private const string EditedText = "# EMBASIC E-NOTE TUR37\n\nKaydedilmemiş **Çığ ve İğdır**\nSON PARAGRAF TUR37";
@@ -27,6 +27,11 @@ internal static class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--pdf-save-dialog", var application, var promptQueue, var outputDirectory])
+        {
+            CheckPdfSaveDialogs(application, promptQueue, outputDirectory);
+            return;
+        }
         if (args is ["--pdf-cancel", var pdfQueue, var pdfOutput])
         {
             CheckPdfCancellation(pdfQueue, pdfOutput);
