@@ -45,6 +45,7 @@ if ($NativePdfSave) {
     $app = Join-Path $PSScriptRoot '../src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe'
     try {
         Add-Printer -Name $queue -DriverName $driver.Name -PortName 'PORTPROMPT:'
+        Get-Printer -Name $queue | Format-List Name, DriverName, PortName
         dotnet run --project $project --configuration Release --no-build -- --pdf-save-dialog $app $queue $root.FullName
         if ($LASTEXITCODE -ne 0) { throw 'Native PDF save and cancel acceptance failed.' }
         & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') (Join-Path $root.FullName 'TUR 45 çıktı.pdf') 'native-save-draft'

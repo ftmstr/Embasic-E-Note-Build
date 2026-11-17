@@ -17,8 +17,11 @@ internal static partial class Program
         Require(queueName.StartsWith("Embasic ENote TUR45 ", StringComparison.Ordinal), "Expected a disposable PDF queue.");
         using var server = new LocalPrintServer();
         using var queue = server.GetPrintQueue(queueName);
-        Require(queue.QueueDriver.Name == "Microsoft Print to PDF" && queue.QueuePort.Name == "PORTPROMPT:" &&
-            !queue.GetPrintJobInfoCollection().Any(), "The dedicated native PDF prompt queue was not ready.");
+        string driver = queue.QueueDriver.Name, port = queue.QueuePort.Name;
+        Require(string.Equals(driver, "Microsoft Print to PDF", StringComparison.OrdinalIgnoreCase), $"Unexpected PDF driver '{driver}'.");
+        Require(string.Equals(port, "PORTPROMPT:", StringComparison.OrdinalIgnoreCase), $"Unexpected PDF prompt port '{port}'.");
+        Require(!queue.GetPrintJobInfoCollection().Any(), "The dedicated native PDF prompt queue was not empty.");
+        Console.WriteLine($"Using prompt queue '{queue.Name}' on '{port}' with '{driver}'.");
 
         var directory = Directory.CreateTempSubdirectory("enote-wpf-pdf-");
         string source = Path.Combine(directory.FullName, "not.md");
@@ -92,8 +95,7 @@ internal static partial class Program
         Require(FindPdfSaveDialog() is null, "Another native PDF save dialog was already open.");
         Click(ById(preview, "PrintButton"));
         var print = Wait(() => LocateDialog(pid, "Print") ?? LocateDialog(pid, "Yazdır"), "native Windows print dialog");
-        var displayedQueue = Wait(() => Find(print, AutomationElement.NameProperty, queueName, ControlType.ListItem)
-            ?? Find(print, AutomationElement.NameProperty, queueName, ControlType.TreeItem), "disposable PDF queue in print dialog");
+        var displayedQueue = Wait(() => Find(print, AutomationElement.NameProperty, queueName), "disposable PDF queue in print dialog");
         var selection = (SelectionItemPattern)displayedQueue.GetCurrentPattern(SelectionItemPattern.Pattern);
         if (!selection.Current.IsSelected) selection.Select();
         Require(selection.Current.IsSelected, "The PDF prompt queue was not selected.");
