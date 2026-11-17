@@ -10,6 +10,7 @@ internal static partial class Program
     private const string PdfDraft = "TUR 45 Çığ ve İğdır. Ölçü, şüphe, ıslak.";
     private const string PdfSaveTitle = "Save Print Output As";
     private const string PdfSaveTitleTr = "Yazdırma Çıktısını Farklı Kaydet";
+    private const string PdfPromptStatus = "Dosyayı kaydettiyseniz seçtiğiniz konumu kontrol edin.";
 
     private static void CheckPdfSaveDialogs(string executable, string queueName, string outputDirectory)
     {
@@ -60,13 +61,14 @@ internal static partial class Program
             Wait(() => !queue.GetPrintJobInfoCollection().Any() ? "drained" : null, "cancelled PDF queue to drain");
             Require(!Directory.EnumerateFileSystemEntries(outputDirectory).Any(), "Cancelling the native save dialog created an output.");
             Console.WriteLine($"Native PDF save cancellation returned: {cancelStatus}");
+            Require(cancelStatus == PdfPromptStatus, "The preview incorrectly claimed that the cancelled PDF was submitted.");
             Console.WriteLine("1/1 Tur45 native PDF save cancellation without output checks passed.");
 
             picker = OpenPdfSaveDialog(preview, process.Id, queueName);
             FileName(picker).SetValue(saved);
             Click(DialogButton(picker, ["1"], ["Save", "Kaydet"]));
             Wait(() => FindPdfSaveDialog() is null ? "closed" : null, "PDF save confirmation to close");
-            Require(WaitForPrintStatus(preview) == "Yazdırma işi Windows kuyruğuna gönderildi.", "E-Note did not submit the confirmed print.");
+            Require(WaitForPrintStatus(preview) == PdfPromptStatus, "The preview did not report the driver-managed output.");
             Wait(() => IsReady(saved) && !queue.GetPrintJobInfoCollection().Any() ? saved : null, "completed and closed PDF output");
             Require(Directory.EnumerateFileSystemEntries(outputDirectory).SequenceEqual([saved]), "Unexpected PDF output files.");
             Console.WriteLine("1/1 Tur45 native PDF filename confirmation and completed file checks passed.");

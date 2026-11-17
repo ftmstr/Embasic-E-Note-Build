@@ -64,7 +64,8 @@ internal static class WindowsSpoolerAcceptance
             dialog.PrintQueue = server.GetPrintQueue(queueName);
             dialog.PageRangeSelection = landscape ? PageRangeSelection.CurrentPage : PageRangeSelection.UserPages;
             dialog.PageRange = new PageRange(2, 3);
-            LocalA4Print.Submit(dialog, pages, 3, landscape);
+            if (LocalA4Print.Submit(dialog, pages, 3, landscape) != PrintSubmissionResult.Queued)
+                throw new InvalidOperationException("The non-interactive test port was not reported as queued.");
 
             var job = Wait(() => observer.GetPrintJobInfoCollection().SingleOrDefault(), "paused spooler job");
             if (job.JobIdentifier <= 0 || job.Name != "Embasic E-Note — A4 Markdown" || File.Exists(output))

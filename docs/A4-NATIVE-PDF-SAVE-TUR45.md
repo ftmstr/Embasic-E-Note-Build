@@ -14,6 +14,12 @@ A4 portrait page, the unchanged media and crop geometry and exact Turkish
 text from the unsaved buffer. The Markdown file, page sidecar and editor
 buffer are checked separately for changes.
 
+The Windows driver exposes the same WPF return for save confirmation and
+cancellation. For `PORTPROMPT:` queues, the preview therefore points to the
+selected output location without claiming that the driver saved a file or that
+the job entered the queue. The initial Windows print dialog still reports a
+known cancellation explicitly.
+
 The separate file-port PDF and XPS regressions continue to run, including
 selected portrait and landscape pages. This test uses the hosted Windows
 desktop. Physical printing, physical DPI and security are separate gates.
