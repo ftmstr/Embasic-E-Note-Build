@@ -119,6 +119,40 @@ internal static partial class Program
             Require(buffer.Current.Value == ReplacementDraft && File.ReadAllBytes(source).SequenceEqual(originalSource)
                 && File.ReadAllBytes(sidecar).SequenceEqual(originalSidecar), "Overwrite cancellation modified the source or draft.");
             Console.WriteLine("1/1 Tur46 overwrite cancellation preserves the existing PDF checks passed.");
+
+            // Preserve the cancellation evidence before explicitly authorizing a replacement.
+            string preserved = Path.Combine(outputDirectory, "TUR 47 önceki.pdf");
+            File.Copy(saved, preserved, overwrite: false);
+            Require(PdfHash(preserved) == originalPdfHash, "The original PDF evidence copy differs.");
+            Click(ById(window, "PrintPreviewButton"));
+            preview = Dialog(process.Id, PrintPreviewTitle);
+            picker = OpenPdfSaveDialog(preview, process.Id, queueName);
+            pickerPid = picker.Current.ProcessId;
+            FileName(picker).SetValue(saved);
+            Click(DialogButton(picker, ["1"], ["Save", "Kaydet"]));
+            warning = Wait(() => LocateDialog(pickerPid, "Confirm Save As")
+                ?? LocateDialog(pickerPid, "Farklı Kaydetmeyi Onayla"), "native overwrite confirmation for replacement");
+            Require(warning.FindAll(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
+                .Cast<AutomationElement>().Any(text => text.Current.Name.Contains(filename, StringComparison.OrdinalIgnoreCase)),
+                "The replacement warning did not identify the intended PDF.");
+            warningTitle = warning.Current.Name;
+            Click(DialogButton(warning, ["6"], ["Yes", "Evet"]));
+            WaitClosed(pickerPid, warningTitle);
+            Wait(() => FindPdfSaveDialog() is null ? "closed" : null, "confirmed PDF overwrite to close");
+            Require(WaitForPrintStatus(preview) == PdfPromptStatus, "The overwrite status did not reflect driver-managed output.");
+            Wait(() => IsReady(saved) && !queue.GetPrintJobInfoCollection().Any() ? saved : null, "confirmed replacement to finish");
+            string replacementHash = PdfHash(saved);
+            Require(replacementHash != originalPdfHash && PdfHash(preserved) == originalPdfHash,
+                "The confirmed PDF was not replaced or its preserved evidence changed.");
+            Require(Directory.EnumerateFileSystemEntries(outputDirectory).Order().SequenceEqual(new[] { saved, preserved }.Order()),
+                "Unexpected output after the confirmed overwrite.");
+            Click(ById(preview, "ClosePrintPreview"));
+            WaitClosed(process.Id, PrintPreviewTitle);
+            Require(buffer.Current.Value == ReplacementDraft && File.ReadAllBytes(source).SequenceEqual(originalSource)
+                && File.ReadAllBytes(sidecar).SequenceEqual(originalSidecar), "Confirmed overwrite modified the source or draft.");
+            Console.WriteLine($"TUR 47 explicit Yes replaced PDF SHA-256 {originalPdfHash} with {replacementHash}; original copy preserved.");
+            Console.WriteLine("1/1 Tur47 explicit native Yes overwrite and source preservation checks passed.");
         }
         catch (Exception error)
         {

@@ -48,8 +48,10 @@ if ($NativePdfSave) {
         Get-Printer -Name $queue | Format-List Name, DriverName, PortName
         dotnet run --project $project --configuration Release --no-build -- --pdf-save-dialog $app $queue $root.FullName
         if ($LASTEXITCODE -ne 0) { throw 'Native PDF save and cancel acceptance failed.' }
-        & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') (Join-Path $root.FullName 'TUR 45 çıktı.pdf') 'native-save-draft'
-        if ($LASTEXITCODE -ne 0) { throw 'Native PDF file validation failed.' }
+        & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') (Join-Path $root.FullName 'TUR 47 önceki.pdf') 'native-save-draft'
+        if ($LASTEXITCODE -ne 0) { throw 'Preserved native PDF file validation failed.' }
+        & $PdfVerifierPython (Join-Path $PSScriptRoot 'Verify-Tur44DriverPdf.py') (Join-Path $root.FullName 'TUR 45 çıktı.pdf') 'native-overwrite-draft'
+        if ($LASTEXITCODE -ne 0) { throw 'Confirmed replacement PDF validation failed.' }
     } finally {
         try {
             if (Get-Printer -Name $queue -ErrorAction SilentlyContinue) {

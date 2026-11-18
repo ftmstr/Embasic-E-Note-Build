@@ -12,6 +12,7 @@ EXPECTED = {
     "portrait-range": (210, 297, ["SAYFA 2 Çığ ve İğdır", "SAYFA 3 Ölçü, şüphe, ıslak"]),
     "landscape-current": (297, 210, ["SAYFA 3 Ölçü, şüphe, ıslak"]),
     "native-save-draft": (210, 297, ["TUR 45 Çığ ve İğdır. Ölçü, şüphe, ıslak."]),
+    "native-overwrite-draft": (210, 297, ["TUR 46 YENİ TASLAK — önceki PDF ile aynı değildir."]),
 }
 
 
@@ -40,7 +41,7 @@ def verify(path, scenario):
                 raise ValueError(f"Page {index}: expected {expected_text!r}, got {content!r}.")
             print(f"{scenario} page {index}: {size[0]:.2f} x {size[1]:.2f} pt; {content}")
     print(f"{scenario} Windows driver PDF SHA-256 {digest}")
-    round_number = 45 if scenario == "native-save-draft" else 44
+    round_number = {"native-save-draft": 45, "native-overwrite-draft": 47}.get(scenario, 44)
     print(f"1/1 Tur{round_number} {scenario} native Windows PDF output checks passed.")
 
 
