@@ -24,6 +24,13 @@ jobs:
         run: dotnet --info
       - name: Restore
         run: dotnet restore Embasic.ENote.slnx
+      - name: Collect archive-bound application NuGet and license inventory
+        run: python tools/Collect-NugetInventory.py --assets src/Embasic.ENote.App/obj/project.assets.json --output artifacts/nuget-inventory
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-nuget-inventory-${{ github.sha }}
+          path: artifacts/nuget-inventory/
+          if-no-files-found: error
       - name: Build Windows WPF solution
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
       - name: Run Tur36 unsigned UDF writer checks
