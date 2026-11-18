@@ -8,6 +8,27 @@ Embasic E-Note application code remains MIT licensed.
 - `Konscious.Security.Cryptography.Argon2` **1.3.1**:
   MIT license, Keef Aragon;
   https://github.com/kmaragon/Konscious.Security.Cryptography.Argon2
+- `Konscious.Security.Cryptography.Blake2` **1.1.1**:
+  transitive dependency of Argon2 for the application target;
+  MIT license declared by the package, (c) 2024 Keef Aragon;
+  https://github.com/kmaragon/Konscious.Security.Cryptography
+
+## Restored application NuGet evidence (Tur 48)
+
+`tools/Collect-NugetInventory.py` records the application's restored NuGet
+graph, exact package versions, archive SHA-256/SHA-512, restore content hashes,
+selected asset hashes, nuspec license declarations and archived legal files.
+Windows CI retains this evidence in `app-nuget-inventory-<commit>`.
+The signed archive hash and NuGet's restore content hash are recorded separately.
+The collector compares archive and expanded assets with the local restore records.
+Package signature verification and distribution review remain open.
+
+The two Konscious 2024 packages declare MIT in their nuspecs and identify
+source commit `4ed95a5377e411506ca6868409b5c7d7ecaa859b`. Their package archives
+do not include a standalone license text. Retain the original copyright and
+license text after verifying the exact source before distribution. The shared
+.NET/Windows runtime, build/test tooling, fonts, user-provided logo rights,
+and final installer contents require additional inventory and review.
 
 ERB1 backup file handling and ELK1 nested AES-GCM proof-of-concept use
 existing .NET BCL crypto; **no new NuGet dependencies** in Tur 06.
