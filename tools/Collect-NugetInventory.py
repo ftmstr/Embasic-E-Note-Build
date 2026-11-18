@@ -104,10 +104,23 @@ def inventory(assets_path, output, source_root):
         raise ValueError("Tracked source changes prevent a commit-bound inventory.")
     graph = {target: {name: {"type": item["type"], "dependencies": item.get("dependencies", {})}
                       for name, item in sorted(items.items())} for target, items in sorted(targets.items())}
+    project_paths = [project] + [(project.parent / item["msbuildProject"]).resolve()
+                                 for item in libraries.values() if item["type"] == "project"]
+    declarations = []
+    for path in sorted(project_paths):
+        relative_path = path.relative_to(source_root).as_posix()
+        for node in ElementTree.parse(path).findall(".//PackageReference"):
+            declarations.append({"project": relative_path, "id": node.get("Include"),
+                                 "version": node.get("Version"), "condition": node.get("Condition")})
+    frameworks = {name: {"framework_references": value.get("frameworkReferences", {}),
+                         "pruning_ranges_for_declared_packages": {
+                             item["id"]: value["packagesToPrune"][item["id"]] for item in declarations
+                             if item["id"] in value.get("packagesToPrune", {})}}
+                  for name, value in assets["project"]["frameworks"].items()}
     result = {"schema_version": 1, "source_commit": head, "application": "Embasic.ENote.App",
               "assets_sha256": sha256(assets_path.read_bytes()), "scope": "restored application NuGet graph",
               "release_status": "BLOCKED", "package_count": len(packages), "packages": packages,
-              "targets": graph,
+              "targets": graph, "declared_package_references": declarations, "frameworks": frameworks,
               "open_reviews": ["Package license text and distribution obligations", "Shared .NET and Windows runtime",
                                "Build and test tools", "Fonts and logo redistribution rights", "Final installer inventory"]}
     output.mkdir(parents=True, exist_ok=False)

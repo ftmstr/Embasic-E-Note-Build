@@ -17,11 +17,17 @@ For signed NuGet packages, the restore content hash excludes signature metadata.
 It differs from the archive hash. Both are retained with the cache source.
 This collector does not verify publisher trust or package signatures.
 
-The three currently restored package versions declare MIT. Argon2 and Blake2
+The inspected package versions declare MIT. Argon2 and Blake2
 have no standalone license file in their archives. Their exact upstream source
 license text and redistribution obligations remain REVIEW. The shared runtime,
 SDK/build/test tools, fonts, logos and final installer are separate open items.
 V1.0 remains BLOCKED and the WPF secure note remains DISABLED.
+
+The inventory also records source PackageReference declarations, shared
+framework references and pruning ranges for those declared packages. The
+Windows restore can prune framework-provided ProtectedData while an older
+cross-targeting SDK restores it as a package. Record each actual resolved graph
+with its declared references; a fixed package count cannot prove completeness.
 
 References
 
