@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "PaperId": "A4",
+  "WidthMm": 210,
+  "HeightMm": 297,
+  "Landscape": false,
+  "ZoomPercent": 100,
+  "LeftMarginMm": 17,
+  "RightMarginMm": 23,
+  "TopMarginMm": 19,
+  "BottomMarginMm": 27
+}

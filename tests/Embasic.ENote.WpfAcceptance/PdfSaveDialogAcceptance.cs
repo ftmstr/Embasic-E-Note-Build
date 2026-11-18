@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Printing;
+using System.Security.Cryptography;
 using System.Windows.Automation;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
@@ -8,6 +9,7 @@ using Embasic.ENote.Storage;
 internal static partial class Program
 {
     private const string PdfDraft = "TUR 45 Çığ ve İğdır. Ölçü, şüphe, ıslak.";
+    private const string ReplacementDraft = "TUR 46 YENİ TASLAK — önceki PDF ile aynı değildir.";
     private const string PdfSaveTitle = "Save Print Output As";
     private const string PdfSaveTitleTr = "Yazdırma Çıktısını Farklı Kaydet";
     private const string PdfPromptStatus = "Dosyayı kaydettiyseniz seçtiğiniz konumu kontrol edin.";
@@ -79,6 +81,44 @@ internal static partial class Program
             Require(File.ReadAllBytes(source).SequenceEqual(originalSource) && File.ReadAllBytes(sidecar).SequenceEqual(originalSidecar),
                 "The source or page sidecar changed during printing.");
             Console.WriteLine("1/1 Tur45 Markdown, sidecar and unsaved buffer preservation checks passed.");
+
+            string originalPdfHash = PdfHash(saved);
+            buffer.SetValue(ReplacementDraft);
+            Require(buffer.Current.Value == ReplacementDraft, "The replacement draft was not applied.");
+            Click(ById(window, "PrintPreviewButton"));
+            preview = Dialog(process.Id, PrintPreviewTitle);
+            picker = OpenPdfSaveDialog(preview, process.Id, queueName);
+            int pickerPid = picker.Current.ProcessId;
+            FileName(picker).SetValue(saved);
+            Click(DialogButton(picker, ["1"], ["Save", "Kaydet"]));
+            var warning = Wait(() => LocateDialog(pickerPid, "Confirm Save As")
+                ?? LocateDialog(pickerPid, "Farklı Kaydetmeyi Onayla"), "native overwrite warning");
+            string filename = Path.GetFileName(saved);
+            Require(warning.FindAll(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text))
+                .Cast<AutomationElement>().Any(text => text.Current.Name.Contains(filename, StringComparison.OrdinalIgnoreCase)),
+                "The overwrite warning did not identify the existing PDF.");
+            string warningTitle = warning.Current.Name;
+            Console.WriteLine($"Native overwrite warning '{warningTitle}' identified '{filename}'.");
+            Click(DialogButton(warning, ["7"], ["No", "Hayır"]));
+            WaitClosed(pickerPid, warningTitle);
+            picker = Wait(FindPdfSaveDialog, "native PDF save dialog after declining overwrite");
+            Require(PdfHash(saved) == originalPdfHash, "Declining the overwrite changed the original PDF.");
+            Console.WriteLine("1/1 Tur46 native overwrite warning and decline checks passed.");
+
+            Click(DialogButton(picker, ["2"], ["Cancel", "İptal"]));
+            Wait(() => FindPdfSaveDialog() is null ? "closed" : null, "PDF overwrite cancellation to close");
+            Require(WaitForPrintStatus(preview) == PdfPromptStatus, "The preview reported a cancelled rewrite as sent.");
+            Wait(() => !queue.GetPrintJobInfoCollection().Any() ? "drained" : null, "declined overwrite queue to drain");
+            string finalPdfHash = PdfHash(saved);
+            Require(finalPdfHash == originalPdfHash, "Cancelling after the warning changed the original PDF.");
+            Require(Directory.EnumerateFileSystemEntries(outputDirectory).SequenceEqual([saved]), "Overwrite cancellation left another file.");
+            Console.WriteLine($"TUR 46 existing PDF SHA-256 before {originalPdfHash}; after {finalPdfHash}.");
+            Click(ById(preview, "ClosePrintPreview"));
+            WaitClosed(process.Id, PrintPreviewTitle);
+            Require(buffer.Current.Value == ReplacementDraft && File.ReadAllBytes(source).SequenceEqual(originalSource)
+                && File.ReadAllBytes(sidecar).SequenceEqual(originalSidecar), "Overwrite cancellation modified the source or draft.");
+            Console.WriteLine("1/1 Tur46 overwrite cancellation preserves the existing PDF checks passed.");
         }
         catch (Exception error)
         {
@@ -134,5 +174,11 @@ internal static partial class Program
             return file.Length > 0;
         }
         catch (IOException) { return false; }
+    }
+
+    private static string PdfHash(string path)
+    {
+        using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None);
+        return Convert.ToHexStringLower(SHA256.HashData(file));
     }
 }

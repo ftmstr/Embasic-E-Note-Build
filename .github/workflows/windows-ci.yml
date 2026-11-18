@@ -262,7 +262,7 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Build the actual WPF application and UI acceptance harness
         run: dotnet build tests/Embasic.ENote.WpfAcceptance --configuration Release
-      - name: Cancel and confirm the native Microsoft Print to PDF save dialog from E-Note
+      - name: Confirm and cancel PDF save and verify the native overwrite warning
         shell: pwsh
         timeout-minutes: 6
         run: |
