@@ -1,0 +1,148 @@
+{
+  "source_commit": "4ed95a5377e411506ca6868409b5c7d7ecaa859b",
+  "scope": "22 C# files in the two package source directories",
+  "method": "case-insensitive copyright/license/attribution/http/based-on text scan, followed by review of matches",
+  "files": [
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2.cs",
+      "sha": "6e8d649e68dbf06c60502d2597219b6e05515370",
+      "matches": [
+        "    /// An implementation of Argon2 https://github.com/P-H-C/phc-winner-argon2"
+      ],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2Core.cs",
+      "sha": "35a85a1e601b729df60bad52d8a94c06286b2e53",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2Lane.cs",
+      "sha": "9d3469cde44c513e658f8d4beb6c07c46211285a",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2d.cs",
+      "sha": "b1f7f9d0db7f6c402a9643abd475d28fe3e601bd",
+      "matches": [
+        "    /// An implementation of Argon2 https://github.com/P-H-C/phc-winner-argon2"
+      ],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2dCore.cs",
+      "sha": "dee5d3b0cf3781b9f8b4627853bb40fcd6f9b005",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2i.cs",
+      "sha": "a5f519b02e009771c9afd1d7c5703f9d23c2c10a",
+      "matches": [
+        "    /// An implementation of Argon2 https://github.com/P-H-C/phc-winner-argon2"
+      ],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2iCore.cs",
+      "sha": "f0b8e842891cffc0f9f3f39b2e3003be4b791c8d",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2id.cs",
+      "sha": "3d7b70cc3bce419e54b0fe0a49dd52163456d053",
+      "matches": [
+        "    /// An implementation of Argon2 https://github.com/P-H-C/phc-winner-argon2"
+      ],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/Argon2idCore.cs",
+      "sha": "bf9ffded305500233b88c9102a4c2c36fb77090f",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/IArgon2PseudoRands.cs",
+      "sha": "9ea7f3e29f39519762561d1cdba0b796dfae7f45",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/LittleEndianActiveStream.cs",
+      "sha": "be35dae34b6df9976bd3d0c213a296cddb0a783b",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/ModifiedBlake2.cs",
+      "sha": "7a4e1927e3ea2396bf4f94012e2e9fea1c02345c",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/SpanExtensions.cs",
+      "sha": "8a59e60b34d93ca2fd9b08066cdc1a8447813b17",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Argon2/TestSupport.cs",
+      "sha": "2d8ce349be33f2e5ce8a66ea3dd184050d6d6be1",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/Blake2Constants.cs",
+      "sha": "59e6ff051b35b758aeba1340ddc0a665f1484ee3",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/Blake2bBase.cs",
+      "sha": "77f9711faad57acda8bbe3561fbab6e666fca514",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/Blake2bNormal.cs",
+      "sha": "e42cb90894cac2b5fbd39a7061d11f0bbe2ead07",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/Blake2bSimd.cs",
+      "sha": "90addc4984d555ccc0597b238513f6352e16a9cc",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/Blake2bSlow.cs",
+      "sha": "aacf18b0585312a95aa2bd23963a9e25e0484596",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/HMACBlake2B.cs",
+      "sha": "adeebe39c07a5bf3781506dd90117e16998383d4",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/HMACBlakeSimd.cs",
+      "sha": "d84d6c08726ee2c39e90e71359010c6b32bc4a70",
+      "matches": [],
+      "error": false
+    },
+    {
+      "path": "Konscious.Security.Cryptography.Blake2/TestSupport.cs",
+      "sha": "dfa959ed9738820ed5173eb1bf8188b4898ce1c4",
+      "matches": [],
+      "error": false
+    }
+  ],
+  "open_review": "Algorithm references are retained here. This scan does not establish binary/source reproducibility or complete legal clearance."
+}

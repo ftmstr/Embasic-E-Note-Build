@@ -1,0 +1,2 @@
+# Keep the exact upstream legal evidence bytes on every checkout platform.
+/third-party/Konscious/** -text
