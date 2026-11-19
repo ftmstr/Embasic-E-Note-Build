@@ -186,7 +186,7 @@ def inventory(assets_path, output, source_root):
                "License declarations and archived texts require distribution review. Shared runtime, build/test tools, "
                "fonts, logos and installer contents remain open.\n")
     (output / "nuget-inventory.md").write_text(summary, encoding="utf-8")
-    print(f"Collected {len(packages)} application NuGet packages and {len(evidence)} archive-bound legal evidence files.")
+    print(f"Collected {len(packages)} application NuGet packages and {len(evidence)} package/source legal evidence files.")
     print(f"Source commit {head}; release BLOCKED.")
 
 
