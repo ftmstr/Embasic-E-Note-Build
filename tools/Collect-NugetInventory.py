@@ -6,6 +6,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import subprocess
+import sys
 from xml.etree import ElementTree
 from zipfile import ZipFile
 
@@ -117,11 +118,50 @@ def inventory(assets_path, output, source_root):
                              item["id"]: value["packagesToPrune"][item["id"]] for item in declarations
                              if item["id"] in value.get("packagesToPrune", {})}}
                   for name, value in assets["project"]["frameworks"].items()}
+    upstream_root = source_root / "third-party" / "Konscious"
+    provenance_data = (upstream_root / "provenance.json").read_bytes()
+    provenance = json.loads(provenance_data)
+    source_legal_files = []
+    for item in provenance["files"]:
+        path = (upstream_root / item["path"]).resolve()
+        path.relative_to(upstream_root.resolve())
+        raw = path.read_bytes()
+        blob = hashlib.sha1(b"blob " + str(len(raw)).encode("ascii") + b"\0" + raw).hexdigest()
+        if sha256(raw) != item["sha256"] or blob != item["git_blob"]:
+            raise ValueError(f"Upstream license evidence changed: {item['path']}.")
+        location = "upstream/Konscious/" + item["path"]
+        evidence[location] = raw
+        source_legal_files.append({"evidence_path": location, "sha256": item["sha256"],
+                                   "git_blob": blob, "source_url": item["source_url"]})
+    evidence["upstream/Konscious/provenance.json"] = provenance_data
+    header_review = (upstream_root / "source-header-review.json").read_bytes()
+    evidence["upstream/Konscious/source-header-review.json"] = header_review
+    for package in packages:
+        recorded = next((item for item in provenance["packages"] if item["id"] == package["id"]), None)
+        if recorded is None:
+            continue
+        if (package["version"] != recorded["version"] or package["nuspec_sha256"] != recorded["nuspec_sha256"] or
+                package["archive_sha256"] != recorded["archive_sha256"] or
+                package["repository"].get("commit") != provenance["commit"] or
+                package["repository"].get("url") != provenance["repository"] or
+                package["license"]["value"] != provenance["license_expression"] or
+                package["copyright"] != provenance["package_copyright"]):
+            raise ValueError(f"Package and pinned source provenance differ for {package['id']}.")
+        package["license"]["source_text"] = "SOURCE_TEXT_VERIFIED"
+        package["source_legal_files"] = source_legal_files
+        package["source_copyright"] = provenance["source_copyright"]
+    sdk = subprocess.check_output(["dotnet", "--version"], text=True).strip()
+    runtimes = subprocess.check_output(["dotnet", "--list-runtimes"], text=True).splitlines()
+    environment = {"sdk_version": sdk, "python_version": sys.version.split()[0],
+                   "installed_shared_runtimes": [{"name": line.split()[0], "version": line.split()[1]}
+                                                 for line in runtimes if line.strip()]}
     result = {"schema_version": 1, "source_commit": head, "application": "Embasic.ENote.App",
               "assets_sha256": sha256(assets_path.read_bytes()), "scope": "restored application NuGet graph",
               "release_status": "BLOCKED", "package_count": len(packages), "packages": packages,
               "targets": graph, "declared_package_references": declarations, "frameworks": frameworks,
-              "open_reviews": ["Package license text and distribution obligations", "Shared .NET and Windows runtime",
+              "build_environment": environment,
+              "source_provenance_sha256": sha256(provenance_data), "source_header_review_sha256": sha256(header_review),
+              "open_reviews": ["Final package distribution obligations and signature verification", "Shared .NET and Windows runtime",
                                "Build and test tools", "Fonts and logo redistribution rights", "Final installer inventory"]}
     output.mkdir(parents=True, exist_ok=False)
     for path, raw in evidence.items():
@@ -136,6 +176,8 @@ def inventory(assets_path, output, source_root):
     for package in packages:
         license_info = package["license"]
         description = f'{license_info["type"]}: {license_info["value"]}' if license_info["type"] else "Legacy URL only · REVIEW"
+        if license_info.get("source_text"):
+            description += " · source text verified"
         rows.append(f'| {package["id"]} | {package["version"]} | {description} | {len(package["legal_files"])} |')
     summary = (f"# Restored application NuGet inventory\n\nSource commit `{head}`. Release BLOCKED.\n\n"
                "| Package | Version | Declared license | Legal evidence files |\n|---|---|---|---|\n" +

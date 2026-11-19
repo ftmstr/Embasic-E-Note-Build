@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/kmaragon/Konscious.Security.Cryptography.git",
+  "commit": "4ed95a5377e411506ca6868409b5c7d7ecaa859b",
+  "license_expression": "MIT",
+  "license_file": "LICENSE",
+  "source_copyright": "Copyright (c) 2017 Keef Aragon",
+  "package_copyright": "(c) 2024 Keef Aragon",
+  "files": [
+    {
+      "path": "LICENSE",
+      "source_path": "LICENSE",
+      "git_blob": "c95f549eae075fc662539dce189665ab5cb247a3",
+      "sha256": "e476e0e780e301a7e65c7b6f54b0c67e9614429ba3ac1c5b498915bf8e6a1bec",
+      "source_url": "https://github.com/kmaragon/Konscious.Security.Cryptography/blob/4ed95a5377e411506ca6868409b5c7d7ecaa859b/LICENSE"
+    },
+    {
+      "path": "Argon2.csproj.txt",
+      "source_path": "Konscious.Security.Cryptography.Argon2/Konscious.Security.Cryptography.Argon2.csproj",
+      "git_blob": "6be23167bcc150dd2857f4d8b8eb6144468a25dc",
+      "sha256": "7b839b653a48f2ca77e258145f0af0a9eb3db1893bf93b8149c46860179b147c",
+      "source_url": "https://github.com/kmaragon/Konscious.Security.Cryptography/blob/4ed95a5377e411506ca6868409b5c7d7ecaa859b/Konscious.Security.Cryptography.Argon2/Konscious.Security.Cryptography.Argon2.csproj"
+    },
+    {
+      "path": "Blake2.csproj.txt",
+      "source_path": "Konscious.Security.Cryptography.Blake2/Konscious.Security.Cryptography.Blake2.csproj",
+      "git_blob": "20b11457c418308c6e3dbb796dee7e4f28d86cc4",
+      "sha256": "baf62481bc438c55b6cdb4ea4949b22ab77d085afcdc2ad55a2c61a47a116bb3",
+      "source_url": "https://github.com/kmaragon/Konscious.Security.Cryptography/blob/4ed95a5377e411506ca6868409b5c7d7ecaa859b/Konscious.Security.Cryptography.Blake2/Konscious.Security.Cryptography.Blake2.csproj"
+    }
+  ],
+  "packages": [
+    {
+      "id": "Konscious.Security.Cryptography.Argon2",
+      "version": "1.3.1",
+      "nuspec_sha256": "952e0d9c45eeb92c30fa361f7612e73a9844435f00a498f23e36ce348708b255",
+      "archive_sha256": "9e1a1cba708f10a4da6353284e47d196b3da203c5448b64ac7835630d7318550"
+    },
+    {
+      "id": "Konscious.Security.Cryptography.Blake2",
+      "version": "1.1.1",
+      "nuspec_sha256": "380600610d3e7485e705380fd4694bb25346ad96cdc5fedc4186fe7ad90e5e0f",
+      "archive_sha256": "d758618b4cedf7ce24d2654de830f5efb3cd56cb3bfc89ed902d69aba54a518f"
+    }
+  ],
+  "review": "SOURCE_TEXT_VERIFIED",
+  "distribution_review": "REVIEW"
+}

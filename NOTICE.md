@@ -7,7 +7,7 @@ Embasic E-Note application code remains MIT licensed.
   https://github.com/dotnet/runtime
 - `Konscious.Security.Cryptography.Argon2` **1.3.1**:
   MIT license, Keef Aragon;
-  https://github.com/kmaragon/Konscious.Security.Cryptography.Argon2
+  https://github.com/kmaragon/Konscious.Security.Cryptography
 - `Konscious.Security.Cryptography.Blake2` **1.1.1**:
   transitive dependency of Argon2 for the application target;
   MIT license declared by the package, (c) 2024 Keef Aragon;
@@ -25,8 +25,15 @@ Package signature verification and distribution review remain open.
 
 The two Konscious 2024 packages declare MIT in their nuspecs and identify
 source commit `4ed95a5377e411506ca6868409b5c7d7ecaa859b`. Their package archives
-do not include a standalone license text. Retain the original copyright and
-license text after verifying the exact source before distribution. The shared
+do not include a standalone license text. The original upstream MIT text is
+preserved verbatim in `third-party/Konscious/LICENSE`, including
+`Copyright (c) 2017 Keef Aragon`. Both package projects and nuspecs separately
+state `(c) 2024 Keef Aragon`; that attribution is retained in provenance.
+`third-party/Konscious/provenance.json` binds the exact source files and package
+archives to Git blob and SHA-256 values. CI includes the original license,
+project metadata and provenance in the dependency evidence artifact.
+Final binary/source provenance, signatures and distribution acceptance remain
+open. The shared
 .NET/Windows runtime, build/test tooling, fonts, user-provided logo rights,
 and final installer contents require additional inventory and review.
 
