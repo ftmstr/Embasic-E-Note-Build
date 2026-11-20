@@ -22,6 +22,14 @@ jobs:
           dotnet-version: '10.0.x'
       - name: SDK information
         run: dotnet --info
+      - name: Retain installed SDK runtime and Python legal evidence
+        run: python tools/Collect-EnvironmentLegal.py --job build-and-smoke --output artifacts/environment-legal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: environment-legal-build-${{ github.sha }}
+          path: artifacts/environment-legal/
+          include-hidden-files: true
+          if-no-files-found: error
       - name: Restore
         run: dotnet restore Embasic.ENote.slnx
       - name: Collect archive-bound application NuGet and license inventory
@@ -221,6 +229,14 @@ jobs:
       - name: Open, edit, save and reopen the actual WPF copy in official UYAP
         shell: pwsh
         run: ./tools/Test-Tur37UyapEditor.ps1 -WpfUdfPath (Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf')
+      - name: Retain installed Temurin and UYAP test environment legal evidence
+        run: python tools/Collect-EnvironmentLegal.py --java --job tur39-wpf-udf --output artifacts/environment-legal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: environment-legal-java-${{ github.sha }}
+          path: artifacts/environment-legal/
+          include-hidden-files: true
+          if-no-files-found: error
 
   tur43-windows-spooler:
     runs-on: windows-latest
@@ -280,6 +296,18 @@ jobs:
           & $python -m pip install --require-hashes --only-binary=:all: -r ./tools/tur44-pdf-requirements.txt
           if ($LASTEXITCODE -ne 0) { throw 'PDF verifier dependency failed.' }
           ./tools/Test-Tur43WindowsSpooler.ps1 -PdfVerifierPython $python -NativePdfSave
+      - name: Retain exact PDF verifier license and package metadata
+        shell: pwsh
+        run: |
+          $python = Join-Path $env:RUNNER_TEMP 'enote-pdf-verifier/Scripts/python.exe'
+          & $python tools/Collect-EnvironmentLegal.py --pypdf --job tur45-windows-pdf-save-dialog --output artifacts/environment-legal
+          if ($LASTEXITCODE -ne 0) { throw 'Environment legal inventory failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: environment-legal-pdf-${{ github.sha }}
+          path: artifacts/environment-legal/
+          include-hidden-files: true
+          if-no-files-found: error
 
   tur34-vault-acceptance:
     runs-on: windows-latest
