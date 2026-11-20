@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 from BuildProvenance import verify as verify_build_provenance, link_component
+from PackageTrust import verify as verify_package_trust
 
 
 LEGAL = re.compile(r"^(licen[cs]e|notice|copying|copyright|third.?party(?:notices)?|assembly_exception)([._-]|$)", re.I)
@@ -174,6 +175,7 @@ def collect(output, source, job, include_java=False, include_pypdf=False):
                            "source_mapping": "REVIEW: vendor release metadata retained; source/build match open"})
 
     provenance_index, source_evidence = verify_build_provenance(source, job, retain)
+    package_evidence = verify_package_trust(source, job, retain)
     for component in components:
         link_component(component, provenance_index)
     manifest = {"schema_version": 2, "source_commit": command("git", "-C", str(source), "rev-parse", "HEAD"),
@@ -181,6 +183,7 @@ def collect(output, source, job, include_java=False, include_pypdf=False):
                 "workflow_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
                 "platform": sys.platform, "scope": "observed installed CI environment; not a distribution SBOM",
                 "release_status": "BLOCKED", "components": components, "build_provenance": source_evidence,
+                "package_evidence": package_evidence,
                 "open_reviews": ["Authenticode/package signatures and trust roots", "binary/source reproducibility",
                                  "per-version runtime legal applicability", "GitHub Actions exact source/license inventory",
                                  "font embedding and logo distribution rights", "final installer file and license inventory"]}

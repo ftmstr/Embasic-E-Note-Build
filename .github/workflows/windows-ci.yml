@@ -24,16 +24,19 @@ jobs:
         run: dotnet --info
       - name: Retain installed SDK runtime and Python legal evidence
         run: python tools/Collect-EnvironmentLegal.py --job build-and-smoke --output artifacts/environment-legal
+      - name: Restore
+        run: dotnet restore Embasic.ENote.slnx
+      - name: Collect archive-bound application NuGet and license inventory
+        run: python tools/Collect-NugetInventory.py --assets src/Embasic.ENote.App/obj/project.assets.json --output artifacts/nuget-inventory
+      - name: Observe package signatures certificate chains and runner tool origins
+        shell: pwsh
+        run: ./tools/Collect-WindowsTrust.ps1 -InventoryDirectory artifacts/environment-legal -NugetAssets src/Embasic.ENote.App/obj/project.assets.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # TUR50 observed v4
         with:
           name: environment-legal-build-${{ github.sha }}
           path: artifacts/environment-legal/
           include-hidden-files: true
           if-no-files-found: error
-      - name: Restore
-        run: dotnet restore Embasic.ENote.slnx
-      - name: Collect archive-bound application NuGet and license inventory
-        run: python tools/Collect-NugetInventory.py --assets src/Embasic.ENote.App/obj/project.assets.json --output artifacts/nuget-inventory
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # TUR50 observed v4
         with:
           name: app-nuget-inventory-${{ github.sha }}
@@ -231,6 +234,9 @@ jobs:
         run: ./tools/Test-Tur37UyapEditor.ps1 -WpfUdfPath (Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf')
       - name: Retain installed Temurin and UYAP test environment legal evidence
         run: python tools/Collect-EnvironmentLegal.py --java --job tur39-wpf-udf --output artifacts/environment-legal
+      - name: Observe Java runtime and runner signatures and origins
+        shell: pwsh
+        run: ./tools/Collect-WindowsTrust.ps1 -InventoryDirectory artifacts/environment-legal
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # TUR50 observed v4
         with:
           name: environment-legal-java-${{ github.sha }}
@@ -302,6 +308,9 @@ jobs:
           $python = Join-Path $env:RUNNER_TEMP 'enote-pdf-verifier/Scripts/python.exe'
           & $python tools/Collect-EnvironmentLegal.py --pypdf --job tur45-windows-pdf-save-dialog --output artifacts/environment-legal
           if ($LASTEXITCODE -ne 0) { throw 'Environment legal inventory failed' }
+      - name: Observe PDF verifier and runner signatures and origins
+        shell: pwsh
+        run: ./tools/Collect-WindowsTrust.ps1 -InventoryDirectory artifacts/environment-legal
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # TUR50 observed v4
         with:
           name: environment-legal-pdf-${{ github.sha }}
