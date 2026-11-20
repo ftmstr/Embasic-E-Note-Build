@@ -1,0 +1,3148 @@
+{
+  "schema_version": 1,
+  "actions": [
+    {
+      "repository": "actions/checkout",
+      "commit": "11d5960a326750d5838078e36cf38b85af677262",
+      "previous_ref": "v4",
+      "git_tree": "f8a7b72dc00648d050099727d25ca92a43ad1162",
+      "observed_run_ids": [
+        44687921233,
+        44687927151
+      ],
+      "source_archive": {
+        "path": "action-checkout.zip",
+        "sha256": "85a8ca18e2ddaea883fb720c0adee5af3befc018b41a8c707577f223517ec17c",
+        "files": [
+          {
+            "path": ".licensed.yml",
+            "size_bytes": 139,
+            "sha256": "d6264ce95ed20c691e3e2b82ea9ebde054d90e16961afc58263e89cebeceb1d4",
+            "git_blob": "15f619829c198f08b52da7549f6602495f4eef27"
+          },
+          {
+            "path": ".licenses/npm/@actions/core.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "a821d31d7e314f0b6425dea7868c8c5f7a97f65c55c77a54d2b718b2041dafe7",
+            "git_blob": "06638c01d908037d75e2cc98a3047d7a97d0008d"
+          },
+          {
+            "path": ".licenses/npm/@actions/exec.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "fa98259e4ddeecd8f63b83537184b386ca1195b71f3909bc0e6eec18d31c48e9",
+            "git_blob": "cbc5abd39e6391ec6e526e6536f1a3efd706ec05"
+          },
+          {
+            "path": ".licenses/npm/@actions/github.dep.yml",
+            "size_bytes": 1309,
+            "sha256": "1087e313de07806c88472f85c9afa39a6e128a41596d7323ba994d3f279b7ba3",
+            "git_blob": "423601cac95ec71f36cafb9263d0b2889c835a0f"
+          },
+          {
+            "path": ".licenses/npm/@actions/http-client.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "de888653989e27f7832d5fbd2091c6b1b33a1cce70e133ef032ff93277390c33",
+            "git_blob": "cdccff4e12d03fd72ab43975a6fb77dd0764565e"
+          },
+          {
+            "path": ".licenses/npm/@actions/io.dep.yml",
+            "size_bytes": 1297,
+            "sha256": "f36b04f1719976c7cff84500325d5e25b40728afa133eaf4c64d3bd8ba1b9082",
+            "git_blob": "d28465403a243506f508f965c1c0641dfd5e0673"
+          },
+          {
+            "path": ".licenses/npm/@actions/tool-cache.dep.yml",
+            "size_bytes": 1321,
+            "sha256": "a50376fa013d3c0b9be65cbe5bd3416270d258be42f082188da4a1e822cfc434",
+            "git_blob": "fbf911fef93e283a9bea20fd65d59fe51dad7d22"
+          },
+          {
+            "path": ".licenses/npm/@fastify/busboy.dep.yml",
+            "size_bytes": 1320,
+            "sha256": "1af4510f988f0c45443dd2893b5f67dfb129a60068c7c992d83a49407fd38328",
+            "git_blob": "4344f3a43f34f7c98d5a7162dc2b060ec558e72f"
+          },
+          {
+            "path": ".licenses/npm/@octokit/auth-token.dep.yml",
+            "size_bytes": 1393,
+            "sha256": "24835b6f45c6082f003799a091c66381617a47ab1fcbfb197a548cf3cc3abc0c",
+            "git_blob": "2ffbd9eaf76d929968946ff59b8dac3c14608a7e"
+          },
+          {
+            "path": ".licenses/npm/@octokit/core.dep.yml",
+            "size_bytes": 1381,
+            "sha256": "87aca0ba510209d7a4ac0bc68df33376cda04094daad55de096c546e43ac25b7",
+            "git_blob": "55830bf1117ea08221245945e0b59b35240b5cfe"
+          },
+          {
+            "path": ".licenses/npm/@octokit/endpoint.dep.yml",
+            "size_bytes": 1387,
+            "sha256": "3e79a6e94348e097f4293b6a4da3ddbfeee194249924b545991900391fc1b698",
+            "git_blob": "71234c6712bee8579721fd04135149f4cf4e6bca"
+          },
+          {
+            "path": ".licenses/npm/@octokit/graphql.dep.yml",
+            "size_bytes": 1381,
+            "sha256": "5b85dd1f4168c8d42d5b9b51e535c4d8546cc610fcea6a615be2f60a73a8fdb4",
+            "git_blob": "898286909537997d5d50ba0db0d3e8a30f43373e"
+          },
+          {
+            "path": ".licenses/npm/@octokit/openapi-types-20.0.0.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "9374f868192b01df7ec209f102fdd8579790974ad2cd886fe42b103f0ccca5bf",
+            "git_blob": "b94d58918928b46c4dfbd304cd2864bfe4adc6ca"
+          },
+          {
+            "path": ".licenses/npm/@octokit/openapi-types-22.1.0.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "9cb7f20eb91c500a5423848fca12b862746669b111d28900e5fc831f9232ae89",
+            "git_blob": "f9be342546e0883651bc8db650fdc8aed1356d8c"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-paginate-rest.dep.yml",
+            "size_bytes": 1374,
+            "sha256": "d21f740b093086947051c4fc144b53701daa07396d1aaae1ff548e53a43f31a3",
+            "git_blob": "c1853a6f2abcfb7a58928fcb1e4d4ff44cd7018a"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-rest-endpoint-methods.dep.yml",
+            "size_bytes": 1407,
+            "sha256": "9a765d252af6bc08a0b50bc511726da8228e2f9f17ed2cb93068a54461261013",
+            "git_blob": "3f4728f4e145ff400ada982d0b066d6f961f328d"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-error.dep.yml",
+            "size_bytes": 1377,
+            "sha256": "26986afa4a15ca82a605a0c9c9aa0bc36a765f73d0dc1efadceb4d23bf768aec",
+            "git_blob": "9c9d70242a68452f0f7a0be6d088e992c83a615e"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request.dep.yml",
+            "size_bytes": 1423,
+            "sha256": "fdbafbbada095392fb86e0b16dca9bc27f231f28b3798399e41a79e29269cc9c",
+            "git_blob": "ef1a5542bfc69f9b38febda71fa1078f43b36411"
+          },
+          {
+            "path": ".licenses/npm/@octokit/types-12.6.0.dep.yml",
+            "size_bytes": 1357,
+            "sha256": "85f8212d94367fb47f092ca332dc343c4a550c8adcda72a3ad0ade4eb288adc9",
+            "git_blob": "ffc81c9fd1068d9bca7140b0140814726124af7e"
+          },
+          {
+            "path": ".licenses/npm/@octokit/types-13.4.1.dep.yml",
+            "size_bytes": 1357,
+            "sha256": "76608b118d2fb13c0f340dea6ee5aac6d885fa63b05b0b91772c3cca454ad19d",
+            "git_blob": "5d9ee98c132209491d434d6142bb600947548d36"
+          },
+          {
+            "path": ".licenses/npm/before-after-hook.dep.yml",
+            "size_bytes": 12308,
+            "sha256": "dd67ec1f9368755c16dfc76e2bc69496b241ddeced0c4be9a9b4e8d6b0c2e51a",
+            "git_blob": "c147501643837a50c60bf2f898ec2adef5b84b80"
+          },
+          {
+            "path": ".licenses/npm/deprecation.dep.yml",
+            "size_bytes": 1066,
+            "sha256": "05cc701233db88ecd57b3921738f6493539a91a6be84a42c6bbcaa725e4ef5b8",
+            "git_blob": "12fd7cec70b8bd94724ff65b854269269db02504"
+          },
+          {
+            "path": ".licenses/npm/once.dep.yml",
+            "size_bytes": 1006,
+            "sha256": "563cf109fbfb00b55c5876760ef264ca5242df929935fcd29434f4be40a6d99e",
+            "git_blob": "7cf525acbb095d6d79c345aea72c63747a2d23e1"
+          },
+          {
+            "path": ".licenses/npm/semver.dep.yml",
+            "size_bytes": 980,
+            "sha256": "602e6b9ba2c96a97cb13c106254fb9fce2cf32086fcaa2626dc96e228b47b92f",
+            "git_blob": "248cb030140ec2e555e4f01285814778b13cb00e"
+          },
+          {
+            "path": ".licenses/npm/tunnel.dep.yml",
+            "size_bytes": 1488,
+            "sha256": "d31e076abf1fa9783dcdc37e27753f6bd9a61f1a5935676475c39ff68297ce78",
+            "git_blob": "9a7111da96a36c81dd1160453ab32caa08c8707f"
+          },
+          {
+            "path": ".licenses/npm/undici.dep.yml",
+            "size_bytes": 1396,
+            "sha256": "5cefa4e129348345297f3e602d639aaccdfa052069a744cfe8512a7c256faac7",
+            "git_blob": "fadecf4a743b7ff972adff6fb838d0547a1c7578"
+          },
+          {
+            "path": ".licenses/npm/universal-user-agent.dep.yml",
+            "size_bytes": 1065,
+            "sha256": "4c9cee4c5ab4523e6097edac18cc61800c524fd210b6d5ad82d75d368de544b0",
+            "git_blob": "708e8965f36e8890ba155a6b1d72275c6534e67f"
+          },
+          {
+            "path": ".licenses/npm/uuid-3.4.0.dep.yml",
+            "size_bytes": 1551,
+            "sha256": "5da742edfd302177ac06280e803a4b4a568b4c3489bda87a69c1474d7c171fb2",
+            "git_blob": "461f159ddef8d5b617cc91c6b65d9517e00601a8"
+          },
+          {
+            "path": ".licenses/npm/uuid-8.3.2.dep.yml",
+            "size_bytes": 1324,
+            "sha256": "a040e590c7b4e337cc8a036c59bb8e52ec73a9587a59c3d457ff5ec01fe44684",
+            "git_blob": "bf84da082324fb7972ccc5d1e813ecbc29df1c0b"
+          },
+          {
+            "path": ".licenses/npm/uuid-9.0.1.dep.yml",
+            "size_bytes": 1287,
+            "sha256": "60df1302ef3a8429e9b16b4cbe4966eded77ce1b3e620e8365cffce829ed3c93",
+            "git_blob": "c9efb0980bae25f214bd2143a1a6c84ba4d30c7d"
+          },
+          {
+            "path": ".licenses/npm/wrappy.dep.yml",
+            "size_bytes": 994,
+            "sha256": "629ad2f9ed2e15bf172ca9d115d3b66d87895da2ae43115084241eef4bc78ded",
+            "git_blob": "2a532ec343ca5b72b9833d2a9fb53e8de07b61f1"
+          },
+          {
+            "path": "LICENSE",
+            "size_bytes": 1097,
+            "sha256": "3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5",
+            "git_blob": "a67dca8b4f65d6bd351f6b1e333ce2cd84d843a5"
+          },
+          {
+            "path": "action.yml",
+            "size_bytes": 5144,
+            "sha256": "6188f6991491ed38977347cdaad0b0cd921a6d6232892363c91f433c22954f4f",
+            "git_blob": "24e73e5a12126edc2adb9e5cd1bf245ce85bde56"
+          },
+          {
+            "path": "package-lock.json",
+            "size_bytes": 261487,
+            "sha256": "678275cbeb52fecbacc620aed081473053f86b787f1b469e157016376a26cc70",
+            "git_blob": "aef29d3bce5069236ea8ed92827834d6381f2685"
+          },
+          {
+            "path": "package.json",
+            "size_bytes": 1500,
+            "sha256": "b327bb5eafeebf3f9cf2aa689103f34a254c7915956c2547274f3abe20184c64",
+            "git_blob": "dbbaabbae229c1c7404f819eefeec49a8b27d9f0"
+          }
+        ]
+      },
+      "runtime_entrypoints": [
+        {
+          "path": "dist/index.js",
+          "sha256": "ff743df9891fd49ffdf6e6bb11ad574bce26a13862ede59474201ef4c9ae029e",
+          "git_blob": "17a1749fafa5ad50ee5376ad39fe19386c37f5a3",
+          "size_bytes": 1362984
+        }
+      ],
+      "legal_declaration_count": 30,
+      "scope": "CI-only; upstream legal declarations, not a complete dependency audit"
+    },
+    {
+      "repository": "actions/setup-dotnet",
+      "commit": "67a3573c9a986a3f9c594539f4ab511d57bb3ce9",
+      "previous_ref": "v4",
+      "git_tree": "e79eaa5df755ee5526db286ec0d2830adfa6f5cb",
+      "observed_run_ids": [
+        44687921233,
+        44687927151
+      ],
+      "source_archive": {
+        "path": "action-setup-dotnet.zip",
+        "sha256": "9465c49b566f35590e6fcf9d5944a7fc2096aca237486ef1348d4ea6860bdfed",
+        "files": [
+          {
+            "path": ".licensed.yml",
+            "size_bytes": 171,
+            "sha256": "7c29c42b05a8695aca1963e4b8b90ee9f95a788a71792daf3e97e741d49ad0bd",
+            "git_blob": "fea56a4e2f119cfa9a7edabd98155499136b9184"
+          },
+          {
+            "path": ".licenses/npm/@actions/cache.dep.yml",
+            "size_bytes": 1306,
+            "sha256": "8f16174f622aa304aa9a73fe51db3e2a80d370dcd5a6c4c5d2c6c078dd95f7d6",
+            "git_blob": "6e21be6a2e9860faea1cffe30e538b671dc36d6d"
+          },
+          {
+            "path": ".licenses/npm/@actions/core.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "f30c131825a0dbc94ffbabb18a7868f2e815b35bc2a597f7a3ccf728b0f86133",
+            "git_blob": "09e099f71078ec77f194a04fa7006553d3ce1b14"
+          },
+          {
+            "path": ".licenses/npm/@actions/exec.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "fa98259e4ddeecd8f63b83537184b386ca1195b71f3909bc0e6eec18d31c48e9",
+            "git_blob": "cbc5abd39e6391ec6e526e6536f1a3efd706ec05"
+          },
+          {
+            "path": ".licenses/npm/@actions/github.dep.yml",
+            "size_bytes": 1309,
+            "sha256": "1087e313de07806c88472f85c9afa39a6e128a41596d7323ba994d3f279b7ba3",
+            "git_blob": "423601cac95ec71f36cafb9263d0b2889c835a0f"
+          },
+          {
+            "path": ".licenses/npm/@actions/glob-0.1.2.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "8cca4135dbfa231ad95619a330d404376580c754e271cf64606e42d98c4740d6",
+            "git_blob": "becb37de2fb6d3da34a744c9c13e3e3c22afd737"
+          },
+          {
+            "path": ".licenses/npm/@actions/glob-0.4.0.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "4a611074413e1b0e48e3393fbafa41d5661b9b1f5881500b37c37c95182e118d",
+            "git_blob": "13754185903935b86effb18389b0c2b751dc8c12"
+          },
+          {
+            "path": ".licenses/npm/@actions/http-client.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "f567317b3753e3bdf8aa48683fc3e102c859db47772d79bfed103b931da591d9",
+            "git_blob": "1bf161b7b3dc624a5a70674d27ef50072c5b4209"
+          },
+          {
+            "path": ".licenses/npm/@actions/io.dep.yml",
+            "size_bytes": 1297,
+            "sha256": "f36b04f1719976c7cff84500325d5e25b40728afa133eaf4c64d3bd8ba1b9082",
+            "git_blob": "d28465403a243506f508f965c1c0641dfd5e0673"
+          },
+          {
+            "path": ".licenses/npm/@azure/abort-controller.dep.yml",
+            "size_bytes": 1421,
+            "sha256": "9514fb4815f3c4a6f2883fe5c66339af331aadab98bedd7b638d6e96626b276c",
+            "git_blob": "b19b8f7a4a222550671cd5419251cbdb7fdc37ed"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-auth.dep.yml",
+            "size_bytes": 1445,
+            "sha256": "6fe4bdf91f4ec43dde14472bc0ebd00b9d2ed306a0ab952ab96b5457fbaac64c",
+            "git_blob": "85f1bb89b75f7e7ee87bb0f25ba32cae246d7cf4"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-http.dep.yml",
+            "size_bytes": 1474,
+            "sha256": "0c8b56694feb88d497e035976c5edc21118480d06fa3da91d37ae64afc67edd8",
+            "git_blob": "6a443e75c138748b9613b46ffc0fc4c5bc0f4794"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-lro.dep.yml",
+            "size_bytes": 1451,
+            "sha256": "ff7b60bd153e436657adf4c4563b2b8a2d838975370ec7b05a2039b6c3dacf12",
+            "git_blob": "29683014cc8f545928ddd78aba3dc6fe5eb3e6e6"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-paging.dep.yml",
+            "size_bytes": 1413,
+            "sha256": "fefd0f2f96aab9312e05668f5bdf5a9d811f2b42e8394c558e143cc1a0ceea98",
+            "git_blob": "dccc048207e9edf3af7a434d84200e4342d312fd"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-tracing.dep.yml",
+            "size_bytes": 1453,
+            "sha256": "95456b9d91db2fcc39a4691b0e07bcf5b37b7aab27eac02dab74c7fdb62cb5e8",
+            "git_blob": "a4649e886c933d93c5129e7c676ce11fac15926e"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-util.dep.yml",
+            "size_bytes": 1393,
+            "sha256": "80f7dda0cf7bcfb1d1942c77a9e9b3bc29815c902789a281e19d428dcac7877e",
+            "git_blob": "75ffb250f4328bc90b93857fb9313447709b3a4a"
+          },
+          {
+            "path": ".licenses/npm/@azure/logger.dep.yml",
+            "size_bytes": 1400,
+            "sha256": "4e598be329e87a6d1e9f2a3412b6f6f6b365ca031374642a92dfd2582ba4e1ff",
+            "git_blob": "971ba001c9a24b840f32d5bd79360df232b040a3"
+          },
+          {
+            "path": ".licenses/npm/@azure/ms-rest-js.dep.yml",
+            "size_bytes": 1517,
+            "sha256": "91039e70951a9673e3b39e40369bbde523132e17519bd9ff393722c4d63184c5",
+            "git_blob": "762fcdb1eec96abd3b297a0e04da50b6ab590335"
+          },
+          {
+            "path": ".licenses/npm/@azure/storage-blob.dep.yml",
+            "size_bytes": 1414,
+            "sha256": "4666723ab404f98c31e241301695e56be4d6bc66297441226cf1798629b9cab6",
+            "git_blob": "c1a125164b684d35a045dfbf80cedba07cea91a9"
+          },
+          {
+            "path": ".licenses/npm/@fastify/busboy.dep.yml",
+            "size_bytes": 1319,
+            "sha256": "6199f41e33e77cadd7073b4c2d6740c620314a7e31059dcc2780ae9a87b18ef6",
+            "git_blob": "817d644a05ca715155fb1c76ec28814252f22b15"
+          },
+          {
+            "path": ".licenses/npm/@octokit/auth-token.dep.yml",
+            "size_bytes": 1392,
+            "sha256": "891b297f7af06baa5b09163f91b545ae839a185e8d3816803b1b3013a545f32a",
+            "git_blob": "a202a59f07aed8f1068d1945808b7cea1b3c9655"
+          },
+          {
+            "path": ".licenses/npm/@octokit/core.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "8aac43afc10ae420109b8232898c4a8c48d11cc8d64badbbf7c5b3f97d891961",
+            "git_blob": "1903ce4f2c1effa8085a1ce9d1318646aaeaa224"
+          },
+          {
+            "path": ".licenses/npm/@octokit/endpoint.dep.yml",
+            "size_bytes": 1387,
+            "sha256": "5f5fabdb900cce63cdbe0d76535f0ca0dfd89e7070c40e9e53b8cc098a1cd08c",
+            "git_blob": "7f2ac3686c041c59a4087a98757948fe0c719f94"
+          },
+          {
+            "path": ".licenses/npm/@octokit/graphql.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "c07f204a2fe3655f6201836d8175fe45173ce7385a6f5b760fbe627a020a1bed",
+            "git_blob": "217f595266280e6d5458c9c7c79d4d140391ee5a"
+          },
+          {
+            "path": ".licenses/npm/@octokit/openapi-types.dep.yml",
+            "size_bytes": 1345,
+            "sha256": "2594b30332c033bd0e1d04120436b8f57ccc5f54cddffaf22401d566d5e35d54",
+            "git_blob": "ed4521624a92c2c960740e8957ca8f82384d5e41"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-paginate-rest.dep.yml",
+            "size_bytes": 1374,
+            "sha256": "54f121262e278ef10c8bffd8b623582437b94101a76738c09a718c3276b3c094",
+            "git_blob": "ce3498aa810186a9984f65673947e9ed9f375243"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-rest-endpoint-methods.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "2831e5e275d5976984d7a70d19cc43093d8a115be663b46533d04fa4746830b8",
+            "git_blob": "1ecfc64535048c1f459f422b98d8a83c760b3a10"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-error.dep.yml",
+            "size_bytes": 1377,
+            "sha256": "0a3465ccd80c53e39fa4b724b45bd47b8f4352dff7e2ff6ca6d2a3790dceb0fe",
+            "git_blob": "424f87e34fc92277dc892c8faaa13b09d8f6914c"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request.dep.yml",
+            "size_bytes": 1423,
+            "sha256": "b99cc0e0445d069083b74a5fe252c8b1abc30fb574070d42eab746f3e6fea3a7",
+            "git_blob": "f6ec82e181870842f8cb88955a146d8f20d5f43f"
+          },
+          {
+            "path": ".licenses/npm/@octokit/types.dep.yml",
+            "size_bytes": 1356,
+            "sha256": "1baaf6c0063d76b56de41817b95ce056c0dd2e16852d0f8e1e860c3861acdd59",
+            "git_blob": "1c35f921e488ea7dc2ab609020ade92f9b41072a"
+          },
+          {
+            "path": ".licenses/npm/@opentelemetry/api.dep.yml",
+            "size_bytes": 12927,
+            "sha256": "81415185da5317e21836d8a02a197552d5fbaea85a6b8073bf47ecb1fe61b1eb",
+            "git_blob": "74c3159ad78e031c1ee18b407135089b7bbfbb4d"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin-framework.dep.yml",
+            "size_bytes": 10970,
+            "sha256": "6e9332a029b2f2e4034e079fa9517df078f921ed20b0b348c3c7cdd7bbc63c7e",
+            "git_blob": "cbb1501e0b2c33c50cb7d7fd1c636d7f85c6e03b"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin.dep.yml",
+            "size_bytes": 11026,
+            "sha256": "162e9acf96482802d2e10e2d6547cb931081da398273a9453308b9f75eb04fd4",
+            "git_blob": "09e4667e249159f525c5844daea5f444e9de1cc0"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/protoc.dep.yml",
+            "size_bytes": 12042,
+            "sha256": "f201bb032bdc4307ba7903d3074eca08102bbe323afb6fe56d00c5e1cd3df62d",
+            "git_blob": "dddaf18aa7b2c7478846064a608ecd13a6d4c485"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime-rpc.dep.yml",
+            "size_bytes": 11007,
+            "sha256": "8b730075da41a66d117aea89cf245c2b735c8dc5936f3a336274d60bce9e9df9",
+            "git_blob": "3e52954e84eb3c14ea223ed1c419e63dab1afbfd"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime.dep.yml",
+            "size_bytes": 10996,
+            "sha256": "65f5242f3f62c038ef6db8f3f66417b3164a39e0924aebe49cdcf2a94f4d74b9",
+            "git_blob": "66dbe2b111192492ec413ea2bfa49b385a5001c1"
+          },
+          {
+            "path": ".licenses/npm/@types/node-fetch.dep.yml",
+            "size_bytes": 1466,
+            "sha256": "2fa45573b45f0dd362cce65149dfd380bf7e36a77a0a1200c398bd36c164f74e",
+            "git_blob": "e335d29a1aa0e2b22b0f2ecae4c3d0e1f7891cc2"
+          },
+          {
+            "path": ".licenses/npm/@types/node.dep.yml",
+            "size_bytes": 1451,
+            "sha256": "ced41aa038c2f81058aaac185b1e6144cac39f73c758415974bada5d904beb8b",
+            "git_blob": "84e870783a626db53120bc351cf79914d9bbbc9c"
+          },
+          {
+            "path": ".licenses/npm/@types/tunnel.dep.yml",
+            "size_bytes": 1454,
+            "sha256": "7e9961d4b13506eb7f4dfd5d76a1f92ad152d4c1738114fb1cca71b56596051c",
+            "git_blob": "b3636b02d4023c7413ce02ad0263e2f904ce2990"
+          },
+          {
+            "path": ".licenses/npm/abort-controller.dep.yml",
+            "size_bytes": 1383,
+            "sha256": "66b012c112da8b51313ff669bc43ddde1ca41cd664dc6f2246e50c0e695de8f8",
+            "git_blob": "492a609bb144972ce27dc406d2b952a9e0f085a1"
+          },
+          {
+            "path": ".licenses/npm/asynckit.dep.yml",
+            "size_bytes": 1449,
+            "sha256": "37c0b44fcf7201cc59487f01da25d8922ad2e989b1b12ebce3a3e1b84d094435",
+            "git_blob": "905e0aaa9814305a5cfcbbace895644fce96782e"
+          },
+          {
+            "path": ".licenses/npm/balanced-match.dep.yml",
+            "size_bytes": 2592,
+            "sha256": "6e9aeb4586d146f78d07a455d00144bcc0e9dc959685e3ac8493a445f1625111",
+            "git_blob": "36095592b7638eb5cace9a13698a3b9cda74b142"
+          },
+          {
+            "path": ".licenses/npm/before-after-hook.dep.yml",
+            "size_bytes": 12307,
+            "sha256": "71495e066413f3f4368e6abf5d44f6e3b00cf8fa85127c3aec7f5f18109b080d",
+            "git_blob": "a1c6b849c8d6058b7243a1e4e99b97f839ef349e"
+          },
+          {
+            "path": ".licenses/npm/brace-expansion.dep.yml",
+            "size_bytes": 2581,
+            "sha256": "90688019e9feca42b08eb9914bb0044b598eea34c3ecde240deaaa1875855b92",
+            "git_blob": "8fa6cfb3114422eeaf20402cb8f97e1fa8892f45"
+          },
+          {
+            "path": ".licenses/npm/combined-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "5adb9ab566e804933e4433ffd50314dea660502c2267ce7c7b8044f012c6f243",
+            "git_blob": "2b392155d021a3bcbbc7f179e0e77a7656ad8022"
+          },
+          {
+            "path": ".licenses/npm/concat-map.dep.yml",
+            "size_bytes": 1329,
+            "sha256": "4bfde62903ad0d8819ea36ed304b1c1f547e37086fe1b17247d24bd75a004602",
+            "git_blob": "6d9a860b82a4350a41c4080d95c3aeb88289b5bd"
+          },
+          {
+            "path": ".licenses/npm/delayed-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "762025f7b39c1f20055fe4b203509bd05a8aef663e141d180928a0d8e8e96efc",
+            "git_blob": "124012173832f11d2729b64c54ad993a3258fc9e"
+          },
+          {
+            "path": ".licenses/npm/deprecation.dep.yml",
+            "size_bytes": 1066,
+            "sha256": "05cc701233db88ecd57b3921738f6493539a91a6be84a42c6bbcaa725e4ef5b8",
+            "git_blob": "12fd7cec70b8bd94724ff65b854269269db02504"
+          },
+          {
+            "path": ".licenses/npm/event-target-shim.dep.yml",
+            "size_bytes": 1386,
+            "sha256": "fa01bbdb7575b0177c769bd9d375d2097b0b5fccf5abb9335821677c4af802be",
+            "git_blob": "7a3fc011ba7d499950caa856df203ba7744fb678"
+          },
+          {
+            "path": ".licenses/npm/events.dep.yml",
+            "size_bytes": 1445,
+            "sha256": "7cd3eb7884922595665f74ae27d9031481d978f949f3fd5d3a718b40a66ff024",
+            "git_blob": "eca8d34cbf5e3dc36c9b970fcb2c3e57d5fdbc5d"
+          },
+          {
+            "path": ".licenses/npm/fast-xml-parser.dep.yml",
+            "size_bytes": 1439,
+            "sha256": "dbcec7edaadba3d553b6e003a10b77ae5f2e7195e85ffe8a0308a63d9b93cb4d",
+            "git_blob": "b04a02eb87fa6fac141b20779189256933252fd0"
+          },
+          {
+            "path": ".licenses/npm/form-data-2.5.1.dep.yml",
+            "size_bytes": 1530,
+            "sha256": "e498f82e41c9cd6f88876bdc96f8d107ad660a3a01d62dc6a69b627c3659d76d",
+            "git_blob": "6e2e1235814c90acc3b35c981f3c37c13e14f441"
+          },
+          {
+            "path": ".licenses/npm/form-data-4.0.0.dep.yml",
+            "size_bytes": 1530,
+            "sha256": "63762bc723e81b1bd0f9664b2e6db8e305adc76e6ddca6ba9af675fdecefd781",
+            "git_blob": "58ded6b3b1956ab2747728598a9aa22f04565370"
+          },
+          {
+            "path": ".licenses/npm/is-plain-object.dep.yml",
+            "size_bytes": 1727,
+            "sha256": "24a5ddc360fec8e0a579e8f720b89861b22375e212d0c0cf9f1018ecbba4c690",
+            "git_blob": "671ba2054feae7c8ad7aba53893ddb0fe5818980"
+          },
+          {
+            "path": ".licenses/npm/json5.dep.yml",
+            "size_bytes": 1456,
+            "sha256": "65a356fa0a1c3ae40890cb476e8a1c24cec5d3f5a045c8b73971b7cd930a59b6",
+            "git_blob": "d4489c2bc31660811a18c564d1a6eafa6b6b5584"
+          },
+          {
+            "path": ".licenses/npm/lru-cache.dep.yml",
+            "size_bytes": 1000,
+            "sha256": "b1666827b8efc871fc65890190f52abd58d2a0cca97a6cf822f5ea167f07ecb6",
+            "git_blob": "3d9f9baea87d4759484bfb13f84dc53729ef4547"
+          },
+          {
+            "path": ".licenses/npm/mime-db.dep.yml",
+            "size_bytes": 1396,
+            "sha256": "c3340f2be01c688e51c1f98128f5c79e5c9f75c9e61d8eed348c134b9e012fad",
+            "git_blob": "fdc29dfc8544ee957a219368e08655b773602f3c"
+          },
+          {
+            "path": ".licenses/npm/mime-types.dep.yml",
+            "size_bytes": 2090,
+            "sha256": "1e88ea649848d83df0435e5707b399a4bb133b6a724e32cf708bba5c8849017c",
+            "git_blob": "e0d8438f6794ae0dcb78459cd61fe556bafe6f57"
+          },
+          {
+            "path": ".licenses/npm/minimatch.dep.yml",
+            "size_bytes": 971,
+            "sha256": "fb359c5d0d19ed54ee5635e5b37f4d426898f4528f41cb468e26d55f48b60129",
+            "git_blob": "a4ff623f48164d99f0b92dbe7b74abd3e7c539cd"
+          },
+          {
+            "path": ".licenses/npm/node-fetch.dep.yml",
+            "size_bytes": 2796,
+            "sha256": "7a438938e6b6d00a520a97ad561236229afd0e3216d78dc8c23ec5f01e6bc2cc",
+            "git_blob": "ec9a760d2ab5922157468d98e2d92375c241789e"
+          },
+          {
+            "path": ".licenses/npm/once.dep.yml",
+            "size_bytes": 1006,
+            "sha256": "563cf109fbfb00b55c5876760ef264ca5242df929935fcd29434f4be40a6d99e",
+            "git_blob": "7cf525acbb095d6d79c345aea72c63747a2d23e1"
+          },
+          {
+            "path": ".licenses/npm/process.dep.yml",
+            "size_bytes": 1344,
+            "sha256": "0b1049580a7d99d18b75387d97dbd3cef34b3ad12ce48c49ccf3805021b08267",
+            "git_blob": "5d38ac81e9c5252239bf8714a41df70d136c637f"
+          },
+          {
+            "path": ".licenses/npm/sax.dep.yml",
+            "size_bytes": 2327,
+            "sha256": "177e4eeb327cef2f9e5adaee50a8f1832f87362b9ff7663f01a64c3f39ec863b",
+            "git_blob": "20f6c4671214a0e7f0f9f2d9fa8df6f871fbf522"
+          },
+          {
+            "path": ".licenses/npm/semver-6.3.1.dep.yml",
+            "size_bytes": 979,
+            "sha256": "88ca0ce55dc1ad25b0241d112743eaf0c0dd8b159c995dbdcde44c8e2d222d7c",
+            "git_blob": "fb7c6902212995177ba019098de379f6c4b82f68"
+          },
+          {
+            "path": ".licenses/npm/semver-7.6.0.dep.yml",
+            "size_bytes": 979,
+            "sha256": "6f318ac2fec6d63ce0ec396c7592a1322160a9f478db251c0adce777e26112c8",
+            "git_blob": "bd631be074b26374ff2d5e7a8dfc552db4bc0b49"
+          },
+          {
+            "path": ".licenses/npm/strnum.dep.yml",
+            "size_bytes": 1320,
+            "sha256": "d28e434066120e10b3137a787a39a964c9b9923efe7f3e1c71ddca77220b5fbe",
+            "git_blob": "645c13fc4dac3c39c6e15ce1ed4ad9ceb94fe716"
+          },
+          {
+            "path": ".licenses/npm/tr46.dep.yml",
+            "size_bytes": 1334,
+            "sha256": "83707076fccc2ba3edb2be8e9ea0d921d5383e10b04f36b346d0f45f9ba1e5ed",
+            "git_blob": "3bacc6ec4c168478637e17763157c09ed9ebe0dc"
+          },
+          {
+            "path": ".licenses/npm/tslib-1.14.1.dep.yml",
+            "size_bytes": 1823,
+            "sha256": "299a0c89f5201b33eb28728f73f901f0164e32337634ee85f904219b8b6b21dd",
+            "git_blob": "10b2c2ac1aa3708cd04256d03b439ece0ef9e026"
+          },
+          {
+            "path": ".licenses/npm/tslib-2.6.2.dep.yml",
+            "size_bytes": 895,
+            "sha256": "0104b4f65b8c66bb210109ab2a45422f4b640230683851b628950f92b0b00f66",
+            "git_blob": "427097a71e75a6e86605c3dda835b2c6aa0d00de"
+          },
+          {
+            "path": ".licenses/npm/tunnel.dep.yml",
+            "size_bytes": 1488,
+            "sha256": "d31e076abf1fa9783dcdc37e27753f6bd9a61f1a5935676475c39ff68297ce78",
+            "git_blob": "9a7111da96a36c81dd1160453ab32caa08c8707f"
+          },
+          {
+            "path": ".licenses/npm/typescript.dep.yml",
+            "size_bytes": 19832,
+            "sha256": "6b24bea1b8b395992a2edfb33f08f5318278b7e4edd64060adc6609128348c31",
+            "git_blob": "01cccafdea3f3731926c2bb2aa1b219e990c6fcc"
+          },
+          {
+            "path": ".licenses/npm/undici-types.dep.yml",
+            "size_bytes": 1321,
+            "sha256": "ad51bb091bc5bc2795c118210f1606411f4b17431bdee7e9f71de28f135cfb4d",
+            "git_blob": "a65b8affc0a33b0773d05d0d7f0efbeadeac23b7"
+          },
+          {
+            "path": ".licenses/npm/undici.dep.yml",
+            "size_bytes": 1396,
+            "sha256": "36424ef4945e8c93bb18c0f452e69c165c7fce5fd4880f37195b33dd80e6a87a",
+            "git_blob": "961089c6539002815e4cb02802c7de40242b34f4"
+          },
+          {
+            "path": ".licenses/npm/universal-user-agent.dep.yml",
+            "size_bytes": 1064,
+            "sha256": "a2a1c576eba2d2d0f258ae449e6aba7fdb8f5272bcf8d190d9c2be4a1be27c69",
+            "git_blob": "c07307b848bf76d62c7adae3bb5ff70263b2e4d7"
+          },
+          {
+            "path": ".licenses/npm/uuid.dep.yml",
+            "size_bytes": 1286,
+            "sha256": "39c8eab2e796c4e2e4bd9ed8f47de1ce8fb141641a1d0b00999293ab5de1ba09",
+            "git_blob": "1aa22dea32c30c014092f3b70695e6a601c4a106"
+          },
+          {
+            "path": ".licenses/npm/webidl-conversions.dep.yml",
+            "size_bytes": 1579,
+            "sha256": "5bf0af833abb218328fe4806b9d8e777f8f470e0e0f24723dd4f15bc5d29433f",
+            "git_blob": "40585680bc2ac36969ff2cb66450c1c7134f244b"
+          },
+          {
+            "path": ".licenses/npm/whatwg-url.dep.yml",
+            "size_bytes": 1367,
+            "sha256": "71c229c5aadd964f9db3ae44c29f4145b47a2271dfa329154cf827942bfbf1be",
+            "git_blob": "ac3e1f6b95fbbefcc4173603e7c2582d4d409603"
+          },
+          {
+            "path": ".licenses/npm/wrappy.dep.yml",
+            "size_bytes": 994,
+            "sha256": "629ad2f9ed2e15bf172ca9d115d3b66d87895da2ae43115084241eef4bc78ded",
+            "git_blob": "2a532ec343ca5b72b9833d2a9fb53e8de07b61f1"
+          },
+          {
+            "path": ".licenses/npm/xml2js.dep.yml",
+            "size_bytes": 1360,
+            "sha256": "259dd433d7d79f9b5ce68369d970394e914855cff18950cf0ac86bc6b6d7843f",
+            "git_blob": "92bce8ddacc1418480ee3691e3c6093b8014d738"
+          },
+          {
+            "path": ".licenses/npm/xmlbuilder.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "c17735165d578112d9d08d2da48b92098892720d41b8e5ddfed9c875a30a564c",
+            "git_blob": "e8c7ee12ff81aeb175e2fc2d02baa8f3d895a31c"
+          },
+          {
+            "path": ".licenses/npm/yallist.dep.yml",
+            "size_bytes": 963,
+            "sha256": "c3c583a8d7364f00d7bf5a32ca532e6d5493ba9fcedff79de763af3abcb650fe",
+            "git_blob": "f767d8af3e24797a47f1a7f8e74c4b5b318f0c5a"
+          },
+          {
+            "path": "LICENSE",
+            "size_bytes": 1096,
+            "sha256": "7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32",
+            "git_blob": "a426ef259d6c5d705e9c1405075c3b318093c65e"
+          },
+          {
+            "path": "action.yml",
+            "size_bytes": 1913,
+            "sha256": "ff2f78829720ee4505fcaab2acc519b85a328ca52c721620925b17307537babd",
+            "git_blob": "991c78287e6e53dd788fbcc1895e99d7f1baa4d6"
+          },
+          {
+            "path": "package-lock.json",
+            "size_bytes": 227717,
+            "sha256": "1297aee22635008b7aee9f038fbbd0b0df1924650d7ac43ce1809a4270303505",
+            "git_blob": "e6139ed98a7d80cab98a8e7310a28b84023dc42e"
+          },
+          {
+            "path": "package.json",
+            "size_bytes": 2086,
+            "sha256": "4885bb3f5158cd8594d51176fd4b35ca78de9525096b6d27b1770e1b13be6e7f",
+            "git_blob": "fd77c264a06883dc8d502486640907f5b4872afa"
+          }
+        ]
+      },
+      "runtime_entrypoints": [
+        {
+          "path": "dist/cache-save/index.js",
+          "sha256": "78a6945c72e1071433a7fafc604da306f6416667db165573f0771b0006ccc547",
+          "git_blob": "a7774ab0d258fbf25462ab3471d8bece69e60521",
+          "size_bytes": 3523089
+        },
+        {
+          "path": "dist/setup/index.js",
+          "sha256": "3ca7ace9f5b5dee541a1a482c858f0dd3e45cb0433550dabaf7450617f989f5e",
+          "git_blob": "a507c2205e9e0826bb413e3a8fa838c6917e31f7",
+          "size_bytes": 3953520
+        }
+      ],
+      "legal_declaration_count": 80,
+      "scope": "CI-only; upstream legal declarations, not a complete dependency audit"
+    },
+    {
+      "repository": "actions/setup-java",
+      "commit": "cf277c60eb25467037889841efdb72551f06f6c3",
+      "previous_ref": "v4",
+      "git_tree": "b3f37028ad61d4c59e568eb01f13e76248f2ad9f",
+      "observed_run_ids": [
+        44687921233,
+        44687927151
+      ],
+      "source_archive": {
+        "path": "action-setup-java.zip",
+        "sha256": "b0b77ff28ffd6710ddff34fb535ecd7ed97dd12f149670ed660d02856550d39d",
+        "files": [
+          {
+            "path": ".licensed.yml",
+            "size_bytes": 148,
+            "sha256": "9e30865a819e2fa649d3ccaceca0e5cdd4f2c0062128a04e880342b5d5536795",
+            "git_blob": "e97382c4d2f98067976f4623f3497195e05bcb33"
+          },
+          {
+            "path": ".licenses/npm/@actions/cache.dep.yml",
+            "size_bytes": 1306,
+            "sha256": "d155e28d2c1e3911f96060606e623c4b8abf2d53ba5e6a5e572310b68666f001",
+            "git_blob": "f70b140d27a62e7e1bd9b1f2653af721d266e5d7"
+          },
+          {
+            "path": ".licenses/npm/@actions/core.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "f30c131825a0dbc94ffbabb18a7868f2e815b35bc2a597f7a3ccf728b0f86133",
+            "git_blob": "09e099f71078ec77f194a04fa7006553d3ce1b14"
+          },
+          {
+            "path": ".licenses/npm/@actions/exec.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "fa98259e4ddeecd8f63b83537184b386ca1195b71f3909bc0e6eec18d31c48e9",
+            "git_blob": "cbc5abd39e6391ec6e526e6536f1a3efd706ec05"
+          },
+          {
+            "path": ".licenses/npm/@actions/glob-0.1.2.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "8cca4135dbfa231ad95619a330d404376580c754e271cf64606e42d98c4740d6",
+            "git_blob": "becb37de2fb6d3da34a744c9c13e3e3c22afd737"
+          },
+          {
+            "path": ".licenses/npm/@actions/glob-0.5.0.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "ff60fa08181fb40b030d950c0dcc37d3062ccf11652bfb8dcae5aeffaf60baa8",
+            "git_blob": "f7bf0793ab4801df81f6e76dde9b15053c1834f8"
+          },
+          {
+            "path": ".licenses/npm/@actions/http-client.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "f567317b3753e3bdf8aa48683fc3e102c859db47772d79bfed103b931da591d9",
+            "git_blob": "1bf161b7b3dc624a5a70674d27ef50072c5b4209"
+          },
+          {
+            "path": ".licenses/npm/@actions/io.dep.yml",
+            "size_bytes": 1297,
+            "sha256": "f36b04f1719976c7cff84500325d5e25b40728afa133eaf4c64d3bd8ba1b9082",
+            "git_blob": "d28465403a243506f508f965c1c0641dfd5e0673"
+          },
+          {
+            "path": ".licenses/npm/@actions/tool-cache.dep.yml",
+            "size_bytes": 1321,
+            "sha256": "a50376fa013d3c0b9be65cbe5bd3416270d258be42f082188da4a1e822cfc434",
+            "git_blob": "fbf911fef93e283a9bea20fd65d59fe51dad7d22"
+          },
+          {
+            "path": ".licenses/npm/@azure/abort-controller.dep.yml",
+            "size_bytes": 1421,
+            "sha256": "9514fb4815f3c4a6f2883fe5c66339af331aadab98bedd7b638d6e96626b276c",
+            "git_blob": "b19b8f7a4a222550671cd5419251cbdb7fdc37ed"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-auth.dep.yml",
+            "size_bytes": 1445,
+            "sha256": "6fe4bdf91f4ec43dde14472bc0ebd00b9d2ed306a0ab952ab96b5457fbaac64c",
+            "git_blob": "85f1bb89b75f7e7ee87bb0f25ba32cae246d7cf4"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-http.dep.yml",
+            "size_bytes": 1474,
+            "sha256": "0c8b56694feb88d497e035976c5edc21118480d06fa3da91d37ae64afc67edd8",
+            "git_blob": "6a443e75c138748b9613b46ffc0fc4c5bc0f4794"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-lro.dep.yml",
+            "size_bytes": 1451,
+            "sha256": "ff7b60bd153e436657adf4c4563b2b8a2d838975370ec7b05a2039b6c3dacf12",
+            "git_blob": "29683014cc8f545928ddd78aba3dc6fe5eb3e6e6"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-paging.dep.yml",
+            "size_bytes": 1413,
+            "sha256": "fefd0f2f96aab9312e05668f5bdf5a9d811f2b42e8394c558e143cc1a0ceea98",
+            "git_blob": "dccc048207e9edf3af7a434d84200e4342d312fd"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-tracing.dep.yml",
+            "size_bytes": 1453,
+            "sha256": "95456b9d91db2fcc39a4691b0e07bcf5b37b7aab27eac02dab74c7fdb62cb5e8",
+            "git_blob": "a4649e886c933d93c5129e7c676ce11fac15926e"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-util.dep.yml",
+            "size_bytes": 1393,
+            "sha256": "80f7dda0cf7bcfb1d1942c77a9e9b3bc29815c902789a281e19d428dcac7877e",
+            "git_blob": "75ffb250f4328bc90b93857fb9313447709b3a4a"
+          },
+          {
+            "path": ".licenses/npm/@azure/logger.dep.yml",
+            "size_bytes": 1400,
+            "sha256": "4e598be329e87a6d1e9f2a3412b6f6f6b365ca031374642a92dfd2582ba4e1ff",
+            "git_blob": "971ba001c9a24b840f32d5bd79360df232b040a3"
+          },
+          {
+            "path": ".licenses/npm/@azure/ms-rest-js.dep.yml",
+            "size_bytes": 1517,
+            "sha256": "91039e70951a9673e3b39e40369bbde523132e17519bd9ff393722c4d63184c5",
+            "git_blob": "762fcdb1eec96abd3b297a0e04da50b6ab590335"
+          },
+          {
+            "path": ".licenses/npm/@azure/storage-blob.dep.yml",
+            "size_bytes": 1414,
+            "sha256": "4666723ab404f98c31e241301695e56be4d6bc66297441226cf1798629b9cab6",
+            "git_blob": "c1a125164b684d35a045dfbf80cedba07cea91a9"
+          },
+          {
+            "path": ".licenses/npm/@fastify/busboy.dep.yml",
+            "size_bytes": 1319,
+            "sha256": "cea27584a973b61a79b93f5d1bfccba03f56e235c0252684fd6723327307f772",
+            "git_blob": "51267ac9fc9b09a1ca17f33bb01a8189fc2fed79"
+          },
+          {
+            "path": ".licenses/npm/@oozcitak/dom.dep.yml",
+            "size_bytes": 1332,
+            "sha256": "a2936233f83b2adcd8751ebe36ec1fa3ad2b5d864a83a76bb23dddba502b2dbc",
+            "git_blob": "a810093aaf6edf511c4f4ad73dcde332089b1bc4"
+          },
+          {
+            "path": ".licenses/npm/@oozcitak/infra.dep.yml",
+            "size_bytes": 1354,
+            "sha256": "297f8a8c2af10debf7ec704e1524c6d0fcbc212775932d46954c8141711b177f",
+            "git_blob": "eeac49dd3c33f1fc758d12c7e173ef0c0dde987a"
+          },
+          {
+            "path": ".licenses/npm/@oozcitak/url.dep.yml",
+            "size_bytes": 1348,
+            "sha256": "ff90bf5942259c6267e11c9d8f7808598a470e167430b5fd4262f5185a1e65a5",
+            "git_blob": "6f3ae3985f98768c5c88e5a81d0aaefc31eb1a67"
+          },
+          {
+            "path": ".licenses/npm/@oozcitak/util.dep.yml",
+            "size_bytes": 1323,
+            "sha256": "bb4cae68646023d0540a41fbb814595dd908faf6958fe3de4b996bddde66ce9f",
+            "git_blob": "dcee45c0fe62e5892203bfe003f30e425563f154"
+          },
+          {
+            "path": ".licenses/npm/@opentelemetry/api.dep.yml",
+            "size_bytes": 12927,
+            "sha256": "81415185da5317e21836d8a02a197552d5fbaea85a6b8073bf47ecb1fe61b1eb",
+            "git_blob": "74c3159ad78e031c1ee18b407135089b7bbfbb4d"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin-framework.dep.yml",
+            "size_bytes": 10970,
+            "sha256": "6e9332a029b2f2e4034e079fa9517df078f921ed20b0b348c3c7cdd7bbc63c7e",
+            "git_blob": "cbb1501e0b2c33c50cb7d7fd1c636d7f85c6e03b"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin.dep.yml",
+            "size_bytes": 11026,
+            "sha256": "162e9acf96482802d2e10e2d6547cb931081da398273a9453308b9f75eb04fd4",
+            "git_blob": "09e4667e249159f525c5844daea5f444e9de1cc0"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/protoc.dep.yml",
+            "size_bytes": 12042,
+            "sha256": "f201bb032bdc4307ba7903d3074eca08102bbe323afb6fe56d00c5e1cd3df62d",
+            "git_blob": "dddaf18aa7b2c7478846064a608ecd13a6d4c485"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime-rpc.dep.yml",
+            "size_bytes": 11007,
+            "sha256": "8b730075da41a66d117aea89cf245c2b735c8dc5936f3a336274d60bce9e9df9",
+            "git_blob": "3e52954e84eb3c14ea223ed1c419e63dab1afbfd"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime.dep.yml",
+            "size_bytes": 10996,
+            "sha256": "65f5242f3f62c038ef6db8f3f66417b3164a39e0924aebe49cdcf2a94f4d74b9",
+            "git_blob": "66dbe2b111192492ec413ea2bfa49b385a5001c1"
+          },
+          {
+            "path": ".licenses/npm/@types/node-fetch.dep.yml",
+            "size_bytes": 1466,
+            "sha256": "2fa45573b45f0dd362cce65149dfd380bf7e36a77a0a1200c398bd36c164f74e",
+            "git_blob": "e335d29a1aa0e2b22b0f2ecae4c3d0e1f7891cc2"
+          },
+          {
+            "path": ".licenses/npm/@types/node.dep.yml",
+            "size_bytes": 1451,
+            "sha256": "c5564049419e87ccb3309933409b668086e12aa5919d2005393eee2c1078633c",
+            "git_blob": "06fb919dfed22432370288a90db74421d65d994f"
+          },
+          {
+            "path": ".licenses/npm/@types/tunnel.dep.yml",
+            "size_bytes": 1454,
+            "sha256": "7e9961d4b13506eb7f4dfd5d76a1f92ad152d4c1738114fb1cca71b56596051c",
+            "git_blob": "b3636b02d4023c7413ce02ad0263e2f904ce2990"
+          },
+          {
+            "path": ".licenses/npm/abort-controller.dep.yml",
+            "size_bytes": 1383,
+            "sha256": "66b012c112da8b51313ff669bc43ddde1ca41cd664dc6f2246e50c0e695de8f8",
+            "git_blob": "492a609bb144972ce27dc406d2b952a9e0f085a1"
+          },
+          {
+            "path": ".licenses/npm/argparse.dep.yml",
+            "size_bytes": 1636,
+            "sha256": "f5577a225d2dc72954231fba369deb035d974853bcc0b7eb50db7b5e4845c833",
+            "git_blob": "2cd2843cf9cc29075f1ec7c843d698149a22e7b1"
+          },
+          {
+            "path": ".licenses/npm/asynckit.dep.yml",
+            "size_bytes": 1449,
+            "sha256": "37c0b44fcf7201cc59487f01da25d8922ad2e989b1b12ebce3a3e1b84d094435",
+            "git_blob": "905e0aaa9814305a5cfcbbace895644fce96782e"
+          },
+          {
+            "path": ".licenses/npm/balanced-match.dep.yml",
+            "size_bytes": 2592,
+            "sha256": "6e9aeb4586d146f78d07a455d00144bcc0e9dc959685e3ac8493a445f1625111",
+            "git_blob": "36095592b7638eb5cace9a13698a3b9cda74b142"
+          },
+          {
+            "path": ".licenses/npm/brace-expansion.dep.yml",
+            "size_bytes": 2581,
+            "sha256": "f3de35d3451ad18262ead4ad91d0eddf37556c4ec934dff7a150ca3b85bbfe4c",
+            "git_blob": "95ca8eb1f991041106ab6106e972259b5d00804a"
+          },
+          {
+            "path": ".licenses/npm/call-bind-apply-helpers.dep.yml",
+            "size_bytes": 1411,
+            "sha256": "123c5776825497a9dc03288560f23d019d2675e0b5821b4a294c091f92094211",
+            "git_blob": "bfd264f376ba5117014109f3c54fbdd2a6cc5dbb"
+          },
+          {
+            "path": ".licenses/npm/combined-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "5adb9ab566e804933e4433ffd50314dea660502c2267ce7c7b8044f012c6f243",
+            "git_blob": "2b392155d021a3bcbbc7f179e0e77a7656ad8022"
+          },
+          {
+            "path": ".licenses/npm/concat-map.dep.yml",
+            "size_bytes": 1379,
+            "sha256": "ac9fca350f06c1c1860adbe1a3d4114144539f9ca05b9b2ab88dccb8db8d1f6a",
+            "git_blob": "20216b958a5dad1d375f3762384fce62ca190930"
+          },
+          {
+            "path": ".licenses/npm/delayed-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "762025f7b39c1f20055fe4b203509bd05a8aef663e141d180928a0d8e8e96efc",
+            "git_blob": "124012173832f11d2729b64c54ad993a3258fc9e"
+          },
+          {
+            "path": ".licenses/npm/dunder-proto.dep.yml",
+            "size_bytes": 1400,
+            "sha256": "f8a9dc818df902f3f32cb2d391037c57a349cfab7758861e2a58b0321ac3356e",
+            "git_blob": "39542bfdc18dec26030b1ea57be1124b66f6f461"
+          },
+          {
+            "path": ".licenses/npm/es-define-property.dep.yml",
+            "size_bytes": 1382,
+            "sha256": "58e3f865d033c9d6e1c95217a19c26ee1781aad15f42b25a2063947d227ca77e",
+            "git_blob": "7f19037283b39f6880b12548b30a4affe4658305"
+          },
+          {
+            "path": ".licenses/npm/es-errors.dep.yml",
+            "size_bytes": 1365,
+            "sha256": "db27b19a9ddca90a18fc119cb43504c933bdfb845e4cdd8bcddd8cf28801139d",
+            "git_blob": "a5827aac9003a51e4508c377d60a69789ff8b2d1"
+          },
+          {
+            "path": ".licenses/npm/es-object-atoms.dep.yml",
+            "size_bytes": 1390,
+            "sha256": "70be7255fdc197231eeb8d30f219eed784d465f22ece8fdd06730e47efe1bb2c",
+            "git_blob": "dc42eaae79cfa5f21addebe4bb52fabe1381f875"
+          },
+          {
+            "path": ".licenses/npm/es-set-tostringtag.dep.yml",
+            "size_bytes": 1398,
+            "sha256": "775f793f7a9188c2223474233225fad228894184a13844e8e9e6eabf1d66736e",
+            "git_blob": "f4b673e2763b374bb4b5a26b2ec9bc72fcd7e8f0"
+          },
+          {
+            "path": ".licenses/npm/esprima.dep.yml",
+            "size_bytes": 1593,
+            "sha256": "2e18213ed22f55c96cb48cd7b2d86c6071bf26640aadfc0af4d515d4a676eb59",
+            "git_blob": "538091c52e68e18b7f4dabf666e9d37cf7aefcf6"
+          },
+          {
+            "path": ".licenses/npm/event-target-shim.dep.yml",
+            "size_bytes": 1386,
+            "sha256": "fa01bbdb7575b0177c769bd9d375d2097b0b5fccf5abb9335821677c4af802be",
+            "git_blob": "7a3fc011ba7d499950caa856df203ba7744fb678"
+          },
+          {
+            "path": ".licenses/npm/events.dep.yml",
+            "size_bytes": 1484,
+            "sha256": "73eb0cf67a163ca150dcdd3bb7a225c628b5efced97fbae2e5359e6a452c148f",
+            "git_blob": "baae3b6b914042522ae9c40b23cee0a954eac499"
+          },
+          {
+            "path": ".licenses/npm/form-data-2.5.5.dep.yml",
+            "size_bytes": 1529,
+            "sha256": "b511a55746879b28aba2923182a037b8cd5e1fe3bdcb9794565fc826fd3d2ea7",
+            "git_blob": "a60d6b9674a41dbe592a14747a15b25e8a96dd2c"
+          },
+          {
+            "path": ".licenses/npm/form-data-4.0.5.dep.yml",
+            "size_bytes": 1529,
+            "sha256": "c29514c242729da7953b08cae26a2b59314c30805d7ea0d55e3fef67db4b76f4",
+            "git_blob": "2ad8a2cacc039de1a35e94ef74bc954831985655"
+          },
+          {
+            "path": ".licenses/npm/function-bind.dep.yml",
+            "size_bytes": 1335,
+            "sha256": "58739042f7a6481b44dd93ded444a479177a640cd8f8ea77465293f36f147de5",
+            "git_blob": "3ae18f3ecc3eea3a1f6f2778a83df6011da85732"
+          },
+          {
+            "path": ".licenses/npm/get-intrinsic.dep.yml",
+            "size_bytes": 1398,
+            "sha256": "73b8e5e5e7f8c999387f2502f97553b224d6ab80da298926fdd2b47533504d8a",
+            "git_blob": "c94509f44c73128bc042303ff9bb767d8c99370c"
+          },
+          {
+            "path": ".licenses/npm/get-proto.dep.yml",
+            "size_bytes": 1354,
+            "sha256": "59eea14f38ac97e1ba469bd5d4ac208a0000a14b96151a64657bedb8e149c762",
+            "git_blob": "1176a9536e24c3c63510166104391d0640a28eb6"
+          },
+          {
+            "path": ".licenses/npm/gopd.dep.yml",
+            "size_bytes": 1382,
+            "sha256": "a6e7f0f99891036b59a3e4e79cfbb31719cba786a276396fa8450fb77b4fbf7e",
+            "git_blob": "d3d28af9b6078815c7a038986226e02189a1f674"
+          },
+          {
+            "path": ".licenses/npm/has-symbols.dep.yml",
+            "size_bytes": 1391,
+            "sha256": "c255c872c09737e6cd63120beec62f70013afbbbe5d597c32fc6cd7daf916375",
+            "git_blob": "38b50f044e0c58140de7fea6a947db17fa809c74"
+          },
+          {
+            "path": ".licenses/npm/has-tostringtag.dep.yml",
+            "size_bytes": 1415,
+            "sha256": "4fe27f078404bba3f86fd4b18b8233ec5e8597ef58184066c26b7f2c1e5b76b1",
+            "git_blob": "efa5c5c1b8d88631b14b4d9b446105d2567a41fe"
+          },
+          {
+            "path": ".licenses/npm/hasown.dep.yml",
+            "size_bytes": 1376,
+            "sha256": "34792180d75308a18687efdfe5ffaefbdd5dd6964e34e6d4d81841432733f233",
+            "git_blob": "99263919595b56f9b17e0c36763ba3cd1ef2fdc1"
+          },
+          {
+            "path": ".licenses/npm/js-yaml.dep.yml",
+            "size_bytes": 1344,
+            "sha256": "1082b9af7d2fd027033e25084582c6667e536bae9db2796ecfab1af3a764167d",
+            "git_blob": "3b8875d01a702cb3f028ab002ff7646ee9415737"
+          },
+          {
+            "path": ".licenses/npm/math-intrinsics.dep.yml",
+            "size_bytes": 1383,
+            "sha256": "574e1a5b8d2273a1dda0ec9abf10c1412152ead55d93b479785c5d4f158f75d5",
+            "git_blob": "2f29af6f9a565fd777ffeaca1cec68c5acd37cec"
+          },
+          {
+            "path": ".licenses/npm/mime-db.dep.yml",
+            "size_bytes": 1395,
+            "sha256": "44801ff43280ec8802838592d54d3ae6b5e1f72bcef06dc11fe72253ef10dce1",
+            "git_blob": "660566950ddf81541a308b21979b4c224f76fe3e"
+          },
+          {
+            "path": ".licenses/npm/mime-types.dep.yml",
+            "size_bytes": 2089,
+            "sha256": "8350578680bd73e552b764ed9188ff4acfb383c133d0896088042095bddfb5b8",
+            "git_blob": "832d2052dcbf6cea60f3385d55c6f516f403dd04"
+          },
+          {
+            "path": ".licenses/npm/minimatch.dep.yml",
+            "size_bytes": 1013,
+            "sha256": "54c2756044325cafe8b5b4514135b2dab840b42c4edab5cbeed05e6714dc2379",
+            "git_blob": "869816f5f7ba1bed2f47f9bf3b88ea1cd59fd664"
+          },
+          {
+            "path": ".licenses/npm/node-fetch.dep.yml",
+            "size_bytes": 2796,
+            "sha256": "7a438938e6b6d00a520a97ad561236229afd0e3216d78dc8c23ec5f01e6bc2cc",
+            "git_blob": "ec9a760d2ab5922157468d98e2d92375c241789e"
+          },
+          {
+            "path": ".licenses/npm/process.dep.yml",
+            "size_bytes": 1391,
+            "sha256": "09b2f784b8bff82787803b84b3542f9e30f7818cd6e99065b94624a776f19b32",
+            "git_blob": "2bf50598abb2dce3a0579ecf27c351f64d44a36b"
+          },
+          {
+            "path": ".licenses/npm/safe-buffer.dep.yml",
+            "size_bytes": 1431,
+            "sha256": "be47c84c63a048e14443b862597fa55107b079f3b1a3533d81d14603e020ef79",
+            "git_blob": "a6499e34da617543f8785a9c3ecf5e49b61c81bf"
+          },
+          {
+            "path": ".licenses/npm/sax.dep.yml",
+            "size_bytes": 2327,
+            "sha256": "177e4eeb327cef2f9e5adaee50a8f1832f87362b9ff7663f01a64c3f39ec863b",
+            "git_blob": "20f6c4671214a0e7f0f9f2d9fa8df6f871fbf522"
+          },
+          {
+            "path": ".licenses/npm/semver-6.3.1.dep.yml",
+            "size_bytes": 980,
+            "sha256": "602e6b9ba2c96a97cb13c106254fb9fce2cf32086fcaa2626dc96e228b47b92f",
+            "git_blob": "248cb030140ec2e555e4f01285814778b13cb00e"
+          },
+          {
+            "path": ".licenses/npm/semver-7.7.1.dep.yml",
+            "size_bytes": 979,
+            "sha256": "98c41f1ff1fb5003fb335c28187352e0b26219dc6627c518fba8734d3544e6aa",
+            "git_blob": "3194cf4ae1dc55e71a8ca59314755c3dbc72752d"
+          },
+          {
+            "path": ".licenses/npm/sprintf-js.dep.yml",
+            "size_bytes": 1925,
+            "sha256": "bc012c27f9883ef7a33dc509c7c3d9c9b5c334570321c6f31fc5e25757a1dafa",
+            "git_blob": "e7157634ff6e273c4e4bb8f7d1730f8b6327ff38"
+          },
+          {
+            "path": ".licenses/npm/tr46.dep.yml",
+            "size_bytes": 1334,
+            "sha256": "83707076fccc2ba3edb2be8e9ea0d921d5383e10b04f36b346d0f45f9ba1e5ed",
+            "git_blob": "3bacc6ec4c168478637e17763157c09ed9ebe0dc"
+          },
+          {
+            "path": ".licenses/npm/tslib-1.14.1.dep.yml",
+            "size_bytes": 1823,
+            "sha256": "299a0c89f5201b33eb28728f73f901f0164e32337634ee85f904219b8b6b21dd",
+            "git_blob": "10b2c2ac1aa3708cd04256d03b439ece0ef9e026"
+          },
+          {
+            "path": ".licenses/npm/tslib-2.6.2.dep.yml",
+            "size_bytes": 895,
+            "sha256": "0104b4f65b8c66bb210109ab2a45422f4b640230683851b628950f92b0b00f66",
+            "git_blob": "427097a71e75a6e86605c3dda835b2c6aa0d00de"
+          },
+          {
+            "path": ".licenses/npm/tunnel.dep.yml",
+            "size_bytes": 1488,
+            "sha256": "d31e076abf1fa9783dcdc37e27753f6bd9a61f1a5935676475c39ff68297ce78",
+            "git_blob": "9a7111da96a36c81dd1160453ab32caa08c8707f"
+          },
+          {
+            "path": ".licenses/npm/typescript.dep.yml",
+            "size_bytes": 19832,
+            "sha256": "6b24bea1b8b395992a2edfb33f08f5318278b7e4edd64060adc6609128348c31",
+            "git_blob": "01cccafdea3f3731926c2bb2aa1b219e990c6fcc"
+          },
+          {
+            "path": ".licenses/npm/undici-types.dep.yml",
+            "size_bytes": 1321,
+            "sha256": "ad51bb091bc5bc2795c118210f1606411f4b17431bdee7e9f71de28f135cfb4d",
+            "git_blob": "a65b8affc0a33b0773d05d0d7f0efbeadeac23b7"
+          },
+          {
+            "path": ".licenses/npm/undici.dep.yml",
+            "size_bytes": 1396,
+            "sha256": "5cefa4e129348345297f3e602d639aaccdfa052069a744cfe8512a7c256faac7",
+            "git_blob": "fadecf4a743b7ff972adff6fb838d0547a1c7578"
+          },
+          {
+            "path": ".licenses/npm/uuid-3.4.0.dep.yml",
+            "size_bytes": 1588,
+            "sha256": "d44c7c7b6473d0c086d067f7b2e53d929ac84551943067a8f148928c798043f3",
+            "git_blob": "45970fef64c9afe45950238bffb7c4997e4443df"
+          },
+          {
+            "path": ".licenses/npm/uuid-8.3.2.dep.yml",
+            "size_bytes": 1324,
+            "sha256": "a040e590c7b4e337cc8a036c59bb8e52ec73a9587a59c3d457ff5ec01fe44684",
+            "git_blob": "bf84da082324fb7972ccc5d1e813ecbc29df1c0b"
+          },
+          {
+            "path": ".licenses/npm/webidl-conversions.dep.yml",
+            "size_bytes": 1629,
+            "sha256": "ee4f2351a818349d597d663c1b1f2ec6814b01ffbd3fc2ed38680b9143cfd183",
+            "git_blob": "48c1f22729f913d07c1354086818933738ca6845"
+          },
+          {
+            "path": ".licenses/npm/whatwg-url.dep.yml",
+            "size_bytes": 1409,
+            "sha256": "233da3cf167cc7a790cd42953e61dc94008c47ad0b74aeeb199e105a53c249ec",
+            "git_blob": "bca799cccbfb09d7738957df48dbd46b41d688a3"
+          },
+          {
+            "path": ".licenses/npm/xml2js.dep.yml",
+            "size_bytes": 1360,
+            "sha256": "259dd433d7d79f9b5ce68369d970394e914855cff18950cf0ac86bc6b6d7843f",
+            "git_blob": "92bce8ddacc1418480ee3691e3c6093b8014d738"
+          },
+          {
+            "path": ".licenses/npm/xmlbuilder.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "c17735165d578112d9d08d2da48b92098892720d41b8e5ddfed9c875a30a564c",
+            "git_blob": "e8c7ee12ff81aeb175e2fc2d02baa8f3d895a31c"
+          },
+          {
+            "path": ".licenses/npm/xmlbuilder2.dep.yml",
+            "size_bytes": 1334,
+            "sha256": "fe228dd5161e39bbada18bd88c99d6ab084b9bc8a543bd365aa729309250516a",
+            "git_blob": "378714677eeb1be6ed5043f96fa250f7ccbb8b2e"
+          },
+          {
+            "path": "LICENSE",
+            "size_bytes": 1096,
+            "sha256": "7d070f6b64d9bcc530fe99cc21eaaa4b3c364e0b2d367d7735671fa202a03b32",
+            "git_blob": "a426ef259d6c5d705e9c1405075c3b318093c65e"
+          },
+          {
+            "path": "action.yml",
+            "size_bytes": 4450,
+            "sha256": "f11b3af3afada5e7bf5f734b4e5d63f7614a12365491ced6ac48ea7838dbc274",
+            "git_blob": "1d72ba088efaf1889aa8f508725f43524fd8ffca"
+          },
+          {
+            "path": "package-lock.json",
+            "size_bytes": 219581,
+            "sha256": "cb01d93e0f6db49236b55892a2e81c6c474903a5adae0f720a55bb7f98e53590",
+            "git_blob": "6f25d96d09959fc18738cf0a528572c17611a62d"
+          },
+          {
+            "path": "package.json",
+            "size_bytes": 2109,
+            "sha256": "d41b46486fb2984cfe819b6f333e1351622c6fdd8c13806dc706d986a0eae608",
+            "git_blob": "a61f84a291a2e18d80519c79fe01703669fe2bb6"
+          }
+        ]
+      },
+      "runtime_entrypoints": [
+        {
+          "path": "dist/cleanup/index.js",
+          "sha256": "db0ae5534679705c7c11b7b71e61f59f8b2d2dabfeb23bfa63486eea6cdf0a16",
+          "git_blob": "de9488ba25ecbeb867fe2b8a50c6d05350e1da54",
+          "size_bytes": 3937927
+        },
+        {
+          "path": "dist/setup/index.js",
+          "sha256": "901dc5cdbe22e744e71bfed25e3fabbe65b6f4064c0f39e2fda94545b74f2425",
+          "git_blob": "526ab711cf9c1700652f3a3a3e8d2592cbe27d27",
+          "size_bytes": 5394646
+        }
+      ],
+      "legal_declaration_count": 84,
+      "scope": "CI-only; upstream legal declarations, not a complete dependency audit"
+    },
+    {
+      "repository": "actions/upload-artifact",
+      "commit": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "previous_ref": "v4",
+      "git_tree": "90fba5b2fb462e7dd5b3b810757b73327d2d66bc",
+      "observed_run_ids": [
+        44687921233,
+        44687927151
+      ],
+      "source_archive": {
+        "path": "action-upload-artifact.zip",
+        "sha256": "4bb3e3a84cdaa93141bddcd36246a4dc5c07edf90fe09392501fe584971b1aa3",
+        "files": [
+          {
+            "path": ".licensed.yml",
+            "size_bytes": 155,
+            "sha256": "f4b949797d5b68cbfea010303f295deeeba51c1568133fe5b5f2099bebfdf7f3",
+            "git_blob": "0d6fe86bcb9a79b6c2d68afdde32d515f5a8df72"
+          },
+          {
+            "path": ".licenses/npm/@actions/artifact.dep.yml",
+            "size_bytes": 1315,
+            "sha256": "ca5ef32ff29fee23827bc21614b808cc3156884c5eb36ff3abeedb438d589026",
+            "git_blob": "5325bd102f4b532e7baa9130923a0deea1a0c1f2"
+          },
+          {
+            "path": ".licenses/npm/@actions/core.dep.yml",
+            "size_bytes": 1230,
+            "sha256": "865c034ac4e6bbc024bc6a54d9350a2e475d42e83d8ade6ec4b71d5215826511",
+            "git_blob": "a64418ee0b9757bcbbec1ba71e1215a743c8731a"
+          },
+          {
+            "path": ".licenses/npm/@actions/exec.dep.yml",
+            "size_bytes": 1303,
+            "sha256": "fa98259e4ddeecd8f63b83537184b386ca1195b71f3909bc0e6eec18d31c48e9",
+            "git_blob": "cbc5abd39e6391ec6e526e6536f1a3efd706ec05"
+          },
+          {
+            "path": ".licenses/npm/@actions/github-5.1.1.dep.yml",
+            "size_bytes": 1309,
+            "sha256": "64a39f7ea95402e75d9c3db4489a78381f8531745af9954acff55b5e0cade28c",
+            "git_blob": "f37954256d1ac97525fed0317676ff876c70d260"
+          },
+          {
+            "path": ".licenses/npm/@actions/github.dep.yml",
+            "size_bytes": 1309,
+            "sha256": "1087e313de07806c88472f85c9afa39a6e128a41596d7323ba994d3f279b7ba3",
+            "git_blob": "423601cac95ec71f36cafb9263d0b2889c835a0f"
+          },
+          {
+            "path": ".licenses/npm/@actions/glob.dep.yml",
+            "size_bytes": 1229,
+            "sha256": "ad07420ea4da46b02a2e348756732c606be21dc5c341c5cf5a990d37c79f6496",
+            "git_blob": "0df84784759fcc0d8fc23cb4d455a5a5387af131"
+          },
+          {
+            "path": ".licenses/npm/@actions/http-client.dep.yml",
+            "size_bytes": 1408,
+            "sha256": "055a742dd1ab3daadc4374cb488db223b37d5042d65f60495a0a51ad16d91ed2",
+            "git_blob": "eadacbcb175068cdcd5108e1e2173769712daa7a"
+          },
+          {
+            "path": ".licenses/npm/@actions/io.dep.yml",
+            "size_bytes": 1227,
+            "sha256": "f1bafa7ed681424037a39bf0efd3f004de94cd3cd77f9555b3211d35450d36c5",
+            "git_blob": "3be0c5c41f347cc1ccc61f84d4943a3397b2c933"
+          },
+          {
+            "path": ".licenses/npm/@azure/abort-controller.dep.yml",
+            "size_bytes": 1421,
+            "sha256": "9514fb4815f3c4a6f2883fe5c66339af331aadab98bedd7b638d6e96626b276c",
+            "git_blob": "b19b8f7a4a222550671cd5419251cbdb7fdc37ed"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-auth.dep.yml",
+            "size_bytes": 1445,
+            "sha256": "6fe4bdf91f4ec43dde14472bc0ebd00b9d2ed306a0ab952ab96b5457fbaac64c",
+            "git_blob": "85f1bb89b75f7e7ee87bb0f25ba32cae246d7cf4"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-http.dep.yml",
+            "size_bytes": 1474,
+            "sha256": "0c8b56694feb88d497e035976c5edc21118480d06fa3da91d37ae64afc67edd8",
+            "git_blob": "6a443e75c138748b9613b46ffc0fc4c5bc0f4794"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-lro.dep.yml",
+            "size_bytes": 1451,
+            "sha256": "ff7b60bd153e436657adf4c4563b2b8a2d838975370ec7b05a2039b6c3dacf12",
+            "git_blob": "29683014cc8f545928ddd78aba3dc6fe5eb3e6e6"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-paging.dep.yml",
+            "size_bytes": 1413,
+            "sha256": "fefd0f2f96aab9312e05668f5bdf5a9d811f2b42e8394c558e143cc1a0ceea98",
+            "git_blob": "dccc048207e9edf3af7a434d84200e4342d312fd"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-tracing.dep.yml",
+            "size_bytes": 1453,
+            "sha256": "95456b9d91db2fcc39a4691b0e07bcf5b37b7aab27eac02dab74c7fdb62cb5e8",
+            "git_blob": "a4649e886c933d93c5129e7c676ce11fac15926e"
+          },
+          {
+            "path": ".licenses/npm/@azure/core-util.dep.yml",
+            "size_bytes": 1393,
+            "sha256": "80f7dda0cf7bcfb1d1942c77a9e9b3bc29815c902789a281e19d428dcac7877e",
+            "git_blob": "75ffb250f4328bc90b93857fb9313447709b3a4a"
+          },
+          {
+            "path": ".licenses/npm/@azure/logger.dep.yml",
+            "size_bytes": 1400,
+            "sha256": "4e598be329e87a6d1e9f2a3412b6f6f6b365ca031374642a92dfd2582ba4e1ff",
+            "git_blob": "971ba001c9a24b840f32d5bd79360df232b040a3"
+          },
+          {
+            "path": ".licenses/npm/@azure/storage-blob.dep.yml",
+            "size_bytes": 1414,
+            "sha256": "4666723ab404f98c31e241301695e56be4d6bc66297441226cf1798629b9cab6",
+            "git_blob": "c1a125164b684d35a045dfbf80cedba07cea91a9"
+          },
+          {
+            "path": ".licenses/npm/@fastify/busboy.dep.yml",
+            "size_bytes": 1319,
+            "sha256": "cea27584a973b61a79b93f5d1bfccba03f56e235c0252684fd6723327307f772",
+            "git_blob": "51267ac9fc9b09a1ca17f33bb01a8189fc2fed79"
+          },
+          {
+            "path": ".licenses/npm/@isaacs/cliui.dep.yml",
+            "size_bytes": 976,
+            "sha256": "a79361ee7980f1a5d6f865aaf32e8085835298473c5e1c378480ee6e317799f1",
+            "git_blob": "3513752600e17ec7518065a542a35305d0bd1d29"
+          },
+          {
+            "path": ".licenses/npm/@octokit/auth-token-2.5.0.dep.yml",
+            "size_bytes": 1392,
+            "sha256": "963a93329e6829a34e2a8692f84e449499b825eeece618e8d7cad24b66525bdb",
+            "git_blob": "b030d32a2c20a8fe37adcd855f3adac8630b5590"
+          },
+          {
+            "path": ".licenses/npm/@octokit/auth-token-4.0.0.dep.yml",
+            "size_bytes": 1392,
+            "sha256": "891b297f7af06baa5b09163f91b545ae839a185e8d3816803b1b3013a545f32a",
+            "git_blob": "a202a59f07aed8f1068d1945808b7cea1b3c9655"
+          },
+          {
+            "path": ".licenses/npm/@octokit/core-3.6.0.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "6c68dcb1c2636ed08f5c7b144cc6149a7cc91d4fcb048fbbbc65e5d50d11ef56",
+            "git_blob": "a29afc074c1b6b87ca331d36b01154b20a83bba7"
+          },
+          {
+            "path": ".licenses/npm/@octokit/core-5.0.2.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "4abaad30a974c0912347bc9e1b08a114bad0e28bb15789df31a0fb986ba753b5",
+            "git_blob": "e5adcc2352d3f2a973ab6b6c02a70b552bc87053"
+          },
+          {
+            "path": ".licenses/npm/@octokit/endpoint-6.0.12.dep.yml",
+            "size_bytes": 1388,
+            "sha256": "e31ef31dfba77e77f6070ba33a753972de2769a49f91773d6ed61cc74c7aab67",
+            "git_blob": "80510c0379d7502b797fdb2865fe8be264385080"
+          },
+          {
+            "path": ".licenses/npm/@octokit/endpoint-9.0.4.dep.yml",
+            "size_bytes": 1387,
+            "sha256": "14871406f33dc8db8e09abc86fb9b7334622f2c5bf8fef6a1d3f46aa1299c5d0",
+            "git_blob": "46ad058360f61645c9c9c42d97a9fe14c572babc"
+          },
+          {
+            "path": ".licenses/npm/@octokit/graphql-4.8.0.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "3ec7a697895f3f320f0d95110f089ec69531152951ca714de5a2c34f908d8473",
+            "git_blob": "8019f236417ca3a994eac44c0ad2b958c57aa86e"
+          },
+          {
+            "path": ".licenses/npm/@octokit/graphql-7.0.2.dep.yml",
+            "size_bytes": 1380,
+            "sha256": "c07f204a2fe3655f6201836d8175fe45173ce7385a6f5b760fbe627a020a1bed",
+            "git_blob": "217f595266280e6d5458c9c7c79d4d140391ee5a"
+          },
+          {
+            "path": ".licenses/npm/@octokit/openapi-types-12.11.0.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "3eca9f8666f4bf7b3fa2e110c6db4f5e5c1e484c86592c51da48945c33076276",
+            "git_blob": "91531481c7176aa146cd032a470cbe22b30c3de2"
+          },
+          {
+            "path": ".licenses/npm/@octokit/openapi-types-19.1.0.dep.yml",
+            "size_bytes": 1345,
+            "sha256": "3ac97cd349a6bb546b77a866cacb4bbb9cdb10c560b2ee994b60cb9eb72667b7",
+            "git_blob": "a4a07b466b62a778d6c869bef34daff863bade94"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-paginate-rest-2.21.3.dep.yml",
+            "size_bytes": 1375,
+            "sha256": "9d98f49c49c28a5a253797a68301d09ad4b47ebe737f459ab195f009ceaacab7",
+            "git_blob": "b83e799ff148c4fc43e8b4e53715ad25020d3d3a"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-paginate-rest-9.1.5.dep.yml",
+            "size_bytes": 1374,
+            "sha256": "72569cce16384da9aa757c24b16e4dc60986c9b5dd140bf4f7386a327fc8180b",
+            "git_blob": "4ea1bee376a6e48f4f1843698d7dd02aa2ea80da"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-request-log.dep.yml",
+            "size_bytes": 1353,
+            "sha256": "f96ac78fe543ad17347dcaaccfb8e7c07e785792fe2ab3c1df92384be7bf11d3",
+            "git_blob": "d9fc28a1b54f957d730fd19fc352023eee389232"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-rest-endpoint-methods-10.2.0.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "21eece8b330cc1cb3d6f3d58b96390fe397c6c76c4ea672766babb9eece7d79e",
+            "git_blob": "01d38369f12bc415704c927448f0dccb9f3af5b3"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-rest-endpoint-methods-5.16.2.dep.yml",
+            "size_bytes": 1406,
+            "sha256": "a5fc8b5fcedd71aea44cd7153ec6ecb0a8a153f9c0c53b4ad37689f84686ae28",
+            "git_blob": "678227b47aacb6fbe06833378e8681a02ea96de2"
+          },
+          {
+            "path": ".licenses/npm/@octokit/plugin-retry.dep.yml",
+            "size_bytes": 1368,
+            "sha256": "cfe9a567f7c5b6597afa58d7fd522bcb2296a85da6dce1d5095d3edf65160001",
+            "git_blob": "b6c7843b01034e6b08f1a94600791589dd766317"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-5.6.3.dep.yml",
+            "size_bytes": 1423,
+            "sha256": "01f07d0db1edb70c3cbca91a88815b294029635c391a300f3289b05ad14b01fa",
+            "git_blob": "b1f86fdb7769fb9fcec77e08f664e657e35e594b"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-8.1.6.dep.yml",
+            "size_bytes": 1423,
+            "sha256": "744011f8874af66c5487173f35718fcc6f66dd5af17d15f07196e8f186dd9e6e",
+            "git_blob": "ea1f5292072851d3cd4252bef9c5082f0ab8867d"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-error-2.1.0.dep.yml",
+            "size_bytes": 1377,
+            "sha256": "c01af20c500e35a4043c535d46f2f3f5361fc0ed9d6f3dcdfc2b8572e853188e",
+            "git_blob": "845bdd149ba7de75d97b15d1cb7b7903f590a863"
+          },
+          {
+            "path": ".licenses/npm/@octokit/request-error-5.0.1.dep.yml",
+            "size_bytes": 1377,
+            "sha256": "0a3465ccd80c53e39fa4b724b45bd47b8f4352dff7e2ff6ca6d2a3790dceb0fe",
+            "git_blob": "424f87e34fc92277dc892c8faaa13b09d8f6914c"
+          },
+          {
+            "path": ".licenses/npm/@octokit/types-12.4.0.dep.yml",
+            "size_bytes": 1356,
+            "sha256": "4cb77dba527ed3cbe81b8522c9d00e31d6f34376fd3a9ae4911f414dbd916040",
+            "git_blob": "4b77b04ec26de61f89cff394c54d5292fb94c8cf"
+          },
+          {
+            "path": ".licenses/npm/@octokit/types-6.41.0.dep.yml",
+            "size_bytes": 1356,
+            "sha256": "924c47f667b8446184d4064f5ac02bafaa29b3f3557e7847c8d5a2fe9de7afaf",
+            "git_blob": "c5efe95e65032d47daed3f9c6213b9645c4f4af0"
+          },
+          {
+            "path": ".licenses/npm/@opentelemetry/api.dep.yml",
+            "size_bytes": 12927,
+            "sha256": "81415185da5317e21836d8a02a197552d5fbaea85a6b8073bf47ecb1fe61b1eb",
+            "git_blob": "74c3159ad78e031c1ee18b407135089b7bbfbb4d"
+          },
+          {
+            "path": ".licenses/npm/@pkgjs/parseargs.dep.yml",
+            "size_bytes": 12267,
+            "sha256": "ee5f21f51f930b4c0e3b7001f6ee774f66513c123d2d85837ed9d68c0dbf3e49",
+            "git_blob": "13fa21a60e5eca6753711eb9d035f44c78f98160"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin-framework.dep.yml",
+            "size_bytes": 10965,
+            "sha256": "da36728cf85ae901b1543ab218e052a08afe2574228e0b2bd6fc699d7005e883",
+            "git_blob": "975e5130c5468deb305b39c931ef4f431562fd4b"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/plugin.dep.yml",
+            "size_bytes": 11026,
+            "sha256": "e7579151f5f1d7c10e3f1eb0e0d72178eba4eb0cc3d12b87636932cf9efd0d99",
+            "git_blob": "2403c7d34da1155ce8232acc686f048875a5d7d4"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/protoc.dep.yml",
+            "size_bytes": 10981,
+            "sha256": "7ba36e3ffd73350260151ec290c98e00ff1030a9df5f6ccb8782c8d1ec1da265",
+            "git_blob": "75ec279c0803c20b997fc2c5e81bbfc224cf2486"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime-rpc.dep.yml",
+            "size_bytes": 11007,
+            "sha256": "10aeb54eb1799323988f0bc7c709ebb383c2767309f5562b9fb0a4b805931d18",
+            "git_blob": "6bd23cb2b7dd2e06b4d7a1eebce996348788c7f7"
+          },
+          {
+            "path": ".licenses/npm/@protobuf-ts/runtime.dep.yml",
+            "size_bytes": 10991,
+            "sha256": "c2f20a99a14fcb22e11efa0e2867dc6792bb01ea21939ab89013e3c123d2c60f",
+            "git_blob": "14e75b5d8f9145321f001e91fe61dd9646fb0929"
+          },
+          {
+            "path": ".licenses/npm/@types/color-name.dep.yml",
+            "size_bytes": 1407,
+            "sha256": "de6d5b16aa2b555e871120ff83d24ecb287ddaee22e5bffcabba99c9bdd444e3",
+            "git_blob": "5e5c6c340743f50ad24a2a637fbb4bec16efbc45"
+          },
+          {
+            "path": ".licenses/npm/@types/node-fetch.dep.yml",
+            "size_bytes": 1466,
+            "sha256": "2fa45573b45f0dd362cce65149dfd380bf7e36a77a0a1200c398bd36c164f74e",
+            "git_blob": "e335d29a1aa0e2b22b0f2ecae4c3d0e1f7891cc2"
+          },
+          {
+            "path": ".licenses/npm/@types/node.dep.yml",
+            "size_bytes": 1454,
+            "sha256": "f7d07c99493a1cfd803e99ba6877576848e7a68ccc394d275691373692440f90",
+            "git_blob": "5f473985d83495ee675525ff2e47e8a22744b92d"
+          },
+          {
+            "path": ".licenses/npm/@types/tunnel.dep.yml",
+            "size_bytes": 1454,
+            "sha256": "7e9961d4b13506eb7f4dfd5d76a1f92ad152d4c1738114fb1cca71b56596051c",
+            "git_blob": "b3636b02d4023c7413ce02ad0263e2f904ce2990"
+          },
+          {
+            "path": ".licenses/npm/abort-controller.dep.yml",
+            "size_bytes": 1383,
+            "sha256": "66b012c112da8b51313ff669bc43ddde1ca41cd664dc6f2246e50c0e695de8f8",
+            "git_blob": "492a609bb144972ce27dc406d2b952a9e0f085a1"
+          },
+          {
+            "path": ".licenses/npm/ansi-regex-5.0.1.dep.yml",
+            "size_bytes": 1308,
+            "sha256": "05e8bce9dd5a7aaf46de069f10556cb8e9dc937c82c55925b0f660eb9da1f4cd",
+            "git_blob": "9e6d3704a13a2b5bb20dfac09743c8ba996f07d9"
+          },
+          {
+            "path": ".licenses/npm/ansi-regex-6.0.1.dep.yml",
+            "size_bytes": 1316,
+            "sha256": "95a1ebf063cbe74ee16ce0f6fed8ec4f28f2cc5facdc3e52faf57f2e32ab5f0f",
+            "git_blob": "9d968404136043cbde4b4ae7a910bf015ed3f2a4"
+          },
+          {
+            "path": ".licenses/npm/ansi-styles-4.2.1.dep.yml",
+            "size_bytes": 1313,
+            "sha256": "5dc9de10d58ff0fe2fe8b17f6acad23081f75367ca3bec607afeb38cf43a3d2a",
+            "git_blob": "46c8296af917a412c79b118fad18270d2a23dccd"
+          },
+          {
+            "path": ".licenses/npm/ansi-styles-6.2.1.dep.yml",
+            "size_bytes": 1321,
+            "sha256": "65eaf5dad0d17f52f4f9bc8be812c408ad90bbae82602274222db5f7722545a4",
+            "git_blob": "88000272f792eddc637463793f9ded6eecfe3671"
+          },
+          {
+            "path": ".licenses/npm/archiver-utils.dep.yml",
+            "size_bytes": 1354,
+            "sha256": "7e2407f03304cdc40b05a67ec63219d88cc6650dec09a7204a546208b0683364",
+            "git_blob": "dfd45d487a14fa06a71f251889c9e70439585c9c"
+          },
+          {
+            "path": ".licenses/npm/archiver.dep.yml",
+            "size_bytes": 1373,
+            "sha256": "48880a16e9d26cbf618abfbc64cdb72fcbb2209824438cb5ffe9eb7993a3006b",
+            "git_blob": "a77839374931f0977febc47e76818e5253643765"
+          },
+          {
+            "path": ".licenses/npm/async.dep.yml",
+            "size_bytes": 1348,
+            "sha256": "4db06bfa08c9b93e65c4e614abc7a1db393caa5798b81bb1f250b6a9a3708d2b",
+            "git_blob": "fd6a5013dea2f045f380b8fad16970a64e903f15"
+          },
+          {
+            "path": ".licenses/npm/asynckit.dep.yml",
+            "size_bytes": 1449,
+            "sha256": "37c0b44fcf7201cc59487f01da25d8922ad2e989b1b12ebce3a3e1b84d094435",
+            "git_blob": "905e0aaa9814305a5cfcbbace895644fce96782e"
+          },
+          {
+            "path": ".licenses/npm/b4a.dep.yml",
+            "size_bytes": 12295,
+            "sha256": "fca1fe9746b636ed8edc5ef2ca3bbb4233606a23b4f7d92c536e9d91f7f8ac2c",
+            "git_blob": "6f2d9817e07cbad23462e367f026d8c898fd74c6"
+          },
+          {
+            "path": ".licenses/npm/balanced-match.dep.yml",
+            "size_bytes": 2592,
+            "sha256": "c8feda744b705f73f24daa46e66d50320b5d892b93371bba3f1ba8c5c3ce1489",
+            "git_blob": "1d768a8e66910dc7758404240f229b508f92b7b0"
+          },
+          {
+            "path": ".licenses/npm/bare-events.dep.yml",
+            "size_bytes": 12291,
+            "sha256": "d15f339c18687c416124b6a8b328a7bf523c68e2e38ea7e59d1c4803d88809ad",
+            "git_blob": "d30dff9f07fed52e6e91da2b752e11f8b311600e"
+          },
+          {
+            "path": ".licenses/npm/base64-js.dep.yml",
+            "size_bytes": 1386,
+            "sha256": "4a8c77b7bade90230e01c76916477bed52fe5127e30817c43713d32e94ff5130",
+            "git_blob": "6f5707cbc570fc35b32c2d21e413cdcf0f85dea3"
+          },
+          {
+            "path": ".licenses/npm/before-after-hook.dep.yml",
+            "size_bytes": 12307,
+            "sha256": "71495e066413f3f4368e6abf5d44f6e3b00cf8fa85127c3aec7f5f18109b080d",
+            "git_blob": "a1c6b849c8d6058b7243a1e4e99b97f839ef349e"
+          },
+          {
+            "path": ".licenses/npm/binary.dep.yml",
+            "size_bytes": 179,
+            "sha256": "69503ebd906e58708424e8dfebaadb4b4d2daeadf54e2748a8983ac2a4a0a38d",
+            "git_blob": "00e43d5d788f0050755b329347a0cbbc6c8d61b3"
+          },
+          {
+            "path": ".licenses/npm/bottleneck.dep.yml",
+            "size_bytes": 1318,
+            "sha256": "875902a5e193db4ecdfda7a814c6c89ecfeafba8f35381721aff338a160a8da2",
+            "git_blob": "af9f462b3ea5ca5be011377d4f4357fdda94ba3c"
+          },
+          {
+            "path": ".licenses/npm/brace-expansion-1.1.11.dep.yml",
+            "size_bytes": 2581,
+            "sha256": "90688019e9feca42b08eb9914bb0044b598eea34c3ecde240deaaa1875855b92",
+            "git_blob": "8fa6cfb3114422eeaf20402cb8f97e1fa8892f45"
+          },
+          {
+            "path": ".licenses/npm/brace-expansion-2.0.1.dep.yml",
+            "size_bytes": 2580,
+            "sha256": "68f97b212eea79751a513d3192df1e7aff07c71f3b1f5db22df68121adb63140",
+            "git_blob": "e0a1e518dbf00989de03fc1cf1c2aff835204e13"
+          },
+          {
+            "path": ".licenses/npm/buffer-crc32.dep.yml",
+            "size_bytes": 1425,
+            "sha256": "add6b71f5c532a15a76e6a4e91068d3583e6a97fe0031876d5336add993aec9c",
+            "git_blob": "fd7b2df7192a84ab0ab292d210be7cfeaf237bb1"
+          },
+          {
+            "path": ".licenses/npm/buffer.dep.yml",
+            "size_bytes": 4649,
+            "sha256": "56cc978f385fef5697a4b88eaeaef6b3fe583ebd36830aca1436fa27f34b8117",
+            "git_blob": "9f0f322f15f3dca11c6a6d1477c068758383f28d"
+          },
+          {
+            "path": ".licenses/npm/buffers.dep.yml",
+            "size_bytes": 180,
+            "sha256": "ed0e43b55ae2e1de44bc748fc4bc4f68147caf2810bebcd14438c5a0401af7ac",
+            "git_blob": "c9d12da9d3b9d937bb14a03060ecbe5f73798e96"
+          },
+          {
+            "path": ".licenses/npm/camel-case.dep.yml",
+            "size_bytes": 1917,
+            "sha256": "e8933709521efbdc4f0510cddf0fd69a9d0f1dfe0c00a6929327ecb877aa807e",
+            "git_blob": "c143a6a0cf17f4ccab350accf0050c6a060bd059"
+          },
+          {
+            "path": ".licenses/npm/chainsaw.dep.yml",
+            "size_bytes": 178,
+            "sha256": "01a7ace13ee1ebf5522f25b7ecae30877262b05949dbc6614d92867bcc892ef6",
+            "git_blob": "692ef61c67d6a35dc353e2a27d37ed0e241eb639"
+          },
+          {
+            "path": ".licenses/npm/color-convert.dep.yml",
+            "size_bytes": 1462,
+            "sha256": "fe3eeba70061dab61df90c7a806adb73607bb89b05aeafe8b0f9a9bd3d3df98f",
+            "git_blob": "5a7944b2b067a5938c606405bf9ea40e3acbf3f0"
+          },
+          {
+            "path": ".licenses/npm/color-name.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "36aa16f19e25eed5a07ba3b74edb50369101131be08aa2a1fc7c158d037f5541",
+            "git_blob": "180104bf9cbb99beb1ba3dd7dfdb28820cb3f3da"
+          },
+          {
+            "path": ".licenses/npm/combined-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "5adb9ab566e804933e4433ffd50314dea660502c2267ce7c7b8044f012c6f243",
+            "git_blob": "2b392155d021a3bcbbc7f179e0e77a7656ad8022"
+          },
+          {
+            "path": ".licenses/npm/commander.dep.yml",
+            "size_bytes": 1447,
+            "sha256": "c42391128fcb5532e829f724c63346ab7419ec06006ffd2b7e16db9cea58c793",
+            "git_blob": "6aa7cafdc0bcca44b78f2969f5780d8850f24008"
+          },
+          {
+            "path": ".licenses/npm/compress-commons.dep.yml",
+            "size_bytes": 1428,
+            "sha256": "9a799bd3570e2f6c064af64b9c4dd449c458ef8fb3b4c745a862fdc61931b28c",
+            "git_blob": "77c0654d707cf8b9e71bf41efe39698708e25bfc"
+          },
+          {
+            "path": ".licenses/npm/concat-map.dep.yml",
+            "size_bytes": 1328,
+            "sha256": "25aa82fe4e92694e7fd1bb7106b847fba80e1f67e4a677182bcad3dd86decb8d",
+            "git_blob": "3b736f5b3bb3c33a93dc1f576aa9b598dc880363"
+          },
+          {
+            "path": ".licenses/npm/core-util-is.dep.yml",
+            "size_bytes": 1323,
+            "sha256": "2110e4a39f7af3889b7912e9e7c7cc8a3ff2cf1e89947132a45e2a43291ec254",
+            "git_blob": "3cb4b4d7af370d18dde8b53fdae19844c285074d"
+          },
+          {
+            "path": ".licenses/npm/crc-32.dep.yml",
+            "size_bytes": 12392,
+            "sha256": "e07b3099ace4e7aeaeed8f8749b9fdc1f05edc2e1adb2ba9c0f5794362924692",
+            "git_blob": "7e43fd4c4738dacdfb927f7c4f497b12c4ed1e48"
+          },
+          {
+            "path": ".licenses/npm/crc32-stream.dep.yml",
+            "size_bytes": 1360,
+            "sha256": "61f703283081fb625ab8b13e1de20ce83e1f91891e186b1018ac939628237776",
+            "git_blob": "2be0adf979875348c77884beb8cf906e086b8128"
+          },
+          {
+            "path": ".licenses/npm/cross-spawn.dep.yml",
+            "size_bytes": 1529,
+            "sha256": "4bbcc0e8a304a126346a8d109fadd55a12b0f4a5b94fdcefac221082985ae08c",
+            "git_blob": "b63152ff4d96500784f06957ab17ec90b430d177"
+          },
+          {
+            "path": ".licenses/npm/delayed-stream.dep.yml",
+            "size_bytes": 1473,
+            "sha256": "762025f7b39c1f20055fe4b203509bd05a8aef663e141d180928a0d8e8e96efc",
+            "git_blob": "124012173832f11d2729b64c54ad993a3258fc9e"
+          },
+          {
+            "path": ".licenses/npm/deprecation.dep.yml",
+            "size_bytes": 1023,
+            "sha256": "fbb73d4520b8dfde2770b1d85d4e6098ec9d88181d16151e9e14b3c86ff04744",
+            "git_blob": "85f21423d5df8e96882b21f74107c281e366b8f2"
+          },
+          {
+            "path": ".licenses/npm/dot-object.dep.yml",
+            "size_bytes": 1342,
+            "sha256": "3083a4dd9536535b15e7df3cee83ad950a964f8a19c8b8fb35b63c601de32e02",
+            "git_blob": "3e1392f4dc7849f4ffeed573002235ef96f03acc"
+          },
+          {
+            "path": ".licenses/npm/eastasianwidth.dep.yml",
+            "size_bytes": 1296,
+            "sha256": "186ed578aed3897e12e75036cc05a1e8f5510ffd87e3a55f1b8d357d1032e216",
+            "git_blob": "064d05002f9e3e2ae7fbb49c56fc65a42142d70b"
+          },
+          {
+            "path": ".licenses/npm/emoji-regex-8.0.0.dep.yml",
+            "size_bytes": 1495,
+            "sha256": "96c2369ae26f08f711d1ca4f3ef4d1b62edb7617f8226c3b8dd7a3150442d978",
+            "git_blob": "30717a6f9cd179f20547692fc6a080245f9ca519"
+          },
+          {
+            "path": ".licenses/npm/emoji-regex-9.2.2.dep.yml",
+            "size_bytes": 1495,
+            "sha256": "16411956ca7a31fd81be524c899a39b9cbf7c2a98f1bd55ef48ac40d56ec9286",
+            "git_blob": "3745ed7b3873e24df753aebf460ae806c450f498"
+          },
+          {
+            "path": ".licenses/npm/event-target-shim.dep.yml",
+            "size_bytes": 1390,
+            "sha256": "c9965b28d0bb3f433c7fb54656784bedaf999794ab64fd8594ccc5526631b5d0",
+            "git_blob": "2f27dac2a1596229023896d0bbd0e9a6173b34d6"
+          },
+          {
+            "path": ".licenses/npm/events.dep.yml",
+            "size_bytes": 1444,
+            "sha256": "089d5b9bab6ec610c5496fe312a32d7c8d6ef8ee58bf8b5e83dfff89d71d61be",
+            "git_blob": "a77943db11d3cde4929e2a1542d1bcdd36a904d4"
+          },
+          {
+            "path": ".licenses/npm/fast-fifo.dep.yml",
+            "size_bytes": 1429,
+            "sha256": "86e059e9c40b3258e79d139c2111cb5c5a024c6c59ea21a85f192b100d4fbb53",
+            "git_blob": "ed8ff374d7d8b486356411be4eb135d788283d93"
+          },
+          {
+            "path": ".licenses/npm/foreground-child.dep.yml",
+            "size_bytes": 1042,
+            "sha256": "d20028b3ca6d8be587e41cec115e74cd8e5dd342410ed30ba386fc7d30bb013c",
+            "git_blob": "7c5e95201531877fdcdf2fb3f6cea4a68114e78f"
+          },
+          {
+            "path": ".licenses/npm/form-data.dep.yml",
+            "size_bytes": 1529,
+            "sha256": "c60d8f61e693c477972468b5cc1abea8bf1556b9daea56ff3a5121c7f1b93c12",
+            "git_blob": "8b34d88117b78eafa23261db3ed17739730a4b87"
+          },
+          {
+            "path": ".licenses/npm/fs.realpath.dep.yml",
+            "size_bytes": 2478,
+            "sha256": "0b54550133fbc9539b01dce88c6dc1db42e313302406ebe1c212b011ebc38680",
+            "git_blob": "18567bbc39a546bad90bf1b12d3833e9fa5fbedf"
+          },
+          {
+            "path": ".licenses/npm/glob-10.3.12.dep.yml",
+            "size_bytes": 1018,
+            "sha256": "6964977ba7018f7673754880fe1513bdec6da0766a10495cc327d3fc38aca4e5",
+            "git_blob": "03dd56eb9e27920decbce466b784efb0506dec1b"
+          },
+          {
+            "path": ".licenses/npm/glob-7.2.3.dep.yml",
+            "size_bytes": 1182,
+            "sha256": "73603cf4ce2bf1ab8ea7b7d7da6855d6e6cab122ca4e57983c1aec113cfb0059",
+            "git_blob": "257b41bfee1332a1ea2ae294fd41c1db0c7fe421"
+          },
+          {
+            "path": ".licenses/npm/graceful-fs.dep.yml",
+            "size_bytes": 1029,
+            "sha256": "56375d6cb82ae352f77e50b6f098196269bb2225150ad2ab4effb4f026a2b7f5",
+            "git_blob": "280edde0ae63f1b15e89fd01754194a672b42eec"
+          },
+          {
+            "path": ".licenses/npm/ieee754.dep.yml",
+            "size_bytes": 1783,
+            "sha256": "800bc6cf00841ca57d302f7969d8207b2e2af64888d76ef5d34d13562c8b4ce6",
+            "git_blob": "02746b61bde5878fd226219dacc90d3dadd05b30"
+          },
+          {
+            "path": ".licenses/npm/inflight.dep.yml",
+            "size_bytes": 1021,
+            "sha256": "e2faf9f7cb038deb92ea70c0054ebb9a417f3146f4c030c859d13df1d6fc7c08",
+            "git_blob": "30e123e1a0ba246cd8351432b00c8c03ab883d69"
+          },
+          {
+            "path": ".licenses/npm/inherits.dep.yml",
+            "size_bytes": 1008,
+            "sha256": "6bde4c45524bc8c4c9b4fe69eb637513a7da3b9f7143439eef5ae75c49413b75",
+            "git_blob": "74179e61facc04e6ea1f966d4dd44af5ca5a33f3"
+          },
+          {
+            "path": ".licenses/npm/is-fullwidth-code-point.dep.yml",
+            "size_bytes": 1427,
+            "sha256": "1a5345bb45ce2f7ea8c4d0db7fbe154f5ccdfc26a081e1538bfaff26012902b2",
+            "git_blob": "87e3ac83b3c4405a136a57b4bff0ffe0495aec06"
+          },
+          {
+            "path": ".licenses/npm/is-plain-object.dep.yml",
+            "size_bytes": 1727,
+            "sha256": "24a5ddc360fec8e0a579e8f720b89861b22375e212d0c0cf9f1018ecbba4c690",
+            "git_blob": "671ba2054feae7c8ad7aba53893ddb0fe5818980"
+          },
+          {
+            "path": ".licenses/npm/is-stream.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "67ab352580af024ed84b9f49f910a395508a5b7ef2a87292619341b18a0bf534",
+            "git_blob": "748b2ee5be7723c44bcaef7ea52fb59b3ec1e54c"
+          },
+          {
+            "path": ".licenses/npm/isarray.dep.yml",
+            "size_bytes": 1366,
+            "sha256": "eea74ce831b3dc0ca94db9e8a369588542f7c007917ea9f40137d2c29fdd9b04",
+            "git_blob": "1b87215858dbf7dd6b8aa6b8d588c8b65b37643d"
+          },
+          {
+            "path": ".licenses/npm/isexe.dep.yml",
+            "size_bytes": 1025,
+            "sha256": "8cd4ecd72d6d273648fa6a4836d118306ca73a2c293577b578ede01b098466df",
+            "git_blob": "a69a541e0f902190e1cca799b7d82240e6fb8882"
+          },
+          {
+            "path": ".licenses/npm/jackspeak.dep.yml",
+            "size_bytes": 1887,
+            "sha256": "eae5bd2460c11b47d646a871c60fddbf62c9c65beda3cb58b6165c97e4bfce41",
+            "git_blob": "8fa8586feb51fe254cfef43e45e8b2f02fdf561a"
+          },
+          {
+            "path": ".licenses/npm/jwt-decode.dep.yml",
+            "size_bytes": 1643,
+            "sha256": "68f4d6353161bfee940471c37dc7918b0fd81fb4b256d3cfa49203a85945215d",
+            "git_blob": "708b1fa3ce4f149bb79aec42d8b8892a92fbb030"
+          },
+          {
+            "path": ".licenses/npm/lazystream.dep.yml",
+            "size_bytes": 1361,
+            "sha256": "d1ae48b3c08fadb44db6d30c0f049bb22c4ec8ac66ff0d44f5ef929c0a3fface",
+            "git_blob": "e198b73ef25a01af3e8c3e68acd99e5d46a96928"
+          },
+          {
+            "path": ".licenses/npm/lodash.dep.yml",
+            "size_bytes": 2267,
+            "sha256": "feb6465791c839cb4cbf047102dce666570f3d4e95cd030e730ed960b119e545",
+            "git_blob": "fce2daa37f430b41c31dec0f3012b5b1df88dc70"
+          },
+          {
+            "path": ".licenses/npm/lower-case.dep.yml",
+            "size_bytes": 1873,
+            "sha256": "81ca87cd9af0ba76612cf2e4dc3814340229e592e670f4feeb07000847f819cf",
+            "git_blob": "e5b04b681f71a90507d8c35f3eb567ce9d4e5e74"
+          },
+          {
+            "path": ".licenses/npm/lru-cache.dep.yml",
+            "size_bytes": 1011,
+            "sha256": "3181ceedcc4f5dced9b56e760a6e2ab5f5c06dd170c9ad2fa675a65e2ac42e2e",
+            "git_blob": "501ccc878bf7b4535d690447b84b2b991ea66434"
+          },
+          {
+            "path": ".licenses/npm/mime-db.dep.yml",
+            "size_bytes": 1395,
+            "sha256": "44801ff43280ec8802838592d54d3ae6b5e1f72bcef06dc11fe72253ef10dce1",
+            "git_blob": "660566950ddf81541a308b21979b4c224f76fe3e"
+          },
+          {
+            "path": ".licenses/npm/mime-types.dep.yml",
+            "size_bytes": 2089,
+            "sha256": "8350578680bd73e552b764ed9188ff4acfb383c133d0896088042095bddfb5b8",
+            "git_blob": "832d2052dcbf6cea60f3385d55c6f516f403dd04"
+          },
+          {
+            "path": ".licenses/npm/minimatch-3.1.2.dep.yml",
+            "size_bytes": 970,
+            "sha256": "2c396c0517043feb753ebd96a2f9fd276a433c8111c43778f34c087742329e79",
+            "git_blob": "05e744aa9b2b55437a2a096ac592847c1cab939a"
+          },
+          {
+            "path": ".licenses/npm/minimatch-5.1.6.dep.yml",
+            "size_bytes": 980,
+            "sha256": "8a9765a85e000be02ebc31f9a4b93eccc02037c7a9a81ae8d5a69f0cb265c23c",
+            "git_blob": "7e565519e42852d7f8f8d71442415cf222926379"
+          },
+          {
+            "path": ".licenses/npm/minimatch.dep.yml",
+            "size_bytes": 980,
+            "sha256": "8d6049293aff24162dfa51b973cf65c96303d72736e993f7223314b5282baabe",
+            "git_blob": "a15661100939c6e5d8395ef5c93888ec84e772b4"
+          },
+          {
+            "path": ".licenses/npm/minimist.dep.yml",
+            "size_bytes": 2150,
+            "sha256": "f6048d8aa84f74c109a337a3865cebb7d3c92729e66edca64037fa0a1a58de72",
+            "git_blob": "3f543eb8a23176c710a8cb0b765195c2e11a01c9"
+          },
+          {
+            "path": ".licenses/npm/minipass.dep.yml",
+            "size_bytes": 1009,
+            "sha256": "c9545ad73978c8884d1d53d126aa99248b76ce46938b6f6fa992f2ff1cf1b3cd",
+            "git_blob": "a2e8bd95194be7fcea9d0d0645f13b94f4929bde"
+          },
+          {
+            "path": ".licenses/npm/mkdirp.dep.yml",
+            "size_bytes": 1410,
+            "sha256": "b43e657fc23dd3d31a25f5921d09fcc9d1ce9c251fd787509b8b4cf43f21ea97",
+            "git_blob": "832d06de136d9fa453753a18a78bf449e21b1b59"
+          },
+          {
+            "path": ".licenses/npm/no-case.dep.yml",
+            "size_bytes": 1875,
+            "sha256": "a3436affb31f37bc592ea400e7cf17d96d8114014bd748d2f02c579bf813c62f",
+            "git_blob": "bee8a3b77f2fa8323bef525a4bd72a068c66cec8"
+          },
+          {
+            "path": ".licenses/npm/node-fetch.dep.yml",
+            "size_bytes": 2796,
+            "sha256": "7a438938e6b6d00a520a97ad561236229afd0e3216d78dc8c23ec5f01e6bc2cc",
+            "git_blob": "ec9a760d2ab5922157468d98e2d92375c241789e"
+          },
+          {
+            "path": ".licenses/npm/normalize-path.dep.yml",
+            "size_bytes": 1809,
+            "sha256": "3f1b415d79c01846572ec7c46d847b506b449c16d154f7070c86ba5053e30a68",
+            "git_blob": "f010f2a00e6c22369b0666317388c58db87ec66b"
+          },
+          {
+            "path": ".licenses/npm/once.dep.yml",
+            "size_bytes": 968,
+            "sha256": "488173a8b7b5a8b64aa1d03f868cbc4d5ee5abdfb0210685657334c1dd8f63be",
+            "git_blob": "af362acd0ce01a7bdfc60b01ec237071acc38bed"
+          },
+          {
+            "path": ".licenses/npm/pascal-case.dep.yml",
+            "size_bytes": 1909,
+            "sha256": "3c85b9cc869f570ebef7f2074429f5dd4a53eb8c8df9dbe1c4f8a8982ef7c483",
+            "git_blob": "20cd14f631e13db23301a4ea65ac1d190449de10"
+          },
+          {
+            "path": ".licenses/npm/path-is-absolute.dep.yml",
+            "size_bytes": 1440,
+            "sha256": "e47d1c16cb498a10586f1d7011fe2a8cd8a96b48a2a0c86f7593447e9746abd2",
+            "git_blob": "d8fbfdd1b4347925b38a185cb28f7b5d7b0df8da"
+          },
+          {
+            "path": ".licenses/npm/path-key.dep.yml",
+            "size_bytes": 1309,
+            "sha256": "7302ad62fb138d6f872bfba221aec16a76ffcb7e72b326530105eb387475416a",
+            "git_blob": "7351b52d15bdf1a4240a08fea3e791a1d6dfa873"
+          },
+          {
+            "path": ".licenses/npm/path-scurry.dep.yml",
+            "size_bytes": 1880,
+            "sha256": "82dc5b88f61b4f247bd46c4489f9df81b966626e083c688c0abf29768d381ab4",
+            "git_blob": "fe5b188897792200040e569a8c1ef8a0621d8060"
+          },
+          {
+            "path": ".licenses/npm/path-to-regexp.dep.yml",
+            "size_bytes": 2111,
+            "sha256": "567535fccdff68a8003facb0d5074ac9d9fa745fcb0ffb48ceb1ff870d75c7d8",
+            "git_blob": "03207b9b4f892a327e59c2cdddbdf42769a616a2"
+          },
+          {
+            "path": ".licenses/npm/prettier.dep.yml",
+            "size_bytes": 314822,
+            "sha256": "eff94f7c661a04676ec0cc968830dc720d30cbc885dc27696ebebb53a3df4a0c",
+            "git_blob": "b10978d020669b80a35589c4f2e4359431175c96"
+          },
+          {
+            "path": ".licenses/npm/process-nextick-args.dep.yml",
+            "size_bytes": 1362,
+            "sha256": "6590b89b5ecf3ee8c31b05d01af7ebb79951cfc4cb85b4efe1513fa3f003abb9",
+            "git_blob": "4d77ee846319b2c4aa52f331e157589444950a4b"
+          },
+          {
+            "path": ".licenses/npm/process.dep.yml",
+            "size_bytes": 1343,
+            "sha256": "7723f144f6a7bde3ad3ce09f627eaf57d78f0137e24bc32911bdef3c85216910",
+            "git_blob": "7649512e3c2cd93cee19ebf71a01950822f6db31"
+          },
+          {
+            "path": ".licenses/npm/queue-tick.dep.yml",
+            "size_bytes": 1425,
+            "sha256": "13a29b4e1e8050372776f7a5325fa70ec1cc6a32cb181d12e17e05d94c9aa98b",
+            "git_blob": "c259ed2a5f9cff179c43eaef0ace14aa73830fd3"
+          },
+          {
+            "path": ".licenses/npm/readable-stream-2.3.8.dep.yml",
+            "size_bytes": 2691,
+            "sha256": "fd0fc609ac8035a9069dfca31d15d748d586ece11c1afb18ab0c8e0e6bc8fd1e",
+            "git_blob": "7cf8551a466f39d84d58c3b5ba816ac2af2f33ef"
+          },
+          {
+            "path": ".licenses/npm/readable-stream-4.5.2.dep.yml",
+            "size_bytes": 2740,
+            "sha256": "f77516be34387e72718452bbfc94e9b3b51a1ef76f0849dcd0d083fcb91ea123",
+            "git_blob": "23410c97f0e6790e219a719f033cc0c17aecbb75"
+          },
+          {
+            "path": ".licenses/npm/readdir-glob.dep.yml",
+            "size_bytes": 12260,
+            "sha256": "ec518bc1ad9ace217187c1bee0accbc3b2e82ebd74eeb4e58ee83599c583e202",
+            "git_blob": "cba05910daba89dfeb4b772956fc3e2b183c990a"
+          },
+          {
+            "path": ".licenses/npm/safe-buffer-5.1.2.dep.yml",
+            "size_bytes": 1431,
+            "sha256": "06fdcb88f902daeeba3acbdd6e56a49d4a1b5f59d705025c2b7aa596f13b21d3",
+            "git_blob": "193d9e89d7208637535aad361c152b62dbb856a2"
+          },
+          {
+            "path": ".licenses/npm/safe-buffer-5.2.1.dep.yml",
+            "size_bytes": 1431,
+            "sha256": "be47c84c63a048e14443b862597fa55107b079f3b1a3533d81d14603e020ef79",
+            "git_blob": "a6499e34da617543f8785a9c3ecf5e49b61c81bf"
+          },
+          {
+            "path": ".licenses/npm/sax.dep.yml",
+            "size_bytes": 2329,
+            "sha256": "4d5ff9bb6eff862260f947c46134290d9c6b6d874e6cbc93a82de580cb20c890",
+            "git_blob": "bd21128e5d99ca4f73ed94b882650f39c445e789"
+          },
+          {
+            "path": ".licenses/npm/shebang-command.dep.yml",
+            "size_bytes": 1301,
+            "sha256": "1d94721f22891566d64ea4f7e0489094c857940470a6a9c688133fc3181c8eee",
+            "git_blob": "d95f0cbb046843d133727a7d808d4af8844031f4"
+          },
+          {
+            "path": ".licenses/npm/shebang-regex.dep.yml",
+            "size_bytes": 1386,
+            "sha256": "c8eb727acddfceb712091dd0b09e7701720000a5f75e34df395fcb8f56dc08e1",
+            "git_blob": "4edc1f9bf9cd588b206f88529ed1175c675a5ff7"
+          },
+          {
+            "path": ".licenses/npm/signal-exit.dep.yml",
+            "size_bytes": 1038,
+            "sha256": "5bface70ca1066061b8fb8188aeb2844e328310d9828568d2496ab280dd6f726",
+            "git_blob": "5257c46db7f1ad29e054c223aa4de1dfb79c3978"
+          },
+          {
+            "path": ".licenses/npm/streamx.dep.yml",
+            "size_bytes": 1415,
+            "sha256": "1fafc637cd306f131fcc76f349b7f4cc2bd9cd63261b0dbdc4887e247ea21dc0",
+            "git_blob": "7a97ae8a27f60e74274c8a5bad7082683546e8bc"
+          },
+          {
+            "path": ".licenses/npm/string-width-4.2.3.dep.yml",
+            "size_bytes": 1342,
+            "sha256": "75c61893721038d346eace84593e492804983f86cb47743f9f6df1b923e11957",
+            "git_blob": "e7d6c0bf476ad618d41441767f27ca1e219c056c"
+          },
+          {
+            "path": ".licenses/npm/string-width-5.1.2.dep.yml",
+            "size_bytes": 1350,
+            "sha256": "3a20489f7bb6dfe9c3063e18a76200814850b538115a9dc2a99d26c1cc645250",
+            "git_blob": "24a8551efddeca9379f439fe3fc993923ed6c533"
+          },
+          {
+            "path": ".licenses/npm/string-width-cjs.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "6c50a11265b21959a024e563f14ea014158d0cdf7378e4e340128bc5ea4b2cb2",
+            "git_blob": "1cecb56903505a0bd58eba92810b1ca41562110c"
+          },
+          {
+            "path": ".licenses/npm/string_decoder-1.1.1.dep.yml",
+            "size_bytes": 2716,
+            "sha256": "0b98ab59c25c6a6dc67abe2b7e4fecb78d30b808d08814583538687ad36bc2ce",
+            "git_blob": "ab0a64f79700fb70daabc424246f1ceb994f1f41"
+          },
+          {
+            "path": ".licenses/npm/string_decoder-1.3.0.dep.yml",
+            "size_bytes": 2716,
+            "sha256": "10251c15bc58cecc98baac46d095e813264220b628d3856c8b687de19dd44cb4",
+            "git_blob": "84d1b1ebdcaf340ead5b5da347906bd5ed01bafd"
+          },
+          {
+            "path": ".licenses/npm/strip-ansi-6.0.1.dep.yml",
+            "size_bytes": 1296,
+            "sha256": "dfb53c87eb41a18346a718d964ed1b0898a576409349e1cf885e5dc97561d867",
+            "git_blob": "4e722bc768c1170d05b1065791fda909c0c1a7c3"
+          },
+          {
+            "path": ".licenses/npm/strip-ansi-7.1.0.dep.yml",
+            "size_bytes": 1304,
+            "sha256": "554b9cf428019bac61cfe460dd4bb02dc5ac81fe1e3006ef50a8d18a652541b2",
+            "git_blob": "b8cfc08df9d3b962af092a07b147df7de802c44a"
+          },
+          {
+            "path": ".licenses/npm/strip-ansi-cjs.dep.yml",
+            "size_bytes": 1300,
+            "sha256": "54ecb5a7819079dd73d2793f72802e0dcd67db07669563ff450803582437f83e",
+            "git_blob": "7d9eebbaeaac1b16e67ec76cc76f72e7f4795bdc"
+          },
+          {
+            "path": ".licenses/npm/tar-stream.dep.yml",
+            "size_bytes": 1544,
+            "sha256": "3cebb6c398e6c94d8e05d719b4d45e6ed995d39cba956d994830548e99ce7c37",
+            "git_blob": "238eca4f6e81510aede76668f82b2182ba977400"
+          },
+          {
+            "path": ".licenses/npm/tr46.dep.yml",
+            "size_bytes": 1334,
+            "sha256": "83707076fccc2ba3edb2be8e9ea0d921d5383e10b04f36b346d0f45f9ba1e5ed",
+            "git_blob": "3bacc6ec4c168478637e17763157c09ed9ebe0dc"
+          },
+          {
+            "path": ".licenses/npm/traverse.dep.yml",
+            "size_bytes": 1536,
+            "sha256": "dacd9e5f3ef2ba34f697756dfb77922f45d586431c36454839ffd5f65e7750fd",
+            "git_blob": "6aa35da90405f18b3117a3ffc19dcdf772740ef4"
+          },
+          {
+            "path": ".licenses/npm/ts-poet.dep.yml",
+            "size_bytes": 12215,
+            "sha256": "02bd7c40e69e8206522a8bb2103f6e9d9f3da31ad9b5c547924a3c185a44be83",
+            "git_blob": "15ea4f6c00055c3e4c77defcf93f5ab2bbda3fba"
+          },
+          {
+            "path": ".licenses/npm/tslib.dep.yml",
+            "size_bytes": 895,
+            "sha256": "27a407b7e45533cade5b3795a22d0af887054b3b533cbe9182c3cdd5fe3101cc",
+            "git_blob": "85b7ae69c57607b28f5e1c0a9a83557fa103fca4"
+          },
+          {
+            "path": ".licenses/npm/tunnel.dep.yml",
+            "size_bytes": 1488,
+            "sha256": "d31e076abf1fa9783dcdc37e27753f6bd9a61f1a5935676475c39ff68297ce78",
+            "git_blob": "9a7111da96a36c81dd1160453ab32caa08c8707f"
+          },
+          {
+            "path": ".licenses/npm/twirp-ts.dep.yml",
+            "size_bytes": 182,
+            "sha256": "e775eedf060108b40267a77aaddb844da75a3b55d5a9deccb99ec23e99d88c70",
+            "git_blob": "f557a486015d05fd6b183aae2a53c4023e4fa070"
+          },
+          {
+            "path": ".licenses/npm/typescript.dep.yml",
+            "size_bytes": 19832,
+            "sha256": "6b24bea1b8b395992a2edfb33f08f5318278b7e4edd64060adc6609128348c31",
+            "git_blob": "01cccafdea3f3731926c2bb2aa1b219e990c6fcc"
+          },
+          {
+            "path": ".licenses/npm/undici.dep.yml",
+            "size_bytes": 1396,
+            "sha256": "03ec1cf3ed399664ceb3f9473161fe98a2ef39006dde6e71825cc39ae213d8bc",
+            "git_blob": "cc74a6d2dafa7bc3a78a6bc451e5b57672ac0514"
+          },
+          {
+            "path": ".licenses/npm/universal-user-agent.dep.yml",
+            "size_bytes": 1064,
+            "sha256": "a2a1c576eba2d2d0f258ae449e6aba7fdb8f5272bcf8d190d9c2be4a1be27c69",
+            "git_blob": "c07307b848bf76d62c7adae3bb5ff70263b2e4d7"
+          },
+          {
+            "path": ".licenses/npm/unzip-stream.dep.yml",
+            "size_bytes": 1349,
+            "sha256": "a94a135ff32cb7baeece6c82ed7bc55ed4ad0b5e49c74596dd690a3c06802f77",
+            "git_blob": "087a2c211e9b1aa3a8e098bc223d6a08a82dbb41"
+          },
+          {
+            "path": ".licenses/npm/util-deprecate.dep.yml",
+            "size_bytes": 2636,
+            "sha256": "aad58fecaf37c2c33cb8e9b7bd3f615563100ff513cc57f86e4511c91459d660",
+            "git_blob": "b59b4f739cc67445bab10639b3ac7e59ab2bd482"
+          },
+          {
+            "path": ".licenses/npm/uuid.dep.yml",
+            "size_bytes": 1286,
+            "sha256": "39c8eab2e796c4e2e4bd9ed8f47de1ce8fb141641a1d0b00999293ab5de1ba09",
+            "git_blob": "1aa22dea32c30c014092f3b70695e6a601c4a106"
+          },
+          {
+            "path": ".licenses/npm/webidl-conversions.dep.yml",
+            "size_bytes": 1578,
+            "sha256": "7a945489060aa05932cb6879d7a01156c7187fd210ebf7c548d4305224ed9a4d",
+            "git_blob": "8c89571374a4bf00c44b4cb65d1666a38a0b5ddd"
+          },
+          {
+            "path": ".licenses/npm/whatwg-url.dep.yml",
+            "size_bytes": 1366,
+            "sha256": "11899ae43e55b376271a78aa63cccd218f52d9010648a9d68db04f1fa0d35124",
+            "git_blob": "73a698840ebcfbae9a8e9760a44181bc22fc1edf"
+          },
+          {
+            "path": ".licenses/npm/which.dep.yml",
+            "size_bytes": 1021,
+            "sha256": "109d488d8e9ff31180ee7f0b9741e645cd702c91ac2d7be02ddc4425792e880d",
+            "git_blob": "0232a3798f5b60c020923481b30e5b74566bb1d3"
+          },
+          {
+            "path": ".licenses/npm/wrap-ansi-cjs.dep.yml",
+            "size_bytes": 1310,
+            "sha256": "d2849c9545acf3b76f9e70288ccd4cdf8619a57640094b5f64a2734f7851e76b",
+            "git_blob": "1abba43f09726d39a39b6dd8fe523104a922a44b"
+          },
+          {
+            "path": ".licenses/npm/wrap-ansi.dep.yml",
+            "size_bytes": 1306,
+            "sha256": "dabfc7eee372e4502d09896b54a91576a03e5439b518c144a26ab58f66cc3d90",
+            "git_blob": "7eb9a27205c385cb0a1bfd710c5d2b291798c116"
+          },
+          {
+            "path": ".licenses/npm/wrappy.dep.yml",
+            "size_bytes": 994,
+            "sha256": "629ad2f9ed2e15bf172ca9d115d3b66d87895da2ae43115084241eef4bc78ded",
+            "git_blob": "2a532ec343ca5b72b9833d2a9fb53e8de07b61f1"
+          },
+          {
+            "path": ".licenses/npm/xml2js.dep.yml",
+            "size_bytes": 1360,
+            "sha256": "259dd433d7d79f9b5ce68369d970394e914855cff18950cf0ac86bc6b6d7843f",
+            "git_blob": "92bce8ddacc1418480ee3691e3c6093b8014d738"
+          },
+          {
+            "path": ".licenses/npm/xmlbuilder.dep.yml",
+            "size_bytes": 1346,
+            "sha256": "c17735165d578112d9d08d2da48b92098892720d41b8e5ddfed9c875a30a564c",
+            "git_blob": "e8c7ee12ff81aeb175e2fc2d02baa8f3d895a31c"
+          },
+          {
+            "path": ".licenses/npm/yaml.dep.yml",
+            "size_bytes": 982,
+            "sha256": "4f17c219e87fb0cad9d6a785b269316371bf96584ba89ae03e5d968f288b8a5c",
+            "git_blob": "a870f57bdeacf82ee5d6b97d73c1db4d5ea14811"
+          },
+          {
+            "path": ".licenses/npm/zip-stream.dep.yml",
+            "size_bytes": 1362,
+            "sha256": "b5a5a44b0e89caeccce202cefcf43ba42deb4bfb58d9d664bc7c153ab13ebe11",
+            "git_blob": "53bd4ff5920055cde488c0eed8371ef3f092149a"
+          },
+          {
+            "path": "LICENSE",
+            "size_bytes": 1097,
+            "sha256": "3e855ffa704114a51628ef8f0bf3aeb41728adf9d9070e263bf58aa5640b0eb5",
+            "git_blob": "a67dca8b4f65d6bd351f6b1e333ce2cd84d843a5"
+          },
+          {
+            "path": "action.yml",
+            "size_bytes": 3159,
+            "sha256": "29b21270ff44638a165ea12abb4481796770c629e513217af7b4df1aa3821177",
+            "git_blob": "2a0ecf19e8d0087dd2e5d1785dcf764811e79fae"
+          },
+          {
+            "path": "package-lock.json",
+            "size_bytes": 531417,
+            "sha256": "fddf66cd1d48dde834ddf318b0b0d6107174bc82298aef3e1f8e6e34b1adfe31",
+            "git_blob": "75e253f2f531817d4f79b79653e5155d58c549ca"
+          },
+          {
+            "path": "package.json",
+            "size_bytes": 1589,
+            "sha256": "221abbd5b3bbff2d44a509a2ebd7b9e35ed772ee7ac464027e86527d928b95d1",
+            "git_blob": "ec05284932ee6727acedf9e89c8be41d5d89295e"
+          }
+        ]
+      },
+      "runtime_entrypoints": [
+        {
+          "path": "dist/upload/index.js",
+          "sha256": "0165b8a75330f3228f2c7a234b4ff8a107b9139c2b519147f4c8e9fe99b262d8",
+          "git_blob": "89238fa3eb49937ea82c5d82006ee1fc6c6abaae",
+          "size_bytes": 5051718
+        }
+      ],
+      "legal_declaration_count": 176,
+      "scope": "CI-only; upstream legal declarations, not a complete dependency audit"
+    }
+  ],
+  "dotnet_vmr": [
+    {
+      "repository": "dotnet/dotnet",
+      "commit": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+      "observed_versions": {
+        "sdk": [
+          "10.0.115"
+        ],
+        "runtime": [
+          "10.0.15"
+        ]
+      },
+      "components": [
+        {
+          "barId": 337590,
+          "path": "aspnetcore",
+          "remoteUri": "https://github.com/dotnet/aspnetcore",
+          "commitSha": "547fc16b976e18911f9df7630f1f75758ab248f2"
+        },
+        {
+          "barId": 337346,
+          "path": "runtime",
+          "remoteUri": "https://github.com/dotnet/runtime",
+          "commitSha": "a3788b71495457354b64ca8040b6ded5ff6ca4f9"
+        },
+        {
+          "barId": 337656,
+          "path": "sdk",
+          "remoteUri": "https://github.com/dotnet/sdk",
+          "commitSha": "f71ce870eee437330738d7eda317459fdc908b71"
+        },
+        {
+          "barId": 337106,
+          "path": "windowsdesktop",
+          "remoteUri": "https://github.com/dotnet/windowsdesktop",
+          "commitSha": "4610b90c4b18c17459dc2af0b5c73e47348397ed"
+        },
+        {
+          "barId": 335637,
+          "path": "wpf",
+          "remoteUri": "https://github.com/dotnet/wpf",
+          "commitSha": "5961b581c906478ff6de63dc83090bbd4e9a5d9e"
+        }
+      ],
+      "source_archive": {
+        "path": "dotnet-8e0f8ed2312954727f8919d7d1c2f78b483b4ee7.zip",
+        "sha256": "e509177ce5a24a9d083ed647ab9c664b457d04e03d5a1ad35a67e709bbb3002c",
+        "files": [
+          {
+            "path": "LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 265586,
+            "sha256": "5a90be9000b5c2f928dead74be4e86952420d1160fa38f6f2d34526eeee49ff6",
+            "git_blob": "02c60e8b2197a2f911484bfc703b545d56cbc9c6"
+          },
+          {
+            "path": "src/aspnetcore/LICENSE.txt",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/aspnetcore/THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 55638,
+            "sha256": "52af3d603b6d069e635f8afd08ec44ec01559255b5f3afd161ae9e6fe7e7aa54",
+            "git_blob": "484f2d5485153f66280acb8646f1e019a58b069c"
+          },
+          {
+            "path": "src/runtime/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/runtime/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 76623,
+            "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+            "git_blob": "1e194f3b353a4fa1b369e843975a1e94ba90addc"
+          },
+          {
+            "path": "src/sdk/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/sdk/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 393,
+            "sha256": "3a2394d7723d623632931e0e0a3d7c0a78c694da9509421548e625df33c59966",
+            "git_blob": "97426f91879b8ac89b6aa366deda37e731c721e4"
+          },
+          {
+            "path": "src/source-manifest.json",
+            "size_bytes": 7556,
+            "sha256": "e3c08d51a557c99b53539f6db5714ab49ea8a67528ab9ac2ad010a869b10e450",
+            "git_blob": "f4cee3a850b47fff1e26b9c25e75e4b9f700fab7"
+          },
+          {
+            "path": "src/windowsdesktop/LICENSE",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 2703,
+            "sha256": "d23dba2fee20c6b59d8f7088ee9ed372459c952a319b7ca90f3eec370cc76eb9",
+            "git_blob": "c2ce2452c1dd7ff03eb862e1d8cd8f6117cee05b"
+          }
+        ]
+      },
+      "component_license_origin_checks": [
+        {
+          "ref": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+          "component": "aspnetcore",
+          "repository": "dotnet/aspnetcore",
+          "commit": "547fc16b976e18911f9df7630f1f75758ab248f2",
+          "path": "LICENSE.txt",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+          "component": "sdk",
+          "repository": "dotnet/sdk",
+          "commit": "f71ce870eee437330738d7eda317459fdc908b71",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+          "component": "runtime",
+          "repository": "dotnet/runtime",
+          "commit": "a3788b71495457354b64ca8040b6ded5ff6ca4f9",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+          "component": "wpf",
+          "repository": "dotnet/wpf",
+          "commit": "5961b581c906478ff6de63dc83090bbd4e9a5d9e",
+          "path": "LICENSE.TXT",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "8e0f8ed2312954727f8919d7d1c2f78b483b4ee7",
+          "component": "windowsdesktop",
+          "repository": "dotnet/windowsdesktop",
+          "commit": "4610b90c4b18c17459dc2af0b5c73e47348397ed",
+          "path": "LICENSE",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        }
+      ],
+      "scope": "installed .version -> VMR -> source-manifest component commits; source-snapshot legal only"
+    },
+    {
+      "repository": "dotnet/dotnet",
+      "commit": "0427b9abbead3fa64c6655eb4290c537397131fa",
+      "observed_versions": {
+        "sdk": [
+          "10.0.114"
+        ],
+        "runtime": [
+          "10.0.14"
+        ]
+      },
+      "components": [
+        {
+          "barId": 333108,
+          "path": "aspnetcore",
+          "remoteUri": "https://github.com/dotnet/aspnetcore",
+          "commitSha": "0ef4bbfa3291b306a21e5001cb0491277bdd35bc"
+        },
+        {
+          "barId": 333141,
+          "path": "runtime",
+          "remoteUri": "https://github.com/dotnet/runtime",
+          "commitSha": "6aa72daa24f66c01c3d7b6a32519e9d21396deec"
+        },
+        {
+          "barId": 333315,
+          "path": "sdk",
+          "remoteUri": "https://github.com/dotnet/sdk",
+          "commitSha": "e5a04cca759fa5905be95746e1ea994662005798"
+        },
+        {
+          "barId": 332651,
+          "path": "windowsdesktop",
+          "remoteUri": "https://github.com/dotnet/windowsdesktop",
+          "commitSha": "e77cb537e3004a6cfeb8ca69a62476edb0c84a45"
+        },
+        {
+          "barId": 332963,
+          "path": "wpf",
+          "remoteUri": "https://github.com/dotnet/wpf",
+          "commitSha": "4726a1a94599e1c2aa090f5326e2ca930f016c7d"
+        }
+      ],
+      "source_archive": {
+        "path": "dotnet-0427b9abbead3fa64c6655eb4290c537397131fa.zip",
+        "sha256": "53fd592dfc07d919e27ba0f11e49c2804816eb004c43f9998874bc093a570d60",
+        "files": [
+          {
+            "path": "LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 265586,
+            "sha256": "5a90be9000b5c2f928dead74be4e86952420d1160fa38f6f2d34526eeee49ff6",
+            "git_blob": "02c60e8b2197a2f911484bfc703b545d56cbc9c6"
+          },
+          {
+            "path": "src/aspnetcore/LICENSE.txt",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/aspnetcore/THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 55638,
+            "sha256": "52af3d603b6d069e635f8afd08ec44ec01559255b5f3afd161ae9e6fe7e7aa54",
+            "git_blob": "484f2d5485153f66280acb8646f1e019a58b069c"
+          },
+          {
+            "path": "src/runtime/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/runtime/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 76623,
+            "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+            "git_blob": "1e194f3b353a4fa1b369e843975a1e94ba90addc"
+          },
+          {
+            "path": "src/sdk/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/sdk/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 393,
+            "sha256": "3a2394d7723d623632931e0e0a3d7c0a78c694da9509421548e625df33c59966",
+            "git_blob": "97426f91879b8ac89b6aa366deda37e731c721e4"
+          },
+          {
+            "path": "src/source-manifest.json",
+            "size_bytes": 7532,
+            "sha256": "33851205223d10e88b6b91bfa33d0f5564ac5df90ad1f0b236be6f3819e33e46",
+            "git_blob": "2bd64895c3ff54c0a301a858c3589d07fa93a45b"
+          },
+          {
+            "path": "src/windowsdesktop/LICENSE",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 2703,
+            "sha256": "d23dba2fee20c6b59d8f7088ee9ed372459c952a319b7ca90f3eec370cc76eb9",
+            "git_blob": "c2ce2452c1dd7ff03eb862e1d8cd8f6117cee05b"
+          }
+        ]
+      },
+      "component_license_origin_checks": [
+        {
+          "ref": "0427b9abbead3fa64c6655eb4290c537397131fa",
+          "component": "sdk",
+          "repository": "dotnet/sdk",
+          "commit": "e5a04cca759fa5905be95746e1ea994662005798",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "0427b9abbead3fa64c6655eb4290c537397131fa",
+          "component": "wpf",
+          "repository": "dotnet/wpf",
+          "commit": "4726a1a94599e1c2aa090f5326e2ca930f016c7d",
+          "path": "LICENSE.TXT",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "0427b9abbead3fa64c6655eb4290c537397131fa",
+          "component": "windowsdesktop",
+          "repository": "dotnet/windowsdesktop",
+          "commit": "e77cb537e3004a6cfeb8ca69a62476edb0c84a45",
+          "path": "LICENSE",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "0427b9abbead3fa64c6655eb4290c537397131fa",
+          "component": "runtime",
+          "repository": "dotnet/runtime",
+          "commit": "6aa72daa24f66c01c3d7b6a32519e9d21396deec",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "0427b9abbead3fa64c6655eb4290c537397131fa",
+          "component": "aspnetcore",
+          "repository": "dotnet/aspnetcore",
+          "commit": "0ef4bbfa3291b306a21e5001cb0491277bdd35bc",
+          "path": "LICENSE.txt",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        }
+      ],
+      "scope": "installed .version -> VMR -> source-manifest component commits; source-snapshot legal only"
+    },
+    {
+      "repository": "dotnet/dotnet",
+      "commit": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+      "observed_versions": {
+        "sdk": [],
+        "runtime": [
+          "10.0.8"
+        ]
+      },
+      "components": [
+        {
+          "barId": 311639,
+          "path": "aspnetcore",
+          "remoteUri": "https://github.com/dotnet/aspnetcore",
+          "commitSha": "876421049e67f45609ba52c8e502c69b7d94bd8a"
+        },
+        {
+          "barId": 311479,
+          "path": "runtime",
+          "remoteUri": "https://github.com/dotnet/runtime",
+          "commitSha": "b82454cad0aaaae3db2cf18fbf2cccc36e201ccc"
+        },
+        {
+          "barId": 311498,
+          "path": "sdk",
+          "remoteUri": "https://github.com/dotnet/sdk",
+          "commitSha": "6f3485e10f775d77891cb5b9a7fbed479be438a5"
+        },
+        {
+          "barId": 310903,
+          "path": "windowsdesktop",
+          "remoteUri": "https://github.com/dotnet/windowsdesktop",
+          "commitSha": "98744803772514d0aac83390451394486b743837"
+        },
+        {
+          "barId": 310993,
+          "path": "wpf",
+          "remoteUri": "https://github.com/dotnet/wpf",
+          "commitSha": "09e72ae8c9b1c5410ca8ad45636c52c45a2a7f29"
+        }
+      ],
+      "source_archive": {
+        "path": "dotnet-94ea82652cdd4e0f8046b5bd5becbd11461482ca.zip",
+        "sha256": "253ccbbc3fdc1a87e15e94d33d02bf0c6caa0f3db269202373d43af2f0bfcee3",
+        "files": [
+          {
+            "path": "LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 265585,
+            "sha256": "4bef6a7e7b359869d751c9ff70274a80a0f626927afa5a0681583c1b1861267b",
+            "git_blob": "d5b8eb06d5e9047fafc8449a253b3761d0447313"
+          },
+          {
+            "path": "src/aspnetcore/LICENSE.txt",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/aspnetcore/THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 55638,
+            "sha256": "52af3d603b6d069e635f8afd08ec44ec01559255b5f3afd161ae9e6fe7e7aa54",
+            "git_blob": "484f2d5485153f66280acb8646f1e019a58b069c"
+          },
+          {
+            "path": "src/runtime/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/runtime/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 76623,
+            "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+            "git_blob": "1e194f3b353a4fa1b369e843975a1e94ba90addc"
+          },
+          {
+            "path": "src/sdk/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/sdk/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 392,
+            "sha256": "8accab41d2456519d132b871d33ff2095e297b09f64d9a46893dc6a7e09bf614",
+            "git_blob": "859bd1a6d9cd9f5e45349a338eb2839cb4f34b6b"
+          },
+          {
+            "path": "src/source-manifest.json",
+            "size_bytes": 7532,
+            "sha256": "6c00a20fe1c175f5ef7cd70b8efec5453feebc6892f8c7c9e707c5f93ed6dec0",
+            "git_blob": "5dff6fe26b51c20da4e492769d177fc5a93dabb5"
+          },
+          {
+            "path": "src/windowsdesktop/LICENSE",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 2703,
+            "sha256": "d23dba2fee20c6b59d8f7088ee9ed372459c952a319b7ca90f3eec370cc76eb9",
+            "git_blob": "c2ce2452c1dd7ff03eb862e1d8cd8f6117cee05b"
+          }
+        ]
+      },
+      "component_license_origin_checks": [
+        {
+          "ref": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+          "component": "runtime",
+          "repository": "dotnet/runtime",
+          "commit": "b82454cad0aaaae3db2cf18fbf2cccc36e201ccc",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+          "component": "sdk",
+          "repository": "dotnet/sdk",
+          "commit": "6f3485e10f775d77891cb5b9a7fbed479be438a5",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+          "component": "wpf",
+          "repository": "dotnet/wpf",
+          "commit": "09e72ae8c9b1c5410ca8ad45636c52c45a2a7f29",
+          "path": "LICENSE.TXT",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+          "component": "aspnetcore",
+          "repository": "dotnet/aspnetcore",
+          "commit": "876421049e67f45609ba52c8e502c69b7d94bd8a",
+          "path": "LICENSE.txt",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "94ea82652cdd4e0f8046b5bd5becbd11461482ca",
+          "component": "windowsdesktop",
+          "repository": "dotnet/windowsdesktop",
+          "commit": "98744803772514d0aac83390451394486b743837",
+          "path": "LICENSE",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        }
+      ],
+      "scope": "installed .version -> VMR -> source-manifest component commits; source-snapshot legal only"
+    },
+    {
+      "repository": "dotnet/dotnet",
+      "commit": "e2f47b0110ed922f21a1522da67279133ce28f32",
+      "observed_versions": {
+        "sdk": [],
+        "runtime": [
+          "10.0.11"
+        ]
+      },
+      "components": [
+        {
+          "barId": 323159,
+          "path": "aspnetcore",
+          "remoteUri": "https://github.com/dotnet/aspnetcore",
+          "commitSha": "a5383385245bdacc20ec19f30e46090a8154d8da"
+        },
+        {
+          "barId": 323912,
+          "path": "runtime",
+          "remoteUri": "https://github.com/dotnet/runtime",
+          "commitSha": "79d0c463f1b55624c874a11585f7e47731e8d675"
+        },
+        {
+          "barId": 323350,
+          "path": "sdk",
+          "remoteUri": "https://github.com/dotnet/sdk",
+          "commitSha": "498dd26f2300b5553e96aed4a11bb5c400923725"
+        },
+        {
+          "barId": 322539,
+          "path": "windowsdesktop",
+          "remoteUri": "https://github.com/dotnet/windowsdesktop",
+          "commitSha": "080bebcaf77c1dd99769ffbafb1da5d9a31382a7"
+        },
+        {
+          "barId": 322768,
+          "path": "wpf",
+          "remoteUri": "https://github.com/dotnet/wpf",
+          "commitSha": "6e295c0c870baf4c02897e89d53e2f3e4a6aeba5"
+        }
+      ],
+      "source_archive": {
+        "path": "dotnet-e2f47b0110ed922f21a1522da67279133ce28f32.zip",
+        "sha256": "bb23184597d73fd67bd708f914fc4b69f3544b37c8e470e67d5b1d9a55d79599",
+        "files": [
+          {
+            "path": "LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 265585,
+            "sha256": "4bef6a7e7b359869d751c9ff70274a80a0f626927afa5a0681583c1b1861267b",
+            "git_blob": "d5b8eb06d5e9047fafc8449a253b3761d0447313"
+          },
+          {
+            "path": "src/aspnetcore/LICENSE.txt",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/aspnetcore/THIRD-PARTY-NOTICES.txt",
+            "size_bytes": 55638,
+            "sha256": "52af3d603b6d069e635f8afd08ec44ec01559255b5f3afd161ae9e6fe7e7aa54",
+            "git_blob": "484f2d5485153f66280acb8646f1e019a58b069c"
+          },
+          {
+            "path": "src/runtime/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/runtime/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 76623,
+            "sha256": "66f1d4e44973185519bb4aa8a9718eb22fc7af2cc532e3ae9cfc4c127ee7fc54",
+            "git_blob": "1e194f3b353a4fa1b369e843975a1e94ba90addc"
+          },
+          {
+            "path": "src/sdk/LICENSE.TXT",
+            "size_bytes": 1116,
+            "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+            "git_blob": "984713a49622a96da110443c15477613bc12656b"
+          },
+          {
+            "path": "src/sdk/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 392,
+            "sha256": "8accab41d2456519d132b871d33ff2095e297b09f64d9a46893dc6a7e09bf614",
+            "git_blob": "859bd1a6d9cd9f5e45349a338eb2839cb4f34b6b"
+          },
+          {
+            "path": "src/source-manifest.json",
+            "size_bytes": 7532,
+            "sha256": "bbe5c3a5869564fa224da9e9e06b9567684380414f2d01d28ef5328863e2177e",
+            "git_blob": "16e0bd7a9eae48cff282a75050e7123f581378c5"
+          },
+          {
+            "path": "src/windowsdesktop/LICENSE",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/LICENSE.TXT",
+            "size_bytes": 1115,
+            "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+            "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b"
+          },
+          {
+            "path": "src/wpf/THIRD-PARTY-NOTICES.TXT",
+            "size_bytes": 2703,
+            "sha256": "d23dba2fee20c6b59d8f7088ee9ed372459c952a319b7ca90f3eec370cc76eb9",
+            "git_blob": "c2ce2452c1dd7ff03eb862e1d8cd8f6117cee05b"
+          }
+        ]
+      },
+      "component_license_origin_checks": [
+        {
+          "ref": "e2f47b0110ed922f21a1522da67279133ce28f32",
+          "component": "wpf",
+          "repository": "dotnet/wpf",
+          "commit": "6e295c0c870baf4c02897e89d53e2f3e4a6aeba5",
+          "path": "LICENSE.TXT",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "e2f47b0110ed922f21a1522da67279133ce28f32",
+          "component": "aspnetcore",
+          "repository": "dotnet/aspnetcore",
+          "commit": "a5383385245bdacc20ec19f30e46090a8154d8da",
+          "path": "LICENSE.txt",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "e2f47b0110ed922f21a1522da67279133ce28f32",
+          "component": "runtime",
+          "repository": "dotnet/runtime",
+          "commit": "79d0c463f1b55624c874a11585f7e47731e8d675",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        },
+        {
+          "ref": "e2f47b0110ed922f21a1522da67279133ce28f32",
+          "component": "windowsdesktop",
+          "repository": "dotnet/windowsdesktop",
+          "commit": "080bebcaf77c1dd99769ffbafb1da5d9a31382a7",
+          "path": "LICENSE",
+          "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+          "error": false
+        },
+        {
+          "ref": "e2f47b0110ed922f21a1522da67279133ce28f32",
+          "component": "sdk",
+          "repository": "dotnet/sdk",
+          "commit": "498dd26f2300b5553e96aed4a11bb5c400923725",
+          "path": "LICENSE.TXT",
+          "git_blob": "984713a49622a96da110443c15477613bc12656b",
+          "error": false
+        }
+      ],
+      "scope": "installed .version -> VMR -> source-manifest component commits; source-snapshot legal only"
+    }
+  ],
+  "open_reviews": [
+    "binary/source reproducibility and signatures/trust roots",
+    "binary distribution license applicability; installed MICROSOFT .NET LIBRARY terms differ from source MIT",
+    "unmapped 8/9/11 runtimes and future SDK versions",
+    "Action dependency declaration completeness and external tool downloads",
+    "runner Node.js/OS legal inventory",
+    "font/logo/final installer rights"
+  ],
+  "release_status": "BLOCKED"
+}

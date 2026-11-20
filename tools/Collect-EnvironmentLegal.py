@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+from BuildProvenance import verify as verify_build_provenance, link_component
 
 
 LEGAL = re.compile(r"^(licen[cs]e|notice|copying|copyright|third.?party(?:notices)?|assembly_exception)([._-]|$)", re.I)
@@ -172,11 +173,14 @@ def collect(output, source, job, include_java=False, include_pypdf=False):
                            "source_repository_candidates": ["https://github.com/adoptium/temurin8-binaries", "https://github.com/adoptium/jdk8u"],
                            "source_mapping": "REVIEW: vendor release metadata retained; source/build match open"})
 
-    manifest = {"schema_version": 1, "source_commit": command("git", "-C", str(source), "rev-parse", "HEAD"),
+    provenance_index, source_evidence = verify_build_provenance(source, job, retain)
+    for component in components:
+        link_component(component, provenance_index)
+    manifest = {"schema_version": 2, "source_commit": command("git", "-C", str(source), "rev-parse", "HEAD"),
                 "workflow_job": job, "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
                 "workflow_run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
                 "platform": sys.platform, "scope": "observed installed CI environment; not a distribution SBOM",
-                "release_status": "BLOCKED", "components": components,
+                "release_status": "BLOCKED", "components": components, "build_provenance": source_evidence,
                 "open_reviews": ["Authenticode/package signatures and trust roots", "binary/source reproducibility",
                                  "per-version runtime legal applicability", "GitHub Actions exact source/license inventory",
                                  "font embedding and logo distribution rights", "final installer file and license inventory"]}
