@@ -46,6 +46,8 @@ jobs:
         run: dotnet build Embasic.ENote.slnx --configuration Release --no-restore
       - name: Run Tur36 unsigned UDF writer checks
         run: dotnet run --project tests/Embasic.ENote.UdfWriter.Tests/Embasic.ENote.UdfWriter.Tests.csproj --configuration Release --no-build
+      - name: Verify new editor search and six new-copy export formats
+        run: dotnet run --project tests/Embasic.ENote.EditorWorkflow.Tests --configuration Release --no-build
       - name: Run Tur35 final path installed identity and target DACL
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur35-windows-path
       - name: Run Tur34 live destination and directory identity checks
@@ -225,6 +227,16 @@ jobs:
         run: |
           $udf = Join-Path $env:RUNNER_TEMP 'enote-wpf-a4.udf'
           dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release -- src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe $udf
+      - name: Exercise actual editor find replace undo and new document copy dialogs
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --editor-workflow src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+      - name: Retain framework-dependent development build after editor acceptance
+        shell: pwsh
+        run: ./tools/Prepare-DevelopmentBuild.ps1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # TUR50 observed v4
+        with:
+          name: enote-windows-development-${{ github.sha }}
+          path: artifacts/enote-windows-development/
+          if-no-files-found: error
       - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # TUR50 observed v4
         with:
           distribution: temurin

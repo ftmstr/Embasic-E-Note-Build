@@ -19,7 +19,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private WorkspaceRoot? _workspace;
     private WorkspaceTreeNode? _selectedNode;
     private string _workspaceLabel = "Çalışma alanı seçilmedi";
-    private string _statusText = "TUR 02 · Klasör seçerek başlayın · .emd açma/kaydetme devre dışı";
+    private string _statusText = "Klasör seçerek başlayın · Şifreli .emd şu anda kapalı";
     private string _selectionDescription = "Henüz dosya veya klasör seçilmedi.";
 
     public MainViewModel(
