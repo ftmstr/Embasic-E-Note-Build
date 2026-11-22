@@ -182,6 +182,7 @@ $result=[ordered]@{ schema_version=1; checked_at_utc=$checkedAt.ToString('o'); s
     nuget_packages=$packages; npm_registry_signatures=$npm; external_installer_scripts=$scripts
     release_status='BLOCKED'; scope='Observed CI signatures, certificate chains and declared tool origins; not final distribution acceptance' }
 $result | ConvertTo-Json -Depth 30 | Set-Content (Join-Path $trustPath 'windows-trust.json') -Encoding utf8
+& (Join-Path $PSScriptRoot 'Collect-ContextualTrust.ps1') -TrustDirectory $trustPath
 $manifest=@(Get-ChildItem $trustPath -Recurse -File | ForEach-Object { @{path=[IO.Path]::GetRelativePath($directory,$_.FullName).Replace('\','/');sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();size_bytes=$_.Length} })
 $manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $directory 'windows-trust-files.json') -Encoding utf8
 Write-Host "Retained Windows trust observations for $($binaries.Count) anchors, $($node.Count) Node candidates and $($packages.Count) NuGet packages; release BLOCKED."
