@@ -149,13 +149,14 @@ public partial class MainWindow : Window
             string absolute = Path.GetFullPath(path);
             var existing = _tabs.FirstOrDefault(t => string.Equals(t.FilePath,
                 absolute, StringComparison.OrdinalIgnoreCase));
-            if (existing is not null) { MarkdownTabs.SelectedItem = existing; return; }
+            if (existing is not null) { MarkdownTabs.SelectedItem = existing; MainSections.SelectedItem = MarkdownSectionTab; return; }
             var snap = _noteStore.Read(absolute);
             var layout = _pageStore.Read(absolute);
             var tab = new PlainMarkdownEditorTab(absolute, snap, layout);
             tab.PropertyChanged += MarkdownTab_PropertyChanged;
             _tabs.Add(tab);
             MarkdownTabs.SelectedItem = tab;
+            MainSections.SelectedItem = MarkdownSectionTab;
             MarkdownStatusText.Text = "Şifresiz Markdown dosyası açıldı: " + Path.GetFileName(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
@@ -269,6 +270,9 @@ public partial class MainWindow : Window
         switch (e.Key)
         {
             case Key.S: if (SelectedTab is { } tab) SaveTab(tab); e.Handled = true; break;
+            case Key.F: ShowFind_Click(sender, e); e.Handled = true; break;
+            case Key.H: ShowFind_Click(sender, e); ReplaceTermBox.Focus(); e.Handled = true; break;
+            case Key.W: CloseMarkdown_Click(sender, e); e.Handled = true; break;
             case Key.O: OpenMarkdown_Click(sender, e); e.Handled = true; break;
             case Key.P: PrintPreview_Click(sender, e); e.Handled = true; break;
             case Key.N:
@@ -281,6 +285,7 @@ public partial class MainWindow : Window
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
         ExportMarkdownUdfButton.IsEnabled = SelectedTab is not null;
+        ExportDocumentCopyButton.IsEnabled = SelectedTab is not null;
         PrintPreviewButton.IsEnabled = SelectedTab is not null;
         if (SelectedTab is not { } tab) return;
         _previewDebounce.Stop();

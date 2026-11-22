@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--editor-workflow", var editorApplication])
+        {
+            CheckEditorWorkflow(editorApplication);
+            return;
+        }
         if (args is ["--pdf-save-dialog", var application, var promptQueue, var outputDirectory])
         {
             CheckPdfSaveDialogs(application, promptQueue, outputDirectory);
