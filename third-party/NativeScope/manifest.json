@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "original_files": [
+    {
+      "repository": "dotnet/core",
+      "commit": "6c25b9da384e8d8a16fd12c79da8a8aa6bdfc6a1",
+      "source_path": "license-information-windows.md",
+      "path": "dotnet-core/license-information-windows.md",
+      "git_blob": "bbba73b9a0b553b1dffd2b4299fc5eb203e195fb",
+      "sha256": "3bdf7142d570f11780d1a5fcb6cbe47f5cf4a15bc634acf8db93fe3be8837119",
+      "size_bytes": 1500
+    },
+    {
+      "repository": "dotnet/core",
+      "commit": "6c25b9da384e8d8a16fd12c79da8a8aa6bdfc6a1",
+      "source_path": "LICENSE.TXT",
+      "path": "dotnet-core/LICENSE.TXT",
+      "git_blob": "984713a49622a96da110443c15477613bc12656b",
+      "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+      "size_bytes": 1116
+    },
+    {
+      "repository": "dotnet/wpf",
+      "commit": "7e162b757e8acad3d2d6d78515f9dc62cb886034",
+      "source_path": "Documentation/redistributables.md",
+      "path": "dotnet-wpf/redistributables.md",
+      "git_blob": "b90e9ce29b7500d3ebf83649cb552c0a6049b131",
+      "sha256": "d2c5d65ce15aad6f7f162f7ab3e0bbc350e5766ee1200d93ca5a5294eec8564a",
+      "size_bytes": 1909
+    },
+    {
+      "repository": "dotnet/wpf",
+      "commit": "7e162b757e8acad3d2d6d78515f9dc62cb886034",
+      "source_path": "LICENSE.TXT",
+      "path": "dotnet-wpf/LICENSE.TXT",
+      "git_blob": "a616ed188dfce68ee308f674350ad242d8588c2b",
+      "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+      "size_bytes": 1115
+    }
+  ],
+  "scope": "Exact informative source scope and rename rationale; not binary/source reproduction or per-version legal approval",
+  "windows_sdk_redist": {
+    "url": "https://learn.microsoft.com/en-us/legal/windows-sdk/redist",
+    "updated": "2024-10-21",
+    "listed_file": "Redist/D3D/x64/d3dcompiler_47.dll",
+    "application_restriction": "Classic Windows only; not Universal Windows apps",
+    "conditions": "Validly licensed SDK, unmodified object code, accompanying SDK terms; local exact hash/version comparison required"
+  },
+  "windows_sdk_terms_url": "https://learn.microsoft.com/en-us/legal/windows-sdk/license",
+  "release_status": "BLOCKED",
+  "legal_applicability": "REVIEW"
+}
