@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-22",
+  "scope": "Out-of-artifact official publication comparisons over Web PKI; not an independent offline root ceremony, package author approval, license approval or production trust-store policy",
+  "nuget_repository_signer": {
+    "sha256": "1f4b311d9acc115c8dc8018b5a49e00fce6da8e2855f9f014ca6f34570bc482d",
+    "publication": "https://devblogs.microsoft.com/dotnet/the-nuget-org-repository-signing-certificate-will-be-updated-as-soon-as-april-8th-2024/",
+    "publication_date": "2024-03-13",
+    "meaning": "NuGet.org repository signature; does not identify Konscious as author signer"
+  },
+  "digicert_root": {
+    "sha256": "552f7bdcf1a7af9e6ce672017f4f12abf77240c78e761ac203d1d9d20ac89988",
+    "publication": "https://github.com/digicert/digicert_official_oids/blob/250e828a04bc1a344c749e597dd1f3938d76f6f1/trust_anchor_identifiers.md",
+    "meaning": "Exact root identity comparison only; embedded CMS roots remain ExtraStore candidates, not newly trusted roots"
+  },
+  "npm_registry_key": {
+    "status": "EXPIRED_AT_REVIEW",
+    "decision": "No new key trust or timestamp claim. TUR52 mathematical signature observations unchanged."
+  },
+  "legal": {
+    "installed_dotnet_binary_terms": "MICROSOFT .NET LIBRARY terms preserved separately from component source MIT",
+    "nuget_repository_signature": "No additional license rights or author signature inferred",
+    "npm_short_missing_texts": "REVIEW; no license text reconstructed",
+    "node_source_legal": "Source counterpart only; no binary/source rebuild or redistribution approval",
+    "distribution": "BLOCKED pending complete applicable legal review"
+  }
+}
