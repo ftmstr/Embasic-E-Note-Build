@@ -49,5 +49,5 @@ internal static partial class Program
     }
     private static void EditorControlKey(byte key)
     {EditorKeybd(0x11,0,0,UIntPtr.Zero);EditorKeybd(key,0,0,UIntPtr.Zero);EditorKeybd(key,0,2,UIntPtr.Zero);EditorKeybd(0x11,0,2,UIntPtr.Zero);}
-    [DllImport("user32.dll")]private static extern void EditorKeybd(byte key,byte scan,uint flags,UIntPtr extra);
+    [DllImport("user32.dll",EntryPoint="keybd_event")]private static extern void EditorKeybd(byte key,byte scan,uint flags,UIntPtr extra);
 }
