@@ -2,3 +2,6 @@
 /third-party/Konscious/** -text
 /third-party/BuildProvenance/** -text
 /third-party/PackageTrust/** -text
+
+# Preserve exact upstream native-scope source/legal bytes.
+/third-party/NativeScope/** -text
