@@ -61,6 +61,7 @@
                     <TextBlock Text="ÇALIŞMA ALANI" FontSize="12" FontWeight="Bold"
                                Foreground="#475569"/>
                     <Button Content="Klasör Seç…" Height="33" Margin="0,10,0,6"
+                            AutomationProperties.AutomationId="ChooseWorkspaceButton"
                             Command="{Binding ChooseWorkspaceCommand}"/>
                     <TextBlock Text="{Binding WorkspaceLabel}"
                                TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource SecondaryInk}"
@@ -70,6 +71,16 @@
                                 Margin="0,0,8,0" Command="{Binding CreateFolderCommand}"/>
                         <Button Content="Yenile" Padding="8,5"
                                 Command="{Binding RefreshCommand}"/>
+                    </WrapPanel>
+                    <WrapPanel Margin="0,8,0,0">
+                        <Button x:Name="RenameEntryButton" Content="Adlandır…" Click="RenameEntry_Click"
+                                AutomationProperties.AutomationId="RenameEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
+                        <Button x:Name="MoveEntryButton" Content="Taşı…" Click="MoveEntry_Click"
+                                AutomationProperties.AutomationId="MoveEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
+                        <Button x:Name="TrashEntryButton" Content="Silinenlere taşı" Click="TrashEntry_Click"
+                                AutomationProperties.AutomationId="TrashEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
+                        <Button x:Name="UndoTrashButton" Content="Silmeyi geri al" Click="UndoTrash_Click"
+                                AutomationProperties.AutomationId="UndoTrashButton" IsEnabled="False" Padding="6,4"/>
                     </WrapPanel>
                     <Button Content="Yeni Güvenli Not (.emd) — Yakında"
                             IsEnabled="False" Margin="0,10,0,0" Height="28"
@@ -84,7 +95,7 @@
                           VirtualizingStackPanel.IsVirtualizing="True"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           ScrollViewer.CanContentScroll="True"
-                          AutomationProperties.Name="Klasör ve not ağacı"/>
+                          AutomationProperties.Name="Klasör ve not ağacı" AutomationProperties.AutomationId="WorkspaceTree"/>
                 <Border Grid.Row="2" Margin="14" Padding="10"
                         BorderBrush="#E2E8F0" BorderThickness="1"
                         CornerRadius="5" MinHeight="76"
@@ -199,6 +210,7 @@
                                                          FontFamily="Consolas" FontSize="14" BorderThickness="0"
                                                          Background="White" Foreground="#1E293B"
                                                          SpellCheck.IsEnabled="False" IsUndoEnabled="True" UndoLimit="200"
+                                                         IsReadOnly="{Binding IsInTrash}"
                                                          AutomationProperties.Name="Düzenlenebilir Markdown kaynak metni"
                                                          AutomationProperties.AutomationId="MarkdownSourceText"/>
                                             </Border>

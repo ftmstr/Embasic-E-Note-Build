@@ -36,6 +36,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     public ObservableCollection<WorkspaceTreeNode> Roots { get; } = new();
+    public WorkspaceRoot? CurrentWorkspace => _workspace;
+    public WorkspaceTreeNode? SelectedNode => _selectedNode;
+
+    public async Task RefreshRootAsync()
+    {
+        _selectedNode = null;
+        if (Roots.FirstOrDefault() is { } root) await root.RefreshAsync();
+    }
     public ICommand ChooseWorkspaceCommand { get; }
     public ICommand CreateFolderCommand { get; }
     public ICommand RefreshCommand { get; }

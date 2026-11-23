@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--workspace-files", var workspaceApplication])
+        {
+            CheckWorkspaceFiles(workspaceApplication);
+            return;
+        }
         if (args is ["--editor-workflow", var editorApplication])
         {
             CheckEditorWorkflow(editorApplication);

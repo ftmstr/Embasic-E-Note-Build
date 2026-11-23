@@ -13,3 +13,5 @@
 Bu tur ilk kullanıcı akışını kapatır. Dışa aktarma sınırlaması açık gösterilir: temel başlık/biçim/liste/tablo aktarılır; liste işaretleri bazı biçimlerde metin olarak kalır. Görseller ve bağlantılar kaynak metindir; uzak içerik yüklenmez. Karmaşık Word/Writer sadakati ve tüm şifreli not iş akışı tamamlanmış sayılmaz.
 
 Her sonraki tur en az bir somut kullanıcı akışını çalışır hale getirmeli veya gerçek bir kabul engelini kapatmalıdır. Yeni provenance-only tur varsayılan devam talimatı olmayacaktır.
+
+23.11.2026 TUR56: ikinci akış için düz .md notu/klasörü adlandırma, taşıma, kalıcı olmayan silme ve oturum sonrası geri alma eklendi. Açık tampon, eski sayfa yan dosyası, hedef çakışması ve klasör altındaki sekmelerin yol tutarlılığı kabul kapsamıdır. Kapsam/sınırlar: `PLAIN-FILE-MANAGEMENT.md`. Karışık belge klasörleri, kopyalama/sürükle-bırak, dosya izleyicisi ve ikonlar tamamlanmış sayılmaz. Nihai durum exact HEAD CI ve tur raporuyla belirlenir.

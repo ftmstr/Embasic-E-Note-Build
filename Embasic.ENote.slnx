@@ -33,4 +33,5 @@
   <Project Path="tests/Embasic.ENote.SmokeTests/Embasic.ENote.SmokeTests.csproj" />
   <Project Path="tests/Embasic.ENote.UdfWriter.Tests/Embasic.ENote.UdfWriter.Tests.csproj" />
   <Project Path="tests/Embasic.ENote.EditorWorkflow.Tests/Embasic.ENote.EditorWorkflow.Tests.csproj" />
+  <Project Path="tests/Embasic.ENote.WorkspaceFiles.Tests/Embasic.ENote.WorkspaceFiles.Tests.csproj" />
 </Solution>
