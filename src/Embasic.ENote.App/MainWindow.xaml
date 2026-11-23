@@ -189,6 +189,12 @@
                             </StackPanel>
                             <TabControl x:Name="MarkdownTabs" SelectionChanged="MarkdownTabs_SelectionChanged"
                                         AutomationProperties.Name="Açık Markdown belgeleri">
+                                <TabControl.ItemContainerStyle>
+                                    <Style TargetType="TabItem">
+                                        <Setter Property="AutomationProperties.Name" Value="{Binding DisplayTitle}"/>
+                                        <Setter Property="ToolTip" Value="{Binding FilePath}"/>
+                                    </Style>
+                                </TabControl.ItemContainerStyle>
                                 <TabControl.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding DisplayTitle}" />

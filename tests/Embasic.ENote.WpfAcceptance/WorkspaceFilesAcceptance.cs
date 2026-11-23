@@ -187,7 +187,7 @@ internal static partial class Program
                 var p = (ExpandCollapsePattern)item.GetCurrentPattern(ExpandCollapsePattern.Pattern);
                 if (p.Current.ExpandCollapseState == ExpandCollapseState.Collapsed) p.Expand();
             }
-            void DocumentTab(string name) => Select(NamedContainer(name, ControlType.TabItem, window));
+            void DocumentTab(string name) => Select(ByName(window, name, ControlType.TabItem));
         }
         catch { if (process is not null && !process.HasExited) DumpWindows(process.Id); throw; }
         finally
