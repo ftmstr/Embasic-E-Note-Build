@@ -32,6 +32,7 @@ public partial class MainWindow : Window
         _viewModel = new MainViewModel(
             new WorkspaceStorage(), PickWorkspace, RequestFolderName);
         DataContext = _viewModel;
+        _viewModel.PropertyChanged += (_, _) => UpdateWorkspaceActions();
         PageSizeComboBox.ItemsSource = PageLayoutCatalog.Presets;
         PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
         Loaded += (_, _) => UpdatePagePreview();
@@ -148,7 +149,7 @@ public partial class MainWindow : Window
         {
             string absolute = Path.GetFullPath(path);
             var existing = _tabs.FirstOrDefault(t => string.Equals(t.FilePath,
-                absolute, StringComparison.OrdinalIgnoreCase));
+                absolute, StringComparison.OrdinalIgnoreCase) && !t.IsInTrash);
             if (existing is not null) { MarkdownTabs.SelectedItem = existing; MainSections.SelectedItem = MarkdownSectionTab; return; }
             var snap = _noteStore.Read(absolute);
             var layout = _pageStore.Read(absolute);
@@ -170,6 +171,7 @@ public partial class MainWindow : Window
 
     private bool SaveTab(PlainMarkdownEditorTab tab)
     {
+        if (_fileOperationBusy) return false;
         try
         {
             tab.Save(_noteStore, _pageStore);
@@ -192,7 +194,7 @@ public partial class MainWindow : Window
 
     private void PrintPreview_Click(object sender, RoutedEventArgs e)
     {
-        if (SelectedTab is not { } tab) return;
+        if (SelectedTab is not { IsInTrash: false } tab) return;
         try
         {
             new A4PrintPreviewWindow(tab.Text, tab.Layout) { Owner = this }.ShowDialog();
@@ -206,7 +208,7 @@ public partial class MainWindow : Window
 
     private void ExportMarkdownUdf_Click(object sender, RoutedEventArgs e)
     {
-        if (SelectedTab is not { } tab) return;
+        if (SelectedTab is not { IsInTrash: false } tab) return;
         var result = MessageBox.Show(this,
             "Düzenleyicideki metin, kaydedilmemiş değişiklikler dahil, imzasız ve şifresiz yeni bir UDF kopyası olarak yazılır. " +
             "Markdown işaretleri metin olarak kalır. Bu aktarım A4 dikey sayfayı destekler.",
@@ -254,12 +256,20 @@ public partial class MainWindow : Window
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
+        if (_fileOperationBusy) { e.Cancel = true; return; }
         foreach (var tab in _tabs)
             if (!ConfirmCloseTab(tab)) { e.Cancel = true; return; }
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (WorkspaceTree.IsKeyboardFocusWithin && Keyboard.Modifiers == ModifierKeys.None)
+        {
+            if (e.Key == Key.F2 && RenameEntryButton.IsEnabled)
+            { RenameEntry_Click(sender, e); e.Handled = true; return; }
+            if (e.Key == Key.Delete && TrashEntryButton.IsEnabled)
+            { TrashEntry_Click(sender, e); e.Handled = true; return; }
+        }
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.N)
         { NewMarkdown_Click(sender, e); e.Handled = true; return; }
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.R)
@@ -284,9 +294,7 @@ public partial class MainWindow : Window
     private void MarkdownTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
-        ExportMarkdownUdfButton.IsEnabled = SelectedTab is not null;
-        ExportDocumentCopyButton.IsEnabled = SelectedTab is not null;
-        PrintPreviewButton.IsEnabled = SelectedTab is not null;
+        UpdateDocumentActions();
         if (SelectedTab is not { } tab) return;
         _previewDebounce.Stop();
         tab.RefreshPreview();
@@ -418,6 +426,7 @@ public partial class MainWindow : Window
         object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         _viewModel.SelectNode(e.NewValue as WorkspaceTreeNode);
+        UpdateWorkspaceActions();
     }
 
     private async void WorkspaceTree_Expanded(object sender, RoutedEventArgs e)

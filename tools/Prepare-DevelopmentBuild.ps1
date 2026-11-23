@@ -17,6 +17,15 @@ Yeni: Bul/Değiştir, geri alma, Markdown araçları ve yeni MD/TXT/HTML/RTF/DOC
 kopyaları. Kaynak/mevcut hedef üzerine dışa aktarma yapılmaz. Görseller ve
 bağlantılar metin olarak kalır; karmaşık belge sadakati tamamlanmadı.
 
+TUR56: Sol ağaçtan .md notu/klasörü adlandırma (F2), çalışma alanı içinde taşıma,
+silinenlere taşıma ve son silmeyi geri alma. Açık metin ve eski sayfa yan dosyaları
+korunur. Silinen not sekmesi salt okunurdur; kaydetmeden önce silmeyi geri alın.
+Tamamlanmış silmeler uygulama yeniden açıldığında da geri alınabilir.
+Klasör işlemi yalnız .md ve .md.enote-layout.json içeriğiyle sınırlıdır; .emd,
+anahtar veya diğer belge içeren klasör reddedilir. .enote-trash elle silinmemeli.
+Not+yan dosya iki OS taşımasıdır; güç kesintisinde atomik işlem garantisi yoktur.
+Kesintili yan dosya kaydı hata ile görünür; elle kurtarma gerekebilir.
+
 Güvenli .emd ve kilitler KAPALI. Düz .md ve dışa aktarılan belgeler ŞİFRESİZDİR.
 Fiziksel Windows/yazıcı/DPI kabulleri NOT RUN; nihai hak/kurulum kabulü açık.
 Bu CI çıktısı sürüm/installer/dağıtım hakkı onayı değildir. V1.0 BLOCKED.

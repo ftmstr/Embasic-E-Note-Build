@@ -38,7 +38,9 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
         PreviewDocument = MarkdownPreviewDocumentFactory.Create(Text);
         Changed(nameof(PreviewDocument));
     }
-    public string FilePath { get; }
+    public string FilePath { get; private set; }
+    public string? TrashId { get; private set; }
+    public bool IsInTrash => TrashId is not null;
     public string Digest { get; private set; }
     public bool HasUtf8Bom { get; }
     public string? LayoutDigest { get; private set; }
@@ -67,7 +69,20 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
     }
     public bool IsDirty => _text != _savedText;
     public bool IsLayoutDirty => !_layout.Equals(_savedLayout);
-    public string DisplayTitle => Path.GetFileName(FilePath) + (IsDirty || IsLayoutDirty ? " *" : "");
+    public string DisplayTitle => Path.GetFileName(FilePath) + (IsDirty || IsLayoutDirty ? " *" : "") +
+        (IsInTrash ? " [Silindi — geri alınabilir]" : "");
+
+    public void RelocatePath(string path)
+    {
+        FilePath = Path.GetFullPath(path);
+        Changed(nameof(FilePath)); Changed(nameof(DisplayTitle));
+    }
+
+    public void SetTrashState(string? id)
+    {
+        TrashId = id;
+        Changed(nameof(TrashId)); Changed(nameof(IsInTrash)); Changed(nameof(DisplayTitle));
+    }
 
     public PlainMarkdownEditorTab(string path, PlainMarkdownSnapshot note, DocumentPageSnapshot page)
     {
@@ -81,6 +96,7 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
     }
     public void Save(PlainMarkdownDocumentStore notes, DocumentPageSettingsStore pages)
     {
+        if (IsInTrash) throw new IOException("Bu not silinenlerde. Kaydetmeden önce silmeyi geri alın.");
         if (IsDirty)
         {
             Digest = notes.Save(FilePath, Text, Digest, HasUtf8Bom);

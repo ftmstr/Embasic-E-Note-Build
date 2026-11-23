@@ -46,7 +46,7 @@ public partial class MainWindow
     }
     private void ReplaceOne_Click(object sender,RoutedEventArgs e)
     {
-        if(ActiveEditor is not { } editor || SearchTermBox.Text.Length==0)return;
+        if(SelectedTab is not { IsInTrash:false } || ActiveEditor is not { } editor || SearchTermBox.Text.Length==0)return;
         var comparison=FindCaseSensitive.IsChecked==true?StringComparison.Ordinal:StringComparison.OrdinalIgnoreCase;
         if(!string.Equals(editor.SelectedText,SearchTermBox.Text,comparison)){FindInNote(false);return;}
         editor.BeginChange();try{editor.SelectedText=ReplaceTermBox.Text;}finally{editor.EndChange();}
@@ -54,7 +54,7 @@ public partial class MainWindow
     }
     private void ReplaceAll_Click(object sender,RoutedEventArgs e)
     {
-        if(ActiveEditor is not { } editor)return;
+        if(SelectedTab is not { IsInTrash:false } || ActiveEditor is not { } editor)return;
         try
         {
             var changed=MarkdownEditing.ReplaceAll(editor.Text,SearchTermBox.Text,ReplaceTermBox.Text,FindCaseSensitive.IsChecked==true);
@@ -66,7 +66,7 @@ public partial class MainWindow
     }
     private void FormatMarkdown_Click(object sender,RoutedEventArgs e)
     {
-        if(ActiveEditor is not { } editor || sender is not Button button)return;
+        if(SelectedTab is not { IsInTrash:false } || ActiveEditor is not { } editor || sender is not Button button)return;
         string tag=button.Tag?.ToString()??"",prefix="",suffix="";
         switch(tag)
         {
@@ -80,7 +80,7 @@ public partial class MainWindow
     }
     private void ExportCopy_Click(object sender,RoutedEventArgs e)
     {
-        if(SelectedTab is not { } tab)return;
+        if(SelectedTab is not { IsInTrash:false } tab)return;
         if(MessageBox.Show(this,"Açık notun kaydedilmemiş değişiklikleri dahil yeni bir şifresiz kopyası oluşturulur. Kaynak dosya değişmez. Başlık, liste, tablo ve temel metin biçimleri aktarılır; görsel ve bağlantılar metin olarak kalır. Karmaşık belge sadakati garanti edilmez.","Belge Kopyası",MessageBoxButton.OKCancel,MessageBoxImage.Information)!=MessageBoxResult.OK)return;
         var dialog=new SaveFileDialog{Title="Yeni belge kopyası oluştur",Filter="Word (.docx)|*.docx|Rich Text (.rtf)|*.rtf|HTML (.html)|*.html|Düz metin (.txt)|*.txt|Markdown (.md)|*.md|OpenDocument (.odt)|*.odt",DefaultExt=".docx",AddExtension=true,OverwritePrompt=false,CheckPathExists=true,InitialDirectory=Path.GetDirectoryName(tab.FilePath),FileName=Path.GetFileNameWithoutExtension(tab.FilePath)+"-kopya"};
         if(dialog.ShowDialog(this)!=true)return;

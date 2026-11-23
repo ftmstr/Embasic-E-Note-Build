@@ -49,6 +49,8 @@ public sealed class WorkspaceStorage : IWorkspaceStorage
             }
 
             var name = Path.GetFileName(path);
+            if (directory.Equals(workspace.FullPath, StringComparison.OrdinalIgnoreCase) &&
+                WorkspaceFileOperations.IsOwnedTrash(path)) continue;
             if ((attributes & FileAttributes.Directory) != 0)
             {
                 entries.Add(new WorkspaceEntry(name, path, WorkspaceEntryKind.Folder));

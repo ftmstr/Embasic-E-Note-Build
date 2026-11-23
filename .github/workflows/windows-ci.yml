@@ -48,6 +48,8 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.UdfWriter.Tests/Embasic.ENote.UdfWriter.Tests.csproj --configuration Release --no-build
       - name: Verify new editor search and six new-copy export formats
         run: dotnet run --project tests/Embasic.ENote.EditorWorkflow.Tests --configuration Release --no-build
+      - name: Verify workspace relocation trash restore and sidecar rollback
+        run: dotnet run --project tests/Embasic.ENote.WorkspaceFiles.Tests --configuration Release --no-build
       - name: Run Tur35 final path installed identity and target DACL
         run: dotnet run --project tests/Embasic.ENote.Tur28.Tests/Embasic.ENote.Tur28.Tests.csproj --configuration Release --no-restore -- tur35-windows-path
       - name: Run Tur34 live destination and directory identity checks
@@ -229,6 +231,8 @@ jobs:
           dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release -- src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe $udf
       - name: Exercise actual editor find replace undo and new document copy dialogs
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --editor-workflow src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+      - name: Exercise actual workspace rename move trash and restart restore
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-files src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Retain framework-dependent development build after editor acceptance
         shell: pwsh
         run: ./tools/Prepare-DevelopmentBuild.ps1
