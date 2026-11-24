@@ -61,7 +61,8 @@ internal static partial class Program
             File.WriteAllText(fixture.CopyLayout, "unrelated old metadata");
             BeginDirtyReload();
             PickCopy(fixture.Copy);
-            Dismiss("Disk değişikliği", "Açık taslak korundu.");
+            Wait(() => ById(window, "MarkdownStatusText").Current.Name.StartsWith(
+                "Açık taslak korundu.", StringComparison.Ordinal) ? "rejected" : null, "destination collision feedback");
             Require(text.Current.Value == draft && !File.Exists(fixture.Copy) &&
                 File.ReadAllText(fixture.CopyLayout) == "unrelated old metadata",
                 "An old sidecar was overwritten or a rejected draft was discarded");
@@ -106,7 +107,12 @@ internal static partial class Program
             void PickCopy(string path)
             {
                 var dialog = Dialog(process.Id, saveTitle);
-                FileName(dialog).SetValue(path);
+                var name = FileName(dialog);
+                var edit = dialog.FindFirst(TreeScope.Descendants, new PropertyCondition(
+                    AutomationElement.AutomationIdProperty, "1148"));
+                edit?.SetFocus();
+                name.SetValue(path);
+                Require(name.Current.Value == path, "Native copy path was not entered");
                 Click(DialogButton(dialog, ["1"], ["Save", "Kaydet"]));
                 WaitClosed(process.Id, saveTitle);
             }
@@ -134,7 +140,7 @@ internal static partial class Program
         public const string Original = "# İlk kaynak";
         public DirectoryInfo Folder { get; } = Directory.CreateTempSubdirectory("enote-revision-ui-");
         public string Source => Path.Combine(Folder.FullName, "note.md");
-        public string Copy => Path.Combine(Folder.FullName, "draft.md");
+        public string Copy => Path.Combine(Folder.FullName, "note-taslak.md");
         public string CopyLayout => Copy + ".enote-layout.json";
         public string MissingCopy => Path.Combine(Folder.FullName, "missing-draft.md");
         public RevisionFixture() => File.WriteAllText(Source, Original);

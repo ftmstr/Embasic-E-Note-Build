@@ -199,7 +199,7 @@
                                         </WrapPanel>
                                     </StackPanel>
                                 </Border>
-                                <TextBlock x:Name="MarkdownStatusText"
+                                <TextBlock x:Name="MarkdownStatusText" AutomationProperties.AutomationId="MarkdownStatusText"
                                            Text="Not açın veya yeni .md oluşturun. PDF ve yazdırma: Baskı Önizlemesi."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             </StackPanel>

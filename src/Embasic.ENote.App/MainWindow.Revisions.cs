@@ -101,11 +101,13 @@ public partial class MainWindow
 
     private bool SaveRevisionCopy(PlainMarkdownEditorTab tab)
     {
+        string? sourceDirectory = Path.GetDirectoryName(tab.FilePath);
         var dialog = new SaveFileDialog
         {
             Title = "Taslağı ayrı Markdown dosyasına kaydet",
             Filter = "Markdown (.md)|*.md",
             FileName = Path.GetFileNameWithoutExtension(tab.FilePath) + "-taslak",
+            InitialDirectory = Directory.Exists(sourceDirectory) ? sourceDirectory! : "",
             DefaultExt = ".md",
             AddExtension = true,
             OverwritePrompt = false,
@@ -124,6 +126,5 @@ public partial class MainWindow
         error is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException or NotSupportedException;
 
     private void ShowRevisionError(Exception error) =>
-        MessageBox.Show(this, "Açık taslak korundu. " + error.Message, "Disk değişikliği",
-            MessageBoxButton.OK, MessageBoxImage.Warning);
+        MarkdownStatusText.Text = "Açık taslak korundu. " + error.Message;
 }
