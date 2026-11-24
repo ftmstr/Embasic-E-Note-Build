@@ -1,3 +1,5 @@
+using System.Security.AccessControl;
+using System.Security.Principal;
 using Embasic.ENote.Storage.Workspaces;
 using System.IO.Compression;
 using System.Xml.Linq;
@@ -125,6 +127,85 @@ Check("workspace result validation refuses removed files and paths outside the s
     File.Delete(temporary);
     Reject<IOException>(() => WorkspaceMarkdownSearch.ValidateResult(workspace, temporary));
     Reject<UnauthorizedAccessException>(() => WorkspaceMarkdownSearch.ValidateResult(workspace, source));
+});
+var noteRoot = Directory.CreateDirectory(Path.Combine(directory.FullName, "create-note")).FullName;
+var noteWorkspace = new WorkspaceStorage().OpenExisting(noteRoot);
+var noteFolder = Directory.CreateDirectory(Path.Combine(noteRoot, "Toplantı")).FullName;
+string CreateNote(string name, string[]? openPaths = null) =>
+    WorkspaceFileOperations.CreateMarkdown(noteWorkspace, noteFolder, name, openPaths ?? []);
+Check("folder note creation preserves Unicode name and appends Markdown extension once", () =>
+{
+    string first = CreateNote("İğdır Çalışması 😀");
+    string second = CreateNote("ışık.MD");
+    Yes(first == Path.Combine(noteFolder, "İğdır Çalışması 😀.md"));
+    Yes(second == Path.Combine(noteFolder, "ışık.MD"));
+    foreach (string path in new[] { first, second })
+        Yes(new FileInfo(path).Length == 0 && !File.Exists(path + WorkspaceFileOperations.LayoutSuffix));
+});
+Check("folder note creation rejects invalid names, reserved devices and secure extensions", () =>
+{
+    foreach (string name in new[] { "", "  ", "..", "../başka", "a/b", "a\\b", "a:b", "a?b",
+                                  "CON.md", "AUX .md", "LPT¹.md", "CONIN$", "son.", "son ", ".md", "gizli.EMD" })
+        Reject<ArgumentException>(() => CreateNote(name));
+    Yes(Directory.EnumerateFileSystemEntries(noteFolder).Count() == 2);
+});
+Check("folder note creation refuses existing file, directory, orphan layout and an open missing path", () =>
+{
+    string existing = Path.Combine(noteFolder, "existing.md");
+    File.WriteAllText(existing, "var olan not");
+    Reject<IOException>(() => CreateNote("existing"));
+    Yes(File.ReadAllText(existing) == "var olan not");
+    Directory.CreateDirectory(Path.Combine(noteFolder, "dir.md"));
+    Reject<IOException>(() => CreateNote("dir"));
+    string orphan = Path.Combine(noteFolder, "orphan.md");
+    File.WriteAllText(orphan + WorkspaceFileOperations.LayoutSuffix, "eski ayar");
+    Reject<IOException>(() => CreateNote("orphan"));
+    Yes(!File.Exists(orphan) && File.ReadAllText(orphan + WorkspaceFileOperations.LayoutSuffix) == "eski ayar");
+    string openMissing = Path.Combine(noteFolder, "open.md");
+    Reject<IOException>(() => CreateNote("open", [openMissing]));
+    Yes(!File.Exists(openMissing));
+});
+Check("folder note creation does not follow a linked ancestor or create a missing folder", () =>
+{
+    string outside = Directory.CreateDirectory(Path.Combine(directory.FullName, "outside")).FullName;
+    string childPath = Directory.CreateDirectory(Path.Combine(outside, "child")).FullName;
+    string alias = Path.Combine(noteRoot, "alias");
+    Directory.CreateSymbolicLink(alias, outside);
+    try
+    {
+        Reject<UnauthorizedAccessException>(() =>
+            WorkspaceFileOperations.CreateMarkdown(noteWorkspace, Path.Combine(alias, "child"), "yasak", []));
+        Reject<UnauthorizedAccessException>(() =>
+            WorkspaceFileOperations.CreateMarkdown(noteWorkspace, childPath, "yasak", []));
+        Reject<IOException>(() =>
+            WorkspaceFileOperations.CreateMarkdown(noteWorkspace, Path.Combine(noteRoot, "missing"), "yasak", []));
+        Yes(!Directory.EnumerateFileSystemEntries(childPath).Any());
+    }
+    finally { Directory.Delete(alias); }
+});
+Check("folder note creation respects a real directory write denial", () =>
+{
+    var denied = Directory.CreateDirectory(Path.Combine(noteRoot, "denied"));
+    void Attempt() => Reject<UnauthorizedAccessException>(() =>
+        WorkspaceFileOperations.CreateMarkdown(noteWorkspace, denied.FullName, "yasak", []));
+    if (OperatingSystem.IsWindows())
+    {
+        using var identity = WindowsIdentity.GetCurrent();
+        var originalAcl = denied.GetAccessControl(AccessControlSections.Access);
+        var restricted = denied.GetAccessControl(AccessControlSections.Access);
+        restricted.AddAccessRule(new FileSystemAccessRule(identity.User!, FileSystemRights.CreateFiles, AccessControlType.Deny));
+        denied.SetAccessControl(restricted);
+        try { Attempt(); }
+        finally { denied.SetAccessControl(originalAcl); }
+    }
+    else
+    {
+        var mode = File.GetUnixFileMode(denied.FullName);
+        File.SetUnixFileMode(denied.FullName, UnixFileMode.UserRead | UnixFileMode.UserExecute);
+        try { Attempt(); }
+        finally { File.SetUnixFileMode(denied.FullName, mode); }
+    }
+    Yes(!Directory.EnumerateFileSystemEntries(denied.FullName).Any());
 });
 // Optional real-viewer inspection receives fresh synthetic documents, not a shipping package.
 if(args is ["--evidence",var output]){Directory.CreateDirectory(output);foreach(string ext in new[]{"md","txt","html","rtf","docx","odt"})File.Copy(Path.Combine(directory.FullName,"copy."+ext),Path.Combine(output,"editor-synthetic."+ext),false);}

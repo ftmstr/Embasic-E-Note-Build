@@ -15,6 +15,41 @@ public sealed class WorkspaceFileOperations
     private const string Marker = "Embasic.ENote.PlainTrash/v1";
     private static readonly StringComparison Comparison = StringComparison.OrdinalIgnoreCase;
 
+    /// <summary>Creates an empty plain note without replacing an existing path or reusing old layout.</summary>
+    public static string CreateMarkdown(WorkspaceRoot workspace, string folderPath, string name,
+        IReadOnlyCollection<string> openNotePaths)
+    {
+        ValidateName(name);
+        if (Path.GetExtension(name).Equals(".emd", Comparison))
+            throw new ArgumentException("Güvenli .emd oluşturma kapalı. Düz not için .md kullanın.", nameof(name));
+        string filename = name.EndsWith(".md", Comparison) ? name : name + ".md";
+        if (filename.Length <= 3)
+            throw new ArgumentException("Dosya uzantısından önce bir not adı yazın.", nameof(name));
+
+        string folder = WorkspaceStorage.CheckDirectory(workspace, folderPath);
+        if (Path.GetRelativePath(workspace.FullPath, folder).Split(Path.DirectorySeparatorChar)
+            .Any(segment => segment.Equals(TrashName, Comparison) || segment.StartsWith(".enote-draft-", Comparison)))
+            throw new UnauthorizedAccessException("Bu klasörde yeni not oluşturulamaz.");
+
+        string path = Path.Combine(folder, filename);
+        if (openNotePaths.Any(open => Equal(open, path)))
+            throw new IOException("Bu yolda zaten açık bir not sekmesi var.");
+        if (EntryExists(path))
+            throw new IOException("Bu adda bir dosya veya klasör zaten var.");
+        if (EntryExists(path + LayoutSuffix))
+            throw new IOException("Bu ada ait eski sayfa düzeni dosyası var. Başka bir ad seçin.");
+
+        // The OS checks existence again when it opens the new file.
+        using (new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
+        return path;
+    }
+
+    private static bool EntryExists(string path)
+    {
+        try { _ = File.GetAttributes(path); return true; }
+        catch (FileNotFoundException) { return false; }
+    }
+
     public WorkspaceChange Rename(WorkspaceRoot workspace, string source, string name)
     {
         ValidateName(name);
@@ -255,9 +290,9 @@ public sealed class WorkspaceFileOperations
         if (name != name.Trim() || name is "." or ".." || name.EndsWith('.') ||
             name.Equals(TrashName, Comparison) || name.Any(c => c < 32 || "<>:\"/\\|?*".Contains(c)))
             throw new ArgumentException("Geçersiz Windows dosya/klasör adı.");
-        string stem = name.Split('.')[0].ToUpperInvariant();
-        if (stem is "CON" or "PRN" or "AUX" or "NUL" ||
-            (stem.Length == 4 && (stem.StartsWith("COM") || stem.StartsWith("LPT")) && stem[3] is >= '1' and <= '9'))
+        string stem = name.Split('.')[0].TrimEnd().ToUpperInvariant();
+        if (stem is "CON" or "PRN" or "AUX" or "NUL" or "CONIN$" or "CONOUT$" ||
+            (stem.Length == 4 && (stem.StartsWith("COM") || stem.StartsWith("LPT")) && "123456789¹²³".Contains(stem[3])))
             throw new ArgumentException("Ayrılmış Windows aygıt adı.");
     }
 

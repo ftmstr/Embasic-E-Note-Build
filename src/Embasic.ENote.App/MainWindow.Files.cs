@@ -23,6 +23,8 @@ public partial class MainWindow
             !string.Equals(root.FullPath, selected.FullPath, StringComparison.OrdinalIgnoreCase);
         RenameEntryButton.IsEnabled = MoveEntryButton.IsEnabled = TrashEntryButton.IsEnabled = editable;
         UndoTrashButton.IsEnabled = root is not null;
+        CreateWorkspaceMarkdownButton.IsEnabled = root is not null &&
+            WorkspaceTree?.SelectedItem is WorkspaceTreeNode { IsFolder: true };
     }
 
     private void UpdateDocumentActions()
@@ -30,6 +32,43 @@ public partial class MainWindow
         bool available = SelectedTab is { IsInTrash: false };
         ExportMarkdownUdfButton.IsEnabled = ExportDocumentCopyButton.IsEnabled =
             PrintPreviewButton.IsEnabled = available;
+    }
+
+    private async void CreateWorkspaceMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        if (_fileOperationBusy || _viewModel.CurrentWorkspace is not { } root ||
+            WorkspaceTree.SelectedItem is not WorkspaceTreeNode { IsFolder: true } folder) return;
+
+        var dialog = new FolderNameDialog("Klasörde yeni Markdown notu", $"Not adı · {folder.Name}",
+            "", "Oluştur") { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+
+        string name = dialog.FolderName;
+        string[] openPaths = _tabs.Where(tab => !tab.IsInTrash).Select(tab => tab.FilePath).ToArray();
+        _fileOperationBusy = true;
+        IsEnabled = false;
+        bool opened = false;
+        Exception? failure = null;
+        try
+        {
+            string created = await Task.Run(() =>
+                WorkspaceFileOperations.CreateMarkdown(root, folder.FullPath, name, openPaths));
+            opened = OpenMarkdown(created);
+            await folder.RefreshAsync();
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            failure = error;
+        }
+        finally
+        {
+            _fileOperationBusy = false;
+            IsEnabled = true;
+            if (opened)
+                ActiveEditor?.Focus();
+        }
+        if (failure is not null)
+            MessageBox.Show(this, failure.Message, "Not oluşturulamadı", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private async void RenameEntry_Click(object sender, RoutedEventArgs e)
