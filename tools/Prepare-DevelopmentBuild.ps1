@@ -33,6 +33,9 @@ kaydedilir. Silinmiş kaynak için de taslağı ayrı kaydedebilirsiniz.
 TUR58: Çalışma alanı seçildikten sonra Ctrl+Shift+F ile diskteki düz Markdown
 notlarının dosya adı veya içeriğini arayın. Sonuçtan açık taslağa dönebilirsiniz.
 
+TUR59: Çalışma alanı ağacından bir klasör seçip «Yeni .md…» ile doğrudan
+orada bir Markdown notu oluşturun. Yeni not düzenleyicide açılır.
+
 Güvenli .emd ve kilitler KAPALI. Düz .md ve dışa aktarılan belgeler ŞİFRESİZDİR.
 Fiziksel Windows/yazıcı/DPI kabulleri NOT RUN; nihai hak/kurulum kabulü açık.
 Bu CI çıktısı sürüm/installer/dağıtım hakkı onayı değildir. V1.0 BLOCKED.

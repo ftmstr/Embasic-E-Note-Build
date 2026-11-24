@@ -154,14 +154,14 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenMarkdown(string path)
+    private bool OpenMarkdown(string path)
     {
         try
         {
             string absolute = Path.GetFullPath(path);
             var existing = _tabs.FirstOrDefault(t => string.Equals(t.FilePath,
                 absolute, StringComparison.OrdinalIgnoreCase) && !t.IsInTrash);
-            if (existing is not null) { MarkdownTabs.SelectedItem = existing; MainSections.SelectedItem = MarkdownSectionTab; return; }
+            if (existing is not null) { MarkdownTabs.SelectedItem = existing; MainSections.SelectedItem = MarkdownSectionTab; return true; }
             var snap = _noteStore.Read(absolute);
             var layout = _pageStore.Read(absolute);
             var tab = new PlainMarkdownEditorTab(absolute, snap, layout);
@@ -170,6 +170,7 @@ public partial class MainWindow : Window
             MarkdownTabs.SelectedItem = tab;
             MainSections.SelectedItem = MarkdownSectionTab;
             MarkdownStatusText.Text = "Şifresiz Markdown dosyası açıldı: " + Path.GetFileName(path);
+            return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
                                    ArgumentException or NotSupportedException or InvalidDataException or
@@ -177,6 +178,7 @@ public partial class MainWindow : Window
         {
             MessageBox.Show(this, "Not açılamadı: " + ex.Message, "Embasic E-Note",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
         }
     }
 
