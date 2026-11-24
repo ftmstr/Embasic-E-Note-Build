@@ -23,7 +23,8 @@ public partial class MainWindow
             !string.Equals(root.FullPath, selected.FullPath, StringComparison.OrdinalIgnoreCase);
         RenameEntryButton.IsEnabled = MoveEntryButton.IsEnabled = TrashEntryButton.IsEnabled = editable;
         UndoTrashButton.IsEnabled = root is not null;
-        CreateWorkspaceMarkdownButton.IsEnabled = root is not null && selected is { IsFolder: true };
+        CreateWorkspaceMarkdownButton.IsEnabled = root is not null &&
+            WorkspaceTree?.SelectedItem is WorkspaceTreeNode { IsFolder: true };
     }
 
     private void UpdateDocumentActions()
@@ -36,7 +37,7 @@ public partial class MainWindow
     private async void CreateWorkspaceMarkdown_Click(object sender, RoutedEventArgs e)
     {
         if (_fileOperationBusy || _viewModel.CurrentWorkspace is not { } root ||
-            _viewModel.SelectedNode is not { IsFolder: true } folder) return;
+            WorkspaceTree.SelectedItem is not WorkspaceTreeNode { IsFolder: true } folder) return;
 
         var dialog = new FolderNameDialog("Klasörde yeni Markdown notu", $"Not adı · {folder.Name}",
             "", "Oluştur") { Owner = this };

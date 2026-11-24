@@ -62,7 +62,9 @@ internal static partial class Program
             ConfirmName(name);
             Wait(() => File.Exists(created) && Editor().Current.Value == "" && window.Current.IsEnabled
                 ? "new editor" : null, "empty note opened at the selected path");
-            TreeItem(name + ".md");
+            Select(TreeItem(name + ".md"));
+            Require(!ById(window, "CreateWorkspaceMarkdownButton").Current.IsEnabled,
+                "A selected note must not be used as a creation folder");
             Editor().SetValue(newText);
             ById(window, "MarkdownSourceText").SetFocus();
             EditorControlKey(0x53);
