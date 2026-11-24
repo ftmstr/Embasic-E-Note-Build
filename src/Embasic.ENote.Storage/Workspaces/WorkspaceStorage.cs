@@ -112,7 +112,7 @@ public sealed class WorkspaceStorage : IWorkspaceStorage
         return target;
     }
 
-    private static string CheckDirectory(WorkspaceRoot workspace, string folderPath)
+    internal static string CheckDirectory(WorkspaceRoot workspace, string folderPath)
     {
         ArgumentNullException.ThrowIfNull(workspace);
         ArgumentException.ThrowIfNullOrWhiteSpace(folderPath);

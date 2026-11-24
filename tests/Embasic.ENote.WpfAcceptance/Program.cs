@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--workspace-search", var searchApplication])
+        {
+            CheckWorkspaceSearch(searchApplication);
+            return;
+        }
         if (args is ["--external-revision", var revisionApplication])
         {
             CheckExternalRevision(revisionApplication);

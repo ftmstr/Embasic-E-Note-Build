@@ -33,11 +33,19 @@ public partial class MainWindow : Window
         _viewModel = new MainViewModel(
             new WorkspaceStorage(), PickWorkspace, RequestFolderName);
         DataContext = _viewModel;
-        _viewModel.PropertyChanged += (_, _) => UpdateWorkspaceActions();
+        _viewModel.PropertyChanged += (_, args) =>
+        {
+            UpdateWorkspaceActions();
+            if (args.PropertyName == nameof(MainViewModel.WorkspaceLabel)) ClearWorkspaceSearch();
+        };
         PageSizeComboBox.ItemsSource = PageLayoutCatalog.Presets;
         PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
         Loaded += (_, _) => { UpdatePagePreview(); _revisionTimer.Start(); };
-        Closed += (_, _) => _revisionTimer.Stop();
+        Closed += (_, _) =>
+        {
+            _revisionTimer.Stop();
+            _workspaceSearchCancellation?.Cancel();
+        };
         _revisionTimer.Tick += async (_, _) => await CheckSelectedRevisionAsync();
         MarkdownTabs.ItemsSource = _tabs;
         _previewDebounce.Tick += (_, _) =>
@@ -164,8 +172,8 @@ public partial class MainWindow : Window
             MarkdownStatusText.Text = "Şifresiz Markdown dosyası açıldı: " + Path.GetFileName(path);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
-                                   ArgumentException or NotSupportedException or
-                                   System.Text.DecoderFallbackException or System.Text.Json.JsonException)
+                                   ArgumentException or NotSupportedException or InvalidDataException or
+                                   System.Text.Json.JsonException)
         {
             MessageBox.Show(this, "Not açılamadı: " + ex.Message, "Embasic E-Note",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -282,6 +290,12 @@ public partial class MainWindow : Window
         { OpenRtf_Click(sender, e); e.Handled = true; return; }
         if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.D)
         { OpenOfflineWord_Click(sender, e); e.Handled = true; return; }
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.F)
+        {
+            ShowWorkspaceSearch_Click(sender, e);
+            e.Handled = true;
+            return;
+        }
         if (Keyboard.Modifiers != ModifierKeys.Control) return;
         switch (e.Key)
         {
