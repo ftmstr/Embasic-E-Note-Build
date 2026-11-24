@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--external-revision", var revisionApplication])
+        {
+            CheckExternalRevision(revisionApplication);
+            return;
+        }
         if (args is ["--workspace-files", var workspaceApplication])
         {
             CheckWorkspaceFiles(workspaceApplication);

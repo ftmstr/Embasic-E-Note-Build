@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage;
+using Embasic.ENote.Storage.Documents;
 using Embasic.ENote.App.Preview;
 using System.Windows;
 using System.Windows.Documents;
@@ -42,7 +43,7 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
     public string? TrashId { get; private set; }
     public bool IsInTrash => TrashId is not null;
     public string Digest { get; private set; }
-    public bool HasUtf8Bom { get; }
+    public bool HasUtf8Bom { get; private set; }
     public string? LayoutDigest { get; private set; }
     public string Text
     {
@@ -94,9 +95,25 @@ public sealed class PlainMarkdownEditorTab : INotifyPropertyChanged
         LayoutDigest = page.Sha256;
         PreviewDocument = MarkdownPreviewDocumentFactory.Create(_text);
     }
+    public void LoadDiskRevision(PlainMarkdownSnapshot note, DocumentPageSnapshot page)
+    {
+        _savedText = note.Text;
+        Digest = note.Sha256;
+        HasUtf8Bom = note.HasUtf8Bom;
+        _savedLayout = page.Settings;
+        LayoutDigest = page.Sha256;
+        Text = note.Text;
+        Layout = page.Settings;
+        Changed(nameof(IsDirty));
+        Changed(nameof(DisplayTitle));
+    }
+
     public void Save(PlainMarkdownDocumentStore notes, DocumentPageSettingsStore pages)
     {
         if (IsInTrash) throw new IOException("Bu not silinenlerde. Kaydetmeden önce silmeyi geri alın.");
+        if ((IsDirty || IsLayoutDirty) &&
+            PlainMarkdownRevision.Check(FilePath, Digest, LayoutDigest) != PlainMarkdownRevisionState.Current)
+            throw new IOException("Diskteki not veya sayfa düzeni değişmiş ya da okunamıyor.");
         if (IsDirty)
         {
             Digest = notes.Save(FilePath, Text, Digest, HasUtf8Bom);
