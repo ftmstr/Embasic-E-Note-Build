@@ -84,7 +84,14 @@ internal static partial class Program
             Require(!ById(window, "ReloadRevisionButton").Current.IsEnabled, "Missing source can be reloaded");
             Click(ById(window, "SaveRevisionCopyButton"));
             PickCopy(fixture.MissingCopy);
-            Wait(() => File.Exists(fixture.MissingCopy) ? "ready" : null, "missing-source recovery copy");
+            Wait(() =>
+            {
+                if (File.Exists(fixture.MissingCopy)) return "ready";
+                string status = ById(window, "MarkdownStatusText").Current.Name;
+                if (status.StartsWith("Açık taslak korundu.", StringComparison.Ordinal))
+                    throw new InvalidOperationException(status);
+                return null;
+            }, "missing-source recovery copy");
             Require(!File.Exists(fixture.Source) && File.ReadAllText(fixture.MissingCopy) == draft &&
                 pages.Read(fixture.MissingCopy).Settings.Landscape && text.Current.Value == draft,
                 "Recovery of the missing-source draft did not retain both parts");
@@ -108,11 +115,14 @@ internal static partial class Program
             {
                 var dialog = Dialog(process.Id, saveTitle);
                 var name = FileName(dialog);
-                var edit = dialog.FindFirst(TreeScope.Descendants, new PropertyCondition(
-                    AutomationElement.AutomationIdProperty, "1148"));
-                edit?.SetFocus();
-                name.SetValue(path);
-                Require(name.Current.Value == path, "Native copy path was not entered");
+                var edit = Find(dialog, AutomationElement.AutomationIdProperty, "1148", ControlType.Edit)
+                    ?? Find(dialog, AutomationElement.AutomationIdProperty, "1001", ControlType.Edit)
+                    ?? throw new IOException("The native file-name field cannot receive keyboard focus.");
+                edit.SetFocus();
+                RunSta(() => System.Windows.Clipboard.SetText(path));
+                EditorControlKey(0x41);
+                EditorControlKey(0x56);
+                Wait(() => name.Current.Value == path ? "entered" : null, "native copy destination");
                 Click(DialogButton(dialog, ["1"], ["Save", "Kaydet"]));
                 WaitClosed(process.Id, saveTitle);
             }
