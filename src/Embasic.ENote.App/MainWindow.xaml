@@ -63,6 +63,8 @@
                     <Button Content="Klasör Seç…" Height="33" Margin="0,10,0,6"
                             AutomationProperties.AutomationId="ChooseWorkspaceButton"
                             Command="{Binding ChooseWorkspaceCommand}"/>
+                    <Button Content="Notlarda Ara… (Ctrl+Shift+F)" Margin="0,0,0,6" Padding="8,5"
+                            Click="ShowWorkspaceSearch_Click" AutomationProperties.AutomationId="ShowWorkspaceSearchButton"/>
                     <TextBlock Text="{Binding WorkspaceLabel}"
                                TextWrapping="Wrap" FontSize="11" Foreground="{DynamicResource SecondaryInk}"
                                AutomationProperties.Name="Seçili çalışma alanı"/>
@@ -307,6 +309,53 @@
                                            AutomationProperties.Name="Seçilen sayfa ölçüleri"/>
                             </StackPanel>
                         </Grid>
+                    </TabItem>
+                    <TabItem x:Name="WorkspaceSearchTab" Header="Notlarda Ara"
+                             AutomationProperties.AutomationId="WorkspaceSearchTab">
+                        <DockPanel Margin="18">
+                            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <TextBlock Text="Çalışma alanında ara" FontSize="21" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryInk}"/>
+                                <TextBlock Text="Alt klasörler dahil, diskteki .md notlarının adı ve içeriği."
+                                           TextWrapping="Wrap" Margin="0,6" Foreground="{DynamicResource SecondaryInk}"/>
+                                <DockPanel Margin="0,4,0,8">
+                                    <Button x:Name="CancelWorkspaceSearchButton" DockPanel.Dock="Right" Content="İptal"
+                                            IsEnabled="False" Padding="10,5" Margin="6,0,0,0" Click="CancelWorkspaceSearch_Click"
+                                            AutomationProperties.AutomationId="CancelWorkspaceSearchButton"/>
+                                    <Button x:Name="StartWorkspaceSearchButton" DockPanel.Dock="Right" Content="Ara"
+                                            Padding="12,5" Margin="6,0,0,0" Click="StartWorkspaceSearch_Click"
+                                            AutomationProperties.AutomationId="StartWorkspaceSearchButton"/>
+                                    <TextBox x:Name="WorkspaceQuery" MaxLength="256" VerticalContentAlignment="Center"
+                                             Padding="6,4" KeyDown="WorkspaceQuery_KeyDown"
+                                             AutomationProperties.Name="Aranacak not adı veya metin"
+                                             AutomationProperties.AutomationId="WorkspaceSearchQuery"/>
+                                </DockPanel>
+                                <TextBlock x:Name="WorkspaceSearchStatus" Text="Arama yapmak için bir terim yazın."
+                                           TextWrapping="Wrap" Foreground="{DynamicResource PrimaryInk}"
+                                           AutomationProperties.AutomationId="WorkspaceSearchStatus"/>
+                            </StackPanel>
+                            <Button DockPanel.Dock="Bottom" HorizontalAlignment="Right" Content="Seçili Notu Aç"
+                                    Margin="0,8,0,0" Padding="12,5" Click="OpenWorkspaceResult_Click"
+                                    AutomationProperties.AutomationId="OpenWorkspaceSearchResult"/>
+                            <ListBox x:Name="WorkspaceSearchResults" MouseDoubleClick="OpenWorkspaceResult_Click"
+                                     KeyDown="WorkspaceResults_KeyDown"
+                                     AutomationProperties.Name="Not arama sonuçları"
+                                     AutomationProperties.AutomationId="WorkspaceSearchResults">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="AutomationProperties.Name" Value="{Binding RelativePath}"/>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="5,4">
+                                            <TextBlock Text="{Binding RelativePath}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Text="{Binding MatchLabel}" FontSize="11"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
                     </TabItem>
                 </TabControl>
             </Grid>

@@ -1,3 +1,4 @@
+using Embasic.ENote.Storage.Workspaces;
 using System.IO.Compression;
 using System.Xml.Linq;
 using Embasic.ENote.Core.Markdown;
@@ -71,6 +72,59 @@ Check("draft copy restores missing source buffer and metadata without recreating
     Reject<IOException>(() => PlainMarkdownRevision.WriteDraftCopy(missing, orphan, "replacement", page, false));
     Yes(!File.Exists(orphan) && File.ReadAllText(orphan + ".enote-layout.json") == "existing");
     Yes(!Directory.EnumerateDirectories(directory.FullName, ".enote-draft-*").Any());
+});
+var searchRoot = Directory.CreateDirectory(Path.Combine(directory.FullName, "search")).FullName;
+var workspace = new WorkspaceStorage().OpenExisting(searchRoot);
+var child = Directory.CreateDirectory(Path.Combine(searchRoot, "nested")).FullName;
+File.WriteAllText(Path.Combine(child, "IŞIK.MD"), "other");
+File.WriteAllText(Path.Combine(child, "body.md"), "IŞIK, İĞDE ve Cafe\u0301 😀",
+    new System.Text.UTF8Encoding(true));
+File.WriteAllText(Path.Combine(searchRoot, "excluded.emd"), "IŞIK");
+var trash = Directory.CreateDirectory(Path.Combine(searchRoot, ".enote-trash")).FullName;
+File.WriteAllText(Path.Combine(trash, "IŞIK.md"), "excluded");
+var staging = Directory.CreateDirectory(Path.Combine(searchRoot, ".enote-draft-fixture")).FullName;
+File.WriteAllText(Path.Combine(staging, "IŞIK.md"), "excluded");
+File.WriteAllBytes(Path.Combine(searchRoot, "invalid.md"), [0xFF, 0xFE]);
+using (var huge = File.Create(Path.Combine(searchRoot, "large.md")))
+    huge.SetLength(WorkspaceMarkdownSearch.MaximumContentBytes + 1);
+
+WorkspaceMarkdownSearchResult Search(string query) =>
+    WorkspaceMarkdownSearch.SearchAsync(workspace, query, CancellationToken.None).GetAwaiter().GetResult();
+
+Check("workspace search matches Turkish names and UTF-8 content and excludes secure, trash and staging files", () =>
+{
+    var result = Search("  ışık  ");
+    Yes(result.Hits.Count == 2 && !result.Truncated);
+    Yes(result.Hits.Any(x => x.RelativePath == Path.Combine("nested", "IŞIK.MD") && x.MatchLabel == "Dosya adı"));
+    Yes(result.Hits.Any(x => x.RelativePath == Path.Combine("nested", "body.md") && x.MatchLabel == "İçerik"));
+    Yes(Search("iğde").Hits.Count == 1 && Search("IĞDE").Hits.Count == 0);
+    Yes(Search("Café 😀").Hits.Count == 1);
+});
+Check("workspace search reports unreadable UTF-8 and oversized content while keeping other matches", () =>
+{
+    var result = Search("iğde");
+    Yes(result.Hits.Count == 1 && result.Unreadable == 1 && result.Oversized == 1);
+    Yes(Search("large.md").Hits.Count == 1);
+});
+Check("workspace search caps returned results and honors cancellation", () =>
+{
+    for (int index = 0; index <= WorkspaceMarkdownSearch.MaximumResults; index++)
+        File.WriteAllText(Path.Combine(searchRoot, $"result-{index}.md"), "text");
+    var result = Search("result-");
+    Yes(result.Truncated && result.Hits.Count == WorkspaceMarkdownSearch.MaximumResults);
+    using var canceled = new CancellationTokenSource();
+    canceled.Cancel();
+    Reject<OperationCanceledException>(() =>
+        WorkspaceMarkdownSearch.SearchAsync(workspace, "result", canceled.Token).GetAwaiter().GetResult());
+});
+Check("workspace result validation refuses removed files and paths outside the selected workspace", () =>
+{
+    string temporary = Path.Combine(searchRoot, "gone.md");
+    File.WriteAllText(temporary, "about to move");
+    WorkspaceMarkdownSearch.ValidateResult(workspace, temporary);
+    File.Delete(temporary);
+    Reject<IOException>(() => WorkspaceMarkdownSearch.ValidateResult(workspace, temporary));
+    Reject<UnauthorizedAccessException>(() => WorkspaceMarkdownSearch.ValidateResult(workspace, source));
 });
 // Optional real-viewer inspection receives fresh synthetic documents, not a shipping package.
 if(args is ["--evidence",var output]){Directory.CreateDirectory(output);foreach(string ext in new[]{"md","txt","html","rtf","docx","odt"})File.Copy(Path.Combine(directory.FullName,"copy."+ext),Path.Combine(output,"editor-synthetic."+ext),false);}

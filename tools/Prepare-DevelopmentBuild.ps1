@@ -30,6 +30,9 @@ TUR57: Açık .md notu veya sayfa düzeni dışarıdan değişirse editörde uya
 Kaydedilmemiş taslak yeniden yüklenmeden önce ayrı .md ve düzen kopyası olarak
 kaydedilir. Silinmiş kaynak için de taslağı ayrı kaydedebilirsiniz.
 
+TUR58: Çalışma alanı seçildikten sonra Ctrl+Shift+F ile diskteki düz Markdown
+notlarının dosya adı veya içeriğini arayın. Sonuçtan açık taslağa dönebilirsiniz.
+
 Güvenli .emd ve kilitler KAPALI. Düz .md ve dışa aktarılan belgeler ŞİFRESİZDİR.
 Fiziksel Windows/yazıcı/DPI kabulleri NOT RUN; nihai hak/kurulum kabulü açık.
 Bu CI çıktısı sürüm/installer/dağıtım hakkı onayı değildir. V1.0 BLOCKED.
