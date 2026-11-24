@@ -26,6 +26,10 @@ anahtar veya diğer belge içeren klasör reddedilir. .enote-trash elle silinmem
 Not+yan dosya iki OS taşımasıdır; güç kesintisinde atomik işlem garantisi yoktur.
 Kesintili yan dosya kaydı hata ile görünür; elle kurtarma gerekebilir.
 
+TUR57: Açık .md notu veya sayfa düzeni dışarıdan değişirse editörde uyarı görünür.
+Kaydedilmemiş taslak yeniden yüklenmeden önce ayrı .md ve düzen kopyası olarak
+kaydedilir. Silinmiş kaynak için de taslağı ayrı kaydedebilirsiniz.
+
 Güvenli .emd ve kilitler KAPALI. Düz .md ve dışa aktarılan belgeler ŞİFRESİZDİR.
 Fiziksel Windows/yazıcı/DPI kabulleri NOT RUN; nihai hak/kurulum kabulü açık.
 Bu CI çıktısı sürüm/installer/dağıtım hakkı onayı değildir. V1.0 BLOCKED.

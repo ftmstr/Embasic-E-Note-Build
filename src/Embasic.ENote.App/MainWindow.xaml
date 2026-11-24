@@ -183,7 +183,23 @@
                                 </StackPanel>
                                 <TextBlock Text="Markdown kaynak + güvenli salt okunur görsel önizleme · Uzak içerik yüklenmez · Şifreli .emd kapalı"
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                <TextBlock x:Name="MarkdownStatusText"
+                                <Border x:Name="RevisionNotice" Visibility="Collapsed" BorderBrush="#B7791F"
+                                        BorderThickness="1" CornerRadius="4" Padding="8" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock x:Name="RevisionMessage" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource PrimaryInk}"
+                                                   AutomationProperties.AutomationId="RevisionMessage"
+                                                   AutomationProperties.LiveSetting="Polite"/>
+                                        <WrapPanel Margin="0,5,0,0">
+                                            <Button x:Name="ReloadRevisionButton" Content="Diskten yeniden yükle…"
+                                                    Click="ReloadRevision_Click" Padding="7,4" Margin="0,0,6,0"
+                                                    AutomationProperties.AutomationId="ReloadRevisionButton"/>
+                                            <Button Content="Taslağı ayrı kaydet…" Click="SaveRevisionCopy_Click" Padding="7,4"
+                                                    AutomationProperties.AutomationId="SaveRevisionCopyButton"/>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock x:Name="MarkdownStatusText" AutomationProperties.AutomationId="MarkdownStatusText"
                                            Text="Not açın veya yeni .md oluşturun. PDF ve yazdırma: Baskı Önizlemesi."
                                            Foreground="{DynamicResource SecondaryInk}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             </StackPanel>

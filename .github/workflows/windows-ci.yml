@@ -233,6 +233,8 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --editor-workflow src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Exercise actual workspace rename move trash and restart restore
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-files src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+      - name: Exercise external note and layout change recovery in WPF
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --external-revision src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Retain framework-dependent development build after editor acceptance
         shell: pwsh
         run: ./tools/Prepare-DevelopmentBuild.ps1

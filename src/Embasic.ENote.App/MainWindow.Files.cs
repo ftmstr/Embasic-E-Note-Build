@@ -1,3 +1,4 @@
+using Embasic.ENote.Storage.Documents;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -127,6 +128,8 @@ public partial class MainWindow
         {
             _fileOperationBusy = false; IsEnabled = true; Mouse.OverrideCursor = null;
             UpdateWorkspaceActions(); UpdateDocumentActions();
+            if (SelectedTab is { IsInTrash: true }) ShowRevisionState(PlainMarkdownRevisionState.Current);
+            else _ = CheckSelectedRevisionAsync();
         }
         if (failure is not null)
             MessageBox.Show(this, "İşlem tamamlanamadı: " + failure.Message, "Dosya işlemi",

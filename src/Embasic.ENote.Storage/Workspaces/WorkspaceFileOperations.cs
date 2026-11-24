@@ -134,7 +134,7 @@ public sealed class WorkspaceFileOperations
         return new WorkspaceChange(from, to, directory, WorkspaceChangeKind.Move);
     }
 
-    private static void MoveCore(string from, string to, bool directory)
+    internal static void MoveCore(string from, string to, bool directory)
     {
         if (File.Exists(to) || Directory.Exists(to)) throw new IOException("Hedef zaten var; üzerine yazılmadı.");
         if (directory) { Directory.Move(from, to); return; }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
 using Embasic.ENote.Storage;
+using Embasic.ENote.Storage.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
@@ -35,7 +36,9 @@ public partial class MainWindow : Window
         _viewModel.PropertyChanged += (_, _) => UpdateWorkspaceActions();
         PageSizeComboBox.ItemsSource = PageLayoutCatalog.Presets;
         PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
-        Loaded += (_, _) => UpdatePagePreview();
+        Loaded += (_, _) => { UpdatePagePreview(); _revisionTimer.Start(); };
+        Closed += (_, _) => _revisionTimer.Stop();
+        _revisionTimer.Tick += async (_, _) => await CheckSelectedRevisionAsync();
         MarkdownTabs.ItemsSource = _tabs;
         _previewDebounce.Tick += (_, _) =>
         {
@@ -174,13 +177,16 @@ public partial class MainWindow : Window
         if (_fileOperationBusy) return false;
         try
         {
+            bool changed = tab.IsDirty || tab.IsLayoutDirty;
             tab.Save(_noteStore, _pageStore);
+            if (changed && ReferenceEquals(SelectedTab, tab)) ShowRevisionState(PlainMarkdownRevisionState.Current);
             MarkdownStatusText.Text = "Kaydedildi: " + Path.GetFileName(tab.FilePath);
             return true;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or
                                    ArgumentException or NotSupportedException)
         {
+            _ = CheckSelectedRevisionAsync();
             MessageBox.Show(this, "Kaydetme reddedildi. Haricî değişiklik veya erişim sorunu olabilir: "
                 + ex.Message, "Embasic E-Note", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
@@ -295,10 +301,17 @@ public partial class MainWindow : Window
     {
         if (!ReferenceEquals(e.OriginalSource, MarkdownTabs)) return;
         UpdateDocumentActions();
+        ShowRevisionState(PlainMarkdownRevisionState.Current);
         if (SelectedTab is not { } tab) return;
         _previewDebounce.Stop();
         tab.RefreshPreview();
         MarkdownModeSelector.SelectedIndex = (int)tab.ViewMode;
+        SyncPageControls(tab);
+        _ = CheckSelectedRevisionAsync();
+    }
+
+    private void SyncPageControls(PlainMarkdownEditorTab tab)
+    {
         _syncingPageControls = true;
         try
         {

@@ -121,6 +121,7 @@ public sealed class DocumentPageSettingsStore
     public DocumentPageSnapshot Read(string markdownPath)
     {
         string file = Sidecar(markdownPath);
+        CheckPlainFile(file);
         if (!File.Exists(file)) return new DocumentPageSnapshot(PageLayoutSettings.Default, null);
         byte[] raw = File.ReadAllBytes(file);
         try
@@ -167,7 +168,17 @@ public sealed class DocumentPageSettingsStore
         finally { CryptographicOperations.ZeroMemory(data); }
     }
 
-    private static string Sidecar(string markdownPath) =>
+    internal static void CheckPlainFile(string path)
+    {
+        try
+        {
+            if ((File.GetAttributes(path) & (FileAttributes.Directory | FileAttributes.ReparsePoint)) != 0)
+                throw new IOException("Dosya yolu bir klasöre veya bağlantıya ait.");
+        }
+        catch (FileNotFoundException) { }
+    }
+
+    internal static string Sidecar(string markdownPath) =>
         PlainMarkdownDocumentStore.ValidatePath(markdownPath) + Suffix;
 
     private sealed record PagePayload(int Version, string PaperId, decimal WidthMm,

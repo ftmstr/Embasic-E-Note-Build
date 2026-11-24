@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using Embasic.ENote.Core.Markdown;
 using Embasic.ENote.Core.Printing;
 using Embasic.ENote.Storage.Documents;
+using Embasic.ENote.Storage;
 
 int passed=0,failed=0;
 void Check(string name,Action test){try{test();passed++;Console.WriteLine("PASS "+name);}catch(Exception e){failed++;Console.Error.WriteLine("FAIL "+name+": "+e);}}
@@ -41,6 +42,36 @@ Check("source overwrite and encrypted source/destination rejected",()=>{Reject<I
 Check("old destination sidecar is preserved",()=>{string target=Path.Combine(directory.FullName,"orphan.md");File.WriteAllText(target+".enote-layout.json","existing");Reject<IOException>(()=>store.WriteNew(source,text,target,page));Yes(!File.Exists(target));Yes(File.ReadAllText(target+".enote-layout.json")=="existing");});
 Check("structured export never silently truncates long Markdown",()=>{string large=new('x',MarkdownPreviewParser.MaximumPreviewCharacters+1);string target=Path.Combine(directory.FullName,"large.docx");Reject<NotSupportedException>(()=>store.WriteNew(source,large,target,page));Yes(!File.Exists(target));store.WriteNew(source,large,Path.Combine(directory.FullName,"large.md"),page);Yes(File.ReadAllText(Path.Combine(directory.FullName,"large.md"))==large);});
 Check("failed export leaves no temporary files",()=>Yes(!Directory.EnumerateFiles(directory.FullName,"*.enote-tmp").Any()));
+Check("revision detects exact note and layout bytes and distinguishes missing source", () =>
+{
+    string note = Path.Combine(directory.FullName, "revision.md");
+    var notes = new PlainMarkdownDocumentStore();
+    var pages = new DocumentPageSettingsStore();
+    string digest = notes.Save(note, "one", null);
+    Yes(PlainMarkdownRevision.Check(note, digest, null) == PlainMarkdownRevisionState.Current);
+    string layoutDigest = pages.Save(note, page, null);
+    Yes(PlainMarkdownRevision.Check(note, digest, null) == PlainMarkdownRevisionState.Changed);
+    Yes(PlainMarkdownRevision.Check(note, digest, layoutDigest) == PlainMarkdownRevisionState.Current);
+    File.WriteAllText(note, "two");
+    Yes(PlainMarkdownRevision.Check(note, digest, layoutDigest) == PlainMarkdownRevisionState.Changed);
+    File.Delete(note);
+    Yes(PlainMarkdownRevision.Check(note, digest, layoutDigest) == PlainMarkdownRevisionState.Missing);
+});
+Check("draft copy restores missing source buffer and metadata without recreating original", () =>
+{
+    string missing = Path.Combine(directory.FullName, "missing-parent", "lost.md");
+    string target = Path.Combine(directory.FullName, "recovered.md");
+    PlainMarkdownRevision.WriteDraftCopy(missing, target, text, page, writeBom: true);
+    var note = new PlainMarkdownDocumentStore().Read(target);
+    Yes(note.HasUtf8Bom && note.Text == text);
+    Yes(new DocumentPageSettingsStore().Read(target).Settings == page && !File.Exists(missing));
+    Reject<IOException>(() => PlainMarkdownRevision.WriteDraftCopy(missing, target, "replacement", page, false));
+    Yes(new PlainMarkdownDocumentStore().Read(target) == note);
+    string orphan = Path.Combine(directory.FullName, "orphan.md");
+    Reject<IOException>(() => PlainMarkdownRevision.WriteDraftCopy(missing, orphan, "replacement", page, false));
+    Yes(!File.Exists(orphan) && File.ReadAllText(orphan + ".enote-layout.json") == "existing");
+    Yes(!Directory.EnumerateDirectories(directory.FullName, ".enote-draft-*").Any());
+});
 // Optional real-viewer inspection receives fresh synthetic documents, not a shipping package.
 if(args is ["--evidence",var output]){Directory.CreateDirectory(output);foreach(string ext in new[]{"md","txt","html","rtf","docx","odt"})File.Copy(Path.Combine(directory.FullName,"copy."+ext),Path.Combine(output,"editor-synthetic."+ext),false);}
 Directory.Delete(directory.FullName,true);
