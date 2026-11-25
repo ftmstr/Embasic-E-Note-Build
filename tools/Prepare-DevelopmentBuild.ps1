@@ -36,6 +36,9 @@ notlarının dosya adı veya içeriğini arayın. Sonuçtan açık taslağa dön
 TUR59: Çalışma alanı ağacından bir klasör seçip «Yeni .md…» ile doğrudan
 orada bir Markdown notu oluşturun. Yeni not düzenleyicide açılır.
 
+TUR60: Haricî dosya ve klasör oluşturma, ad değiştirme ve silme işlemleri
+çalışma alanı ağacına yansır. Açık taslaklar kendi sekmelerinde kalır.
+
 Güvenli .emd ve kilitler KAPALI. Düz .md ve dışa aktarılan belgeler ŞİFRESİZDİR.
 Fiziksel Windows/yazıcı/DPI kabulleri NOT RUN; nihai hak/kurulum kabulü açık.
 Bu CI çıktısı sürüm/installer/dağıtım hakkı onayı değildir. V1.0 BLOCKED.

@@ -11,7 +11,7 @@ public sealed class WorkspaceTreeNode
     private readonly WorkspaceRoot? _workspace;
     private readonly Action<string>? _report;
     private bool _loaded;
-    private bool _loading;
+    private Task<string?>? _refreshTask;
 
     public string Name { get; }
     public string FullPath { get; }
@@ -55,33 +55,85 @@ public sealed class WorkspaceTreeNode
 
     public async Task RefreshAsync()
     {
-        if (!IsFolder || _storage is null || _workspace is null || _loading) return;
-        _loading = true;
+        if (!IsFolder || _storage is null || _workspace is null) return;
+        string? error = await RefreshChildrenAsync(CancellationToken.None);
+        _report?.Invoke(error is null ? $"{Name}: {Children.Count} öğe listelendi." : error);
+    }
+
+    private async Task<string?> RefreshChildrenAsync(CancellationToken cancellationToken)
+    {
+        while (_refreshTask is { IsCompleted: false } previous)
+        {
+            try { await previous.WaitAsync(cancellationToken); }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { }
+        }
+        cancellationToken.ThrowIfCancellationRequested();
+        _refreshTask = ReadChildrenAsync(cancellationToken);
+        return await _refreshTask;
+    }
+
+    private async Task<string?> ReadChildrenAsync(CancellationToken cancellationToken)
+    {
         try
         {
-            var results = await _storage.ListChildrenAsync(_workspace, FullPath);
-            Children.Clear();
-            foreach (var entry in results)
-            {
-                Children.Add(new WorkspaceTreeNode(
-                    entry.Name, entry.FullPath, entry.Kind,
-                    _storage, _workspace, _report!));
-            }
-
+            var entries = await _storage!.ListChildrenAsync(_workspace!, FullPath, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            ApplyChildren(entries);
             _loaded = true;
-            _report?.Invoke($"{Name}: {results.Count} öğe listelendi.");
+            return null;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            _loaded = false;
-            Children.Clear();
-            Children.Add(Placeholder());
-            _report?.Invoke($"Klasör okunamadı ({Name}): {error.Message}");
+            // Keep the last readable listing until a successful refresh can reconcile it.
+            return $"Klasör okunamadı ({Name}): {error.Message}";
         }
-        finally
+    }
+
+    private void ApplyChildren(IReadOnlyList<WorkspaceEntry> entries)
+    {
+        var wanted = entries.ToDictionary(entry => entry.FullPath, StringComparer.Ordinal);
+        for (int i = Children.Count - 1; i >= 0; i--)
         {
-            _loading = false;
+            var child = Children[i];
+            if (!wanted.TryGetValue(child.FullPath, out var entry) || child.Kind != entry.Kind)
+                Children.RemoveAt(i);
         }
+
+        var retained = Children.ToDictionary(child => child.FullPath, StringComparer.Ordinal);
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            if (!retained.TryGetValue(entry.FullPath, out var child))
+            {
+                Children.Insert(i, new WorkspaceTreeNode(entry.Name, entry.FullPath, entry.Kind,
+                    _storage!, _workspace!, _report!));
+            }
+            else if (!ReferenceEquals(Children[i], child))
+            {
+                Children.Move(Children.IndexOf(child), i);
+            }
+        }
+    }
+
+    public async Task<string?> RefreshLoadedBranchesAsync(CancellationToken cancellationToken)
+    {
+        string? firstError = null;
+        var pending = new Stack<WorkspaceTreeNode>();
+        pending.Push(this);
+        while (pending.TryPop(out var folder))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!folder._loaded && folder._refreshTask is null) continue;
+            string? error = await folder.RefreshChildrenAsync(cancellationToken);
+            if (error is not null)
+            {
+                firstError ??= error;
+                continue;
+            }
+            foreach (var child in folder.Children)
+                if (child.IsFolder) pending.Push(child);
+        }
+        return firstError;
     }
 
     public Task ExpandAsync() => _loaded ? Task.CompletedTask : RefreshAsync();
