@@ -239,6 +239,8 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-search src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Exercise workspace folder note creation in WPF
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-create-note src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+      - name: Exercise real workspace directory watching in WPF
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-watch src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Retain framework-dependent development build after editor acceptance
         shell: pwsh
         run: ./tools/Prepare-DevelopmentBuild.ps1

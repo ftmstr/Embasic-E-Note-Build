@@ -78,10 +78,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (string.IsNullOrEmpty(name)) name = workspace.FullPath;
             Roots.Add(new WorkspaceTreeNode(
                 name, workspace.FullPath, WorkspaceEntryKind.Folder,
-                _storage, workspace, message => StatusText = message));
+                _storage, workspace, message =>
+                {
+                    if (ReferenceEquals(_workspace, workspace)) StatusText = message;
+                }));
             WorkspaceLabel = workspace.FullPath;
             SelectionDescription = "Alt klasörleri açın; .md metin ve .rtf zengin düzenleme desteklenir.";
             StatusText = "Çalışma alanı açıldı. Klasörler genişletildikçe yüklenir.";
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentWorkspace)));
             CommandManager.InvalidateRequerySuggested();
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException)
@@ -92,16 +96,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public void SelectNode(WorkspaceTreeNode? node)
     {
-        if (node is null || node.IsPlaceholder) return;
-        _selectedNode = node;
-        SelectionDescription = node.Kind switch
+        _selectedNode = node is { IsPlaceholder: false } ? node : null;
+        SelectionDescription = _selectedNode?.Kind switch
         {
-            WorkspaceEntryKind.Folder => $"Klasör: {node.FullPath}",
-            WorkspaceEntryKind.PlainMarkdown => $"Standart .md (şifresiz): {node.FullPath}. Çift tıklayarak metin editöründe açın.",
-            WorkspaceEntryKind.RichTextRtf => $"RTF: {node.FullPath}. Çift tıklayarak yerel zengin editörde açın; yalnız yeni .rtf kopyasına kaydedilir.",
-            WorkspaceEntryKind.WordDocument => $"Word/Writer belgesi: {node.FullPath}. Tam sadakatli yerel DOCX/ODT editörü henüz yok; orijinal korunur.",
-            WorkspaceEntryKind.ReadOnlyDocument => $"Referans belgesi: {node.FullPath}. Yalnız dosya ağacında listelenir; içerik önizlemesi henüz eklenmedi.",
-            WorkspaceEntryKind.OnlineShortcut => $"Google Docs bağlantısı: {node.FullPath}. İnternet yokken içerik çevrimdışı okunamaz.",
+            WorkspaceEntryKind.Folder => $"Klasör: {_selectedNode!.FullPath}",
+            WorkspaceEntryKind.PlainMarkdown => $"Standart .md (şifresiz): {_selectedNode!.FullPath}. Çift tıklayarak metin editöründe açın.",
+            WorkspaceEntryKind.RichTextRtf => $"RTF: {_selectedNode!.FullPath}. Çift tıklayarak yerel zengin editörde açın; yalnız yeni .rtf kopyasına kaydedilir.",
+            WorkspaceEntryKind.WordDocument => $"Word/Writer belgesi: {_selectedNode!.FullPath}. Tam sadakatli yerel DOCX/ODT editörü henüz yok; orijinal korunur.",
+            WorkspaceEntryKind.ReadOnlyDocument => $"Referans belgesi: {_selectedNode!.FullPath}. Yalnız dosya ağacında listelenir; içerik önizlemesi henüz eklenmedi.",
+            WorkspaceEntryKind.OnlineShortcut => $"Google Docs bağlantısı: {_selectedNode!.FullPath}. İnternet yokken içerik çevrimdışı okunamaz.",
             WorkspaceEntryKind.EncryptedEmd => "Şifreli .emd: güvenli açma henüz uygulanmadı. İçerik okunmuyor.",
             _ => "Seçim yok"
         };

@@ -36,14 +36,20 @@ public partial class MainWindow : Window
         _viewModel.PropertyChanged += (_, args) =>
         {
             UpdateWorkspaceActions();
-            if (args.PropertyName == nameof(MainViewModel.WorkspaceLabel)) ClearWorkspaceSearch();
+            if (args.PropertyName == nameof(MainViewModel.CurrentWorkspace))
+            {
+                ClearWorkspaceSearch();
+                StartWorkspaceWatch();
+            }
         };
+        _workspaceWatchTimer.Tick += async (_, _) => await RefreshWorkspaceWatchAsync();
         PageSizeComboBox.ItemsSource = PageLayoutCatalog.Presets;
         PageSizeComboBox.SelectedItem = PageLayoutCatalog.Get("A4");
         Loaded += (_, _) => { UpdatePagePreview(); _revisionTimer.Start(); };
         Closed += (_, _) =>
         {
             _revisionTimer.Stop();
+            StopWorkspaceWatch();
             _workspaceSearchCancellation?.Cancel();
         };
         _revisionTimer.Tick += async (_, _) => await CheckSelectedRevisionAsync();
