@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--workspace-copy", var copyApplication])
+        {
+            CheckWorkspaceCopy(copyApplication);
+            return;
+        }
         if (args is ["--workspace-reveal", var revealApplication])
         {
             CheckWorkspaceReveal(revealApplication);

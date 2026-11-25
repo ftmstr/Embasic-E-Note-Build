@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Embasic.ENote.Storage.Documents;
 
 namespace Embasic.ENote.Storage.Workspaces;
 
@@ -17,6 +18,15 @@ public sealed class WorkspaceFileOperations
 
     /// <summary>Creates an empty plain note without replacing an existing path or reusing old layout.</summary>
     public static string CreateMarkdown(WorkspaceRoot workspace, string folderPath, string name,
+        IReadOnlyCollection<string> openNotePaths)
+    {
+        string path = GetNewMarkdownPath(workspace, folderPath, name, openNotePaths);
+        // The OS checks existence again when it opens the new file.
+        using (new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
+        return path;
+    }
+
+    private static string GetNewMarkdownPath(WorkspaceRoot workspace, string folderPath, string name,
         IReadOnlyCollection<string> openNotePaths)
     {
         ValidateName(name);
@@ -39,9 +49,57 @@ public sealed class WorkspaceFileOperations
         if (EntryExists(path + LayoutSuffix))
             throw new IOException("Bu ada ait eski sayfa düzeni dosyası var. Başka bir ad seçin.");
 
-        // The OS checks existence again when it opens the new file.
-        using (new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { }
         return path;
+    }
+
+    public static WorkspaceMarkdownCopySource ReadMarkdownCopySource(WorkspaceRoot workspace, string path)
+    {
+        string source = CheckPath(workspace, path);
+        var note = new PlainMarkdownDocumentStore().Read(source);
+        var layout = new DocumentPageSettingsStore().Read(source);
+        layout.Settings.Validate();
+        return new WorkspaceMarkdownCopySource(source, note.Sha256, layout.Sha256);
+    }
+
+    public static string CopyMarkdown(WorkspaceRoot workspace, WorkspaceMarkdownCopySource source,
+        string folderPath, string name, IReadOnlyCollection<string> openNotePaths)
+    {
+        string target = GetNewMarkdownPath(workspace, folderPath, name, openNotePaths);
+        string path = CheckPath(workspace, source.Path);
+        string layout = DocumentPageSettingsStore.Sidecar(path);
+        AssertCurrent(path);
+
+        string stage = Path.Combine(Path.GetDirectoryName(target)!, ".enote-draft-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(stage);
+        try
+        {
+            string stagedNote = Path.Combine(stage, "copy.md");
+            StageFile(path, stagedNote);
+            if (source.LayoutDigest is not null) StageFile(layout, stagedNote + LayoutSuffix);
+            AssertCurrent(stagedNote);
+            AssertCurrent(CheckPath(workspace, path));
+            GetNewMarkdownPath(workspace, folderPath, name, openNotePaths);
+            MoveCore(stagedNote, target, directory: false);
+            return target;
+        }
+        finally
+        {
+            Directory.Delete(stage, recursive: true);
+        }
+
+        void AssertCurrent(string candidate)
+        {
+            if (PlainMarkdownRevision.Check(candidate, source.NoteDigest, source.LayoutDigest) != PlainMarkdownRevisionState.Current)
+                throw new IOException("Kaynak not veya sayfa düzeni değişti ya da okunamadı. Kopya oluşturulmadı.");
+        }
+    }
+
+    private static void StageFile(string source, string destination)
+    {
+        using var input = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var output = new FileStream(destination, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        input.CopyTo(output);
+        output.Flush(flushToDisk: true);
     }
 
     private static bool EntryExists(string path)
@@ -143,7 +201,7 @@ public sealed class WorkspaceFileOperations
 
     public static bool ContainsPath(string parent, string candidate) =>
         Equal(parent, candidate) || candidate.StartsWith(
-            Path.TrimEndingDirectorySeparator(parent) + Path.DirectorySeparatorChar, Comparison);
+            Path.EndsInDirectorySeparator(parent) ? parent : parent + Path.DirectorySeparatorChar, Comparison);
 
     public static string MapPath(string path, string from, string to) =>
         Equal(path, from) ? to : Path.Combine(to, Path.GetRelativePath(from, path));
@@ -305,3 +363,4 @@ public sealed record WorkspaceChange(string Source, string Target, bool IsDirect
     WorkspaceChangeKind Kind, string? TrashId = null);
 public sealed record WorkspaceTrashEntry(string Id, string OriginalPath, string StoredPath,
     bool IsDirectory, DateTimeOffset CreatedAt);
+public sealed record WorkspaceMarkdownCopySource(string Path, string NoteDigest, string? LayoutDigest);
