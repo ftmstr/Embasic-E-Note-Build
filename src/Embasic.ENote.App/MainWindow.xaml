@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Embasic.ENote.App.ViewModels"
+        xmlns:local="clr-namespace:Embasic.ENote.App"
         Title="Embasic E-Note"
         Icon="/Embasic.ENote.App;component/Assets/Embasic-E-Note.ico"
         Width="1200" Height="780" MinWidth="900" MinHeight="600"
@@ -101,7 +102,21 @@
                           VirtualizingStackPanel.IsVirtualizing="True"
                           VirtualizingStackPanel.VirtualizationMode="Recycling"
                           ScrollViewer.CanContentScroll="True"
-                          AutomationProperties.Name="Klasör ve not ağacı" AutomationProperties.AutomationId="WorkspaceTree"/>
+                          AutomationProperties.Name="Klasör ve not ağacı" AutomationProperties.AutomationId="WorkspaceTree">
+                    <TreeView.Resources>
+                        <ItemsPanelTemplate x:Key="WorkspaceItemsPanel">
+                            <local:WorkspaceTreePanel/>
+                        </ItemsPanelTemplate>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="ItemsPanel" Value="{StaticResource WorkspaceItemsPanel}"/>
+                        </Style>
+                    </TreeView.Resources>
+                    <TreeView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <local:WorkspaceTreePanel/>
+                        </ItemsPanelTemplate>
+                    </TreeView.ItemsPanel>
+                </TreeView>
                 <Border Grid.Row="2" Margin="14" Padding="10"
                         BorderBrush="#E2E8F0" BorderThickness="1"
                         CornerRadius="5" MinHeight="76"
@@ -142,6 +157,9 @@
                                     <Button Content="Yeni .md (Ctrl+Alt+N)" Click="NewMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Aç (Ctrl+O)" Click="OpenMarkdown_Click" Padding="8,5" Margin="0,0,6,0"
                                             AutomationProperties.AutomationId="OpenMarkdownButton"/>
+                                    <Button x:Name="RevealWorkspaceNoteButton" Content="Ağaçta göster"
+                                            Click="RevealWorkspaceNote_Click" IsEnabled="False" Padding="8,5" Margin="0,0,6,0"
+                                            AutomationProperties.AutomationId="RevealWorkspaceNoteButton"/>
                                     <Button Content="RTF Düzenle (Ctrl+Alt+R)" Click="OpenRtf_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="DOCX / ODT (Ctrl+Alt+D)" Click="OpenOfflineWord_Click" Padding="8,5" Margin="0,0,6,0"/>
                                     <Button Content="Kaydet (Ctrl+S)" Click="SaveMarkdown_Click" Padding="8,5" Margin="0,0,6,0"/>

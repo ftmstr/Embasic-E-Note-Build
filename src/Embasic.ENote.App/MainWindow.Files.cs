@@ -30,6 +30,7 @@ public partial class MainWindow
     private void UpdateDocumentActions()
     {
         bool available = SelectedTab is { IsInTrash: false };
+        RevealWorkspaceNoteButton.IsEnabled = available && !_revealingWorkspaceNote;
         ExportMarkdownUdfButton.IsEnabled = ExportDocumentCopyButton.IsEnabled =
             PrintPreviewButton.IsEnabled = available;
     }
