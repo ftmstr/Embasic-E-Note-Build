@@ -60,7 +60,7 @@ public sealed class WorkspaceTreeNode
         _report?.Invoke(error is null ? $"{Name}: {Children.Count} öğe listelendi." : error);
     }
 
-    private async Task<string?> RefreshChildrenAsync(CancellationToken cancellationToken)
+    internal async Task<string?> RefreshChildrenAsync(CancellationToken cancellationToken)
     {
         while (_refreshTask is { IsCompleted: false } previous)
         {

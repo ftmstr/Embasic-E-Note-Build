@@ -27,6 +27,11 @@ internal static partial class Program
     [MTAThread]
     private static void Main(string[] args)
     {
+        if (args is ["--workspace-reveal", var revealApplication])
+        {
+            CheckWorkspaceReveal(revealApplication);
+            return;
+        }
         if (args is ["--workspace-watch", var watchApplication])
         {
             CheckWorkspaceWatch(watchApplication);
