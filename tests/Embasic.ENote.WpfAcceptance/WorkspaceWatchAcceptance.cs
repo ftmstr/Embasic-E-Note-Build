@@ -32,11 +32,14 @@ internal static partial class Program
             }, "workspace watch window");
 
             Choose(first);
+            OpenSource(window, process.Id, source);
+            Wait(() => Editor().Current.Value == disk ? "opened" : null, "note opened from disk");
+            Editor().SetValue(draft);
             Expand(TreeItem(first.Name));
             Expand(TreeItem(selected.Name));
+            TreeItem("taslak.md");
             Select(TreeItem(selected.Name));
-            OpenSource(window, process.Id, source);
-            Editor().SetValue(draft);
+            AssertSelectedDraft();
 
             string created = Path.Combine(selected.FullName, "dışarıdan.md");
             File.WriteAllText(created, "# Yeni");
@@ -157,9 +160,10 @@ internal static partial class Program
             void AssertSelectedDraft()
             {
                 var item = TreeItem(selected.Name);
-                Require(((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Current.IsSelected &&
-                    ((ExpandCollapsePattern)item.GetCurrentPattern(ExpandCollapsePattern.Pattern)).Current.ExpandCollapseState == ExpandCollapseState.Expanded,
-                    "Unchanged folder lost its selection or expansion");
+                bool isSelected = ((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Current.IsSelected;
+                var expansion = ((ExpandCollapsePattern)item.GetCurrentPattern(ExpandCollapsePattern.Pattern)).Current.ExpandCollapseState;
+                Require(isSelected && expansion == ExpandCollapseState.Expanded,
+                    $"Expected selected, expanded folder. IsSelected={isSelected}, ExpandCollapseState={expansion}");
                 Require(Editor().Current.Value == draft && File.ReadAllText(source) == disk,
                     "A tree refresh changed the draft or disk");
             }
