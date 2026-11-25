@@ -243,6 +243,8 @@ jobs:
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-watch src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Exercise locating the active Markdown note in the workspace tree
         run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-reveal src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
+      - name: Exercise independent saved Markdown copies in the Windows workspace
+        run: dotnet run --project tests/Embasic.ENote.WpfAcceptance --configuration Release --no-build -- --workspace-copy src/Embasic.ENote.App/bin/Release/net10.0-windows/Embasic.ENote.App.exe
       - name: Retain framework-dependent development build after editor acceptance
         shell: pwsh
         run: ./tools/Prepare-DevelopmentBuild.ps1

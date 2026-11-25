@@ -22,6 +22,7 @@ public partial class MainWindow
             selected.Kind is WorkspaceEntryKind.Folder or WorkspaceEntryKind.PlainMarkdown &&
             !string.Equals(root.FullPath, selected.FullPath, StringComparison.OrdinalIgnoreCase);
         RenameEntryButton.IsEnabled = MoveEntryButton.IsEnabled = TrashEntryButton.IsEnabled = editable;
+        CopyWorkspaceMarkdownButton.IsEnabled = editable && selected?.Kind == WorkspaceEntryKind.PlainMarkdown;
         UndoTrashButton.IsEnabled = root is not null;
         CreateWorkspaceMarkdownButton.IsEnabled = root is not null &&
             WorkspaceTree?.SelectedItem is WorkspaceTreeNode { IsFolder: true };
@@ -70,6 +71,52 @@ public partial class MainWindow
         }
         if (failure is not null)
             MessageBox.Show(this, failure.Message, "Not oluşturulamadı", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
+    private async void CopyWorkspaceMarkdown_Click(object sender, RoutedEventArgs e)
+    {
+        if (_fileOperationBusy || _viewModel.CurrentWorkspace is not { } root ||
+            _viewModel.SelectedNode is not { Kind: WorkspaceEntryKind.PlainMarkdown } selected) return;
+
+        _fileOperationBusy = true;
+        Exception? failure = null;
+        try
+        {
+            IsEnabled = false;
+            var snapshot = await Task.Run(() => WorkspaceFileOperations.ReadMarkdownCopySource(root, selected.FullPath));
+            if (_tabs.Any(tab => !tab.IsInTrash &&
+                string.Equals(tab.FilePath, snapshot.Path, StringComparison.OrdinalIgnoreCase) &&
+                (tab.Digest != snapshot.NoteDigest || tab.LayoutDigest != snapshot.LayoutDigest)))
+                throw new IOException("Açık notun diskteki içeriği veya sayfa düzeni dışarıdan değişti. Önce farkı çözün.");
+
+            IsEnabled = true;
+            var picker = new OpenFolderDialog { Title = "Markdown kopyası için hedef klasörü seçin" };
+            if (picker.ShowDialog(this) != true) return;
+            var dialog = new FolderNameDialog("Markdown kopyasının adı",
+                "Kopya adı · diskteki not ve varsa sayfa düzeni", selected.Name, "Kopyala") { Owner = this };
+            if (dialog.ShowDialog() != true) return;
+
+            string name = dialog.FolderName;
+            string folder = picker.FolderName;
+            string[] openPaths = _tabs.Where(tab => !tab.IsInTrash).Select(tab => tab.FilePath).ToArray();
+            IsEnabled = false;
+            string copied = await Task.Run(() => WorkspaceFileOperations.CopyMarkdown(root, snapshot, folder, name, openPaths));
+            await _viewModel.RefreshRootAsync();
+            MarkdownStatusText.Text = $"Diskteki not kopyalandı: {Path.GetRelativePath(root.FullPath, copied)}";
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or
+            NotSupportedException or InvalidDataException)
+        {
+            failure = error;
+        }
+        finally
+        {
+            _fileOperationBusy = false;
+            IsEnabled = true;
+            UpdateWorkspaceActions();
+        }
+        if (failure is not null)
+            MessageBox.Show(this, failure.Message, "Markdown kopyalanamadı", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private async void RenameEntry_Click(object sender, RoutedEventArgs e)

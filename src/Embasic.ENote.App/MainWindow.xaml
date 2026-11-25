@@ -84,6 +84,8 @@
                                 AutomationProperties.AutomationId="RenameEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
                         <Button x:Name="MoveEntryButton" Content="Taşı…" Click="MoveEntry_Click"
                                 AutomationProperties.AutomationId="MoveEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
+                        <Button x:Name="CopyWorkspaceMarkdownButton" Content="Kopyala…" Click="CopyWorkspaceMarkdown_Click"
+                                AutomationProperties.AutomationId="CopyWorkspaceMarkdownButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
                         <Button x:Name="TrashEntryButton" Content="Silinenlere taşı" Click="TrashEntry_Click"
                                 AutomationProperties.AutomationId="TrashEntryButton" IsEnabled="False" Padding="6,4" Margin="0,0,5,5"/>
                         <Button x:Name="UndoTrashButton" Content="Silmeyi geri al" Click="UndoTrash_Click"
