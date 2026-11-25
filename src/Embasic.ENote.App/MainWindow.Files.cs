@@ -101,7 +101,8 @@ public partial class MainWindow
             string[] openPaths = _tabs.Where(tab => !tab.IsInTrash).Select(tab => tab.FilePath).ToArray();
             IsEnabled = false;
             string copied = await Task.Run(() => WorkspaceFileOperations.CopyMarkdown(root, snapshot, folder, name, openPaths));
-            await _viewModel.RefreshRootAsync();
+            if (_viewModel.Roots.FirstOrDefault() is { } treeRoot)
+                await treeRoot.RefreshLoadedBranchesAsync(CancellationToken.None);
             MarkdownStatusText.Text = $"Diskteki not kopyalandı: {Path.GetRelativePath(root.FullPath, copied)}";
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException or
