@@ -102,6 +102,7 @@ internal static partial class Program
             }
             finally { protectedFolder.SetAccessControl(originalAcl); }
 
+            Require(Directory.EnumerateFiles(protectedFolder.FullName).Any(), "Original ACL must restore actual enumeration");
             File.WriteAllText(Path.Combine(protectedFolder.FullName, "izin-döndü.md"), "# Kurtarılan erişim");
             TreeItem("izin-döndü.md");
             WatchStatus("Klasör ağacı otomatik izleniyor.");

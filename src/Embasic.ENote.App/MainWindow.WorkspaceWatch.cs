@@ -5,6 +5,7 @@ namespace Embasic.ENote.App;
 
 public partial class MainWindow
 {
+    private static readonly TimeSpan WorkspaceReadRetryDelay = TimeSpan.FromSeconds(3);
     private readonly DispatcherTimer _workspaceWatchTimer = new() { Interval = TimeSpan.FromMilliseconds(350) };
     private WorkspaceWatch? _workspaceWatch;
     private bool _workspaceWatchRefreshing;
@@ -36,13 +37,15 @@ public partial class MainWindow
     private async Task RefreshWorkspaceWatchAsync()
     {
         if (_workspaceWatchRefreshing || _fileOperationBusy || _workspaceWatch is not { } watch ||
-            _viewModel.Roots.FirstOrDefault() is not { } root || !watch.TakeChanges(out var watcherError)) return;
+            _viewModel.Roots.FirstOrDefault() is not { } root) return;
+        if (!watch.TakeChanges(out var watcherError) && !watch.ReadRetryDue) return;
 
         _workspaceWatchRefreshing = true;
         try
         {
             var error = await root.RefreshLoadedBranchesAsync(watch.Token);
             if (!ReferenceEquals(_workspaceWatch, watch)) return;
+            watch.RetryReadAfter(error is null ? null : WorkspaceReadRetryDelay);
             WorkspaceWatchStatus.Text = error ?? (watcherError
                 ? "İzleyici bildirim kaybetti. Gerekirse Yenile düğmesini kullanın."
                 : "Klasör ağacı otomatik izleniyor.");
@@ -57,8 +60,10 @@ public partial class MainWindow
         private readonly CancellationTokenSource _lifetime = new();
         private int _dirty;
         private int _error;
+        private long? _retryReadAt;
 
         public CancellationToken Token { get; }
+        public bool ReadRetryDue => _retryReadAt is { } due && Environment.TickCount64 >= due;
 
         public WorkspaceWatch(string path)
         {
@@ -96,6 +101,9 @@ public partial class MainWindow
             watcherError = changed && Interlocked.Exchange(ref _error, 0) != 0;
             return changed;
         }
+
+        public void RetryReadAfter(TimeSpan? delay) =>
+            _retryReadAt = delay is { } interval ? Environment.TickCount64 + (long)interval.TotalMilliseconds : null;
 
         public void Dispose()
         {
