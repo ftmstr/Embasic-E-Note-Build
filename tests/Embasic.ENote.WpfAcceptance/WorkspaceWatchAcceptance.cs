@@ -76,10 +76,10 @@ internal static partial class Program
             Expand(TreeItem(protectedFolder.Name));
             TreeItem("eski.md");
             WaitAbsent(first.Name);
-            var originalAcl = protectedFolder.GetAccessControl(AccessControlSections.Access);
             var restrictedAcl = protectedFolder.GetAccessControl(AccessControlSections.Access);
             using var identity = WindowsIdentity.GetCurrent();
-            restrictedAcl.AddAccessRule(new FileSystemAccessRule(identity.User!, FileSystemRights.ListDirectory, AccessControlType.Deny));
+            var denyListing = new FileSystemAccessRule(identity.User!, FileSystemRights.ListDirectory, AccessControlType.Deny);
+            restrictedAcl.AddAccessRule(denyListing);
             protectedFolder.SetAccessControl(restrictedAcl);
             try
             {
@@ -100,7 +100,12 @@ internal static partial class Program
                 TreeItem("eski.md");
                 Require(Editor().Current.Value == draft && File.ReadAllText(source) == disk, "Access error changed the draft or disk");
             }
-            finally { protectedFolder.SetAccessControl(originalAcl); }
+            finally
+            {
+                var restoredAcl = protectedFolder.GetAccessControl(AccessControlSections.Access);
+                restoredAcl.RemoveAccessRuleSpecific(denyListing);
+                protectedFolder.SetAccessControl(restoredAcl);
+            }
 
             Require(Directory.EnumerateFiles(protectedFolder.FullName).Any(), "Original ACL must restore actual enumeration");
             File.WriteAllText(Path.Combine(protectedFolder.FullName, "izin-döndü.md"), "# Kurtarılan erişim");
